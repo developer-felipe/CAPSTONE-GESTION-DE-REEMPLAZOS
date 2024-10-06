@@ -5,18 +5,19 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <title>Mi Proyecto </title>
-    <img src="{% static 'core/'%} images/logo_capstone.jpg" width="30" height="30" alt="Logo">
+    <title>GPI</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
     
 </head>
+
 <body>
+
 <!-- Barra de navegación -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">Mi Proyecto</a>
+        <img src="../static/core/images/logo_capstone.jpg" alt="" width="30" height="24">
+        <p>GPI</p>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -26,10 +27,10 @@
                     <a class="nav-link" href="#">Profesores</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Gestion de Reemplazo</a>
+                    <a class="nav-link" href="reemplazos">Gestion de Reemplazo</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Recuperacion de Clases </a>
+                    <a class="nav-link" href="recuperacion">Recuperacion de Clases </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">Reportes</a>
@@ -41,23 +42,26 @@
 </nav>
 
 <!-- Contenido principal -->
-<div class="container mt-5">
+<div class="container mt-5"> 
     <div class="row">
-        <div class="col-md-12">
-            <h1 class="text-center">Bienvenido a Mi Proyecto</h1>
-            <p class="text-center">Este es un ejemplo básico de una página HTML5 integrada con Bootstrap. Aquí puedes agregar tu contenido personalizado.</p>
+        <div class="col-md-6 offset-md-3">
+            <h1 class="text-center">Iniciar sesión</h1>
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                {{ form.as_p }} <!-- Esto renderiza todos los campos del formulario -->
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
         </div>
     </div>
-
-
 </div>
 
+</div>
 
     <!-- Pie de página -->
     <footer class="bg-light text-center text-lg-start mt-5">
         <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
-            © 2024 Mi Proyecto:
-            <a class="text-dark" href="#">miproyecto.com</a>
+            © 2024 :
+            <a class="text-dark" href="#">GPI</a>
         </div>
     </footer>
 

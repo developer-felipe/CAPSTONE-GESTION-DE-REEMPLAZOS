@@ -16,9 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from . import views
+from django.shortcuts import redirect
+from .views import login_view, reemplazos_view, recuperacion_view,base_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.login, name='login'),
+    path('', login_view, name='login'), 
+    path('reemplazos/', reemplazos_view, name='reemplazos'), 
+    path('recuperacion/', recuperacion_view, name='recuperacion'),
+    path('', base_view, name='base'),
 ]
