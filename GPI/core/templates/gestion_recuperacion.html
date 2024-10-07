@@ -3,12 +3,153 @@
 {% block title %}Gestión de Reemplazo{% endblock %}
 
 {% block content %}
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-12">
-                <h1 class="text-center">Bienvenido a la Gestión de Reemplazo</h1>
-                <p class="text-center">BUILDING</p>
+<h1>Gestión de Recuperación</h1>
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+</div>
+<form method="GET" action="{% url 'reemplazos' %}" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="filter" class="form-control" placeholder="Buscar por nombre docente...">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </div>
+</form>
+<div class="w-50 p-1">
+    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#extraLargeModal">Agregar
+        Recuperación</button>
+</div>
+<div class="modal fade" id="extraLargeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Formulario de Clases</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Docente</th>
+                                <th>Sección</th>
+                                <th>Jornada</th>
+                                <th>Hora Inicio</th>
+                                <th>Hora Término</th>
+                                <th>Número Módulos</th>
+                                <th>Fecha de Clase</th>
+                                <th>Fecha de Recuperación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <select name="docente" class="form-control">
+                                        <option value="">Docente</option>
+                                        <option value="Docente 1">Docente 1</option>
+                                        <option value="Docente 2">Docente 2</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="seccion" class="form-control">
+                                        <option value="">Sección</option>
+                                        <option value="Sección A">Sección A</option>
+                                        <option value="Sección B">Sección B</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="jornada" class="form-control">
+                                        <option value="">Jornada</option>
+                                        <option value="Mañana">Mañana</option>
+                                        <option value="Tarde">Tarde</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="hora_inicio" class="form-control">
+                                        <option value="">Hora Inicio</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="10:00">10:00</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="hora_termino" class="form-control">
+                                        <option value="">Hora Término</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="12:00">12:00</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="numero_modulos" class="form-control">
+                                        <option value="">Número de Módulos</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="fecha" class="form-control">
+                                        <option value="">Fecha de Clase</option>
+                                        <option value="2024-01-01">2024-01-01</option>
+                                        <option value="2024-01-02">2024-01-02</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="fecha_recuperacion" class="form-control">
+                                        <option value="">Fecha Recuperación</option>
+                                        <option value="2024-01-10">2024-01-10</option>
+                                        <option value="2024-01-11">2024-01-11</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-right">
+                        <button type="submit" class="btn btn-primary">Agregar Clase</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
+</div>
+
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Docente</th>
+            <th>Sección</th>
+            <th>Jornada</th>
+            <th>Hora Inicio</th>
+            <th>Hora Término</th>
+            <th>Número Módulos</th>
+            <th>Fecha de Clase</th>
+            <th>Fecha de Recuperación</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.semana }}</td>
+            <td>{{ item.seccion }}</td>
+            <td>{{ item.jornada }}</td>
+            <td>{{ item.hora_inicio }}</td>
+            <td>{{ item.hora_termino }}</td>
+            <td>{{ item.numero_modulos }}</td>
+            <td>{{ item.sala }}</td>
+            <td>{{ item.fecha }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8">No hay datos disponibles.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<script>
+    $(document).ready(function () {
+        $('#extraLargeModal').modal('show');
+    });</script>
 {% endblock %}

@@ -13,6 +13,108 @@
     </div>
 </form>
 
+<div class="w-50 p-1">
+    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#extraLargeModal">Agregar
+        Recuperación</button>
+</div>
+<div class="modal fade" id="extraLargeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Formulario de Clases</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Semana</th>
+                                <th>Sección</th>
+                                <th>Jornada</th>
+                                <th>Hora Inicio</th>
+                                <th>Hora Término</th>
+                                <th>Número Módulos</th>
+                                <th>Sala</th>
+                                <th>Fecha de Clase</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <select name="docente" class="form-control">
+                                        <option value="">Semana</option>
+                                        <option value="Docente 1">1</option>
+                                        <option value="Docente 2">2</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="seccion" class="form-control">
+                                        <option value="">Sección</option>
+                                        <option value="Sección A">Sección A</option>
+                                        <option value="Sección B">Sección B</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="jornada" class="form-control">
+                                        <option value="">Jornada</option>
+                                        <option value="Mañana">Mañana</option>
+                                        <option value="Tarde">Tarde</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="hora_inicio" class="form-control">
+                                        <option value="">Hora Inicio</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="10:00">10:00</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="hora_termino" class="form-control">
+                                        <option value="">Hora Término</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="12:00">12:00</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="numero_modulos" class="form-control">
+                                        <option value="">Número de Módulos</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="fecha" class="form-control">
+                                        <option value="">Sala</option>
+                                        <option value="2024-01-01">H304</option>
+                                        <option value="2024-01-02">H308</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="fecha_recuperacion" class="form-control">
+                                        <option value="">Fecha de Clase</option>
+                                        <option value="2024-01-10">2024-01-10</option>
+                                        <option value="2024-01-11">2024-01-11</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-right">
+                        <button type="submit" class="btn btn-primary">Agregar Clase</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 <table class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -46,6 +148,9 @@
     </tbody>
 </table>
 {% endblock %}
-
 {% block head %}
 {% endblock %}
+<script>
+    $(document).ready(function () {
+        $('#extraLargeModal').modal('show');
+    });</script>
