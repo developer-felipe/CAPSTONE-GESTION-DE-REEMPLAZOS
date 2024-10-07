@@ -1,61 +1,60 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPI</title>
-    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
 </head>
 
 <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <img src="{% static 'images/logo_capstone.jpg' %}" alt="" width="30" height="24">
+            <p>GPI</p>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Profesores</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="reemplazos">Gestion de Reemplazo</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="recuperacion">Recuperacion de Clases </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Reportes</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-<!-- Barra de navegación -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-        <img src="../static/core/images/logo_capstone.jpg" alt="" width="30" height="24">
-        <p>GPI</p>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Profesores</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="reemplazos">Gestion de Reemplazo</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="recuperacion">Recuperacion de Clases </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Reportes</a>
-                </li>
-
-            </ul>
+    <!-- Contenido principal -->
+    <div id="login-div" class="container mt-5">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <h1 class="text-center">Iniciar sesión</h1>
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+                    {{ form.as_p }} <!-- Esto renderiza todos los campos del formulario -->
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+            </div>
         </div>
     </div>
-</nav>
 
-<!-- Contenido principal -->
-<div class="container mt-5"> 
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <h1 class="text-center">Iniciar sesión</h1>
-            <form method="POST" novalidate>
-                {% csrf_token %}
-                {{ form.as_p }} <!-- Esto renderiza todos los campos del formulario -->
-                <button type="submit" class="btn btn-primary">Login</button>
-            </form>
-        </div>
     </div>
-</div>
-
-</div>
 
     <!-- Pie de página -->
     <footer class="bg-light text-center text-lg-start mt-5">
@@ -65,7 +64,8 @@
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

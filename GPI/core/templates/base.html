@@ -5,13 +5,13 @@
 <head>
     <meta charset="UTF-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 
 <body>
     <nav class="navbar navbar-light bg-light">
         <div class="container-fluid">
-            <img src="{% static 'core/images/logo_capstone.jpg' %}" alt="" width="30" height="24">
+            <img src="{% static 'images/logo_capstone.jpg' %}" alt="" width="30" height="24">
             <ul class="nav justify-content-center">
                 {% if request.user.is_admin %}
                 <li class="nav-item">
