@@ -1,21 +1,23 @@
+from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
-from .forms import LoginForm
+from django.contrib import messages
+from .models import Usuario
 
 def login_view(request):
-    form = LoginForm(request.POST or None)
     if request.method == 'POST':
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('reemplazos')  # Redirige a la vista de reemplazos
+        usuario = request.POST['usuario']
+        password = request.POST['password']
+        try:
+            user = Usuario.objects.get(usuario=usuario)
+            if password == user.password:
+                request.session['user_id'] = user.id_usuario
+                return redirect('reemplazos')
             else:
-                form.add_error(None, 'Usuario o contraseña incorrectos')
-    
-    return render(request, 'templates/login.html', {'form': form})
+                messages.error(request, 'Contraseña incorrecta.')
+        except Usuario.DoesNotExist:
+            messages.error(request, 'Usuario no encontrado.')
+    return render(request, 'templates/login.html')
 
 def reemplazos_view(request):
     return render(request, 'templates/gestion_reemplazo.html')

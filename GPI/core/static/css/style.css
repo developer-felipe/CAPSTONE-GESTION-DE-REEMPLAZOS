@@ -18,23 +18,6 @@ form {
     margin-bottom: 20px;
 }
 
-input[type="text"] {
-    padding: 10px;
-    margin-right: 10px;
-}
-
-button {
-    padding: 10px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
 table {
     border-collapse: collapse;
     width: 100%;
@@ -60,10 +43,10 @@ tr:hover {
 
 #login {
     width: 500px;
-    height: 200px;
+    height: 285px;
     padding: 5vh;
-    background-color: grey;
-    border-radius: 10px;
+    background-color: #f2e255;
+    border-radius: 20px;
     box-shadow: black;
     margin: center;
 }
@@ -73,6 +56,35 @@ tr:hover {
 }
 
 .container{
+    padding-top: 10px;
     padding-left: 1vh;
     padding-right: 1vh;
+}
+
+#body-login{
+    overflow: hidden;
+    padding-top: 175px;
+    background-image: url(../images/background-login.jpg);
+    min-height: 100vh;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+footer{
+    bottom: 0;
+    left: 0;
+    position: fixed;
+    width: 100%;
+    height: 40px;
+}
+
+.imagen-login{
+    text-align: center;
+}
+
+
+.login-text,.login-acceder{
+    color: #0056b3;
+    text-align: center;
 }

@@ -1,53 +1,146 @@
-{% load static %}
-<body>
-     <!-- Barra de navegación -->
-     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-          <div class="container-fluid">
-               <a class="navbar-brand" href="#">Mi Proyecto</a>
-               <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-               </button>
-               <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav">
-                         <li class="nav-item">
-                              <a class="nav-link" href="reemplazos">Gestion de Reemplazo</a>
-                         </li>
-                         <li class="nav-item">
-                              <a class="nav-link" href="recuperacion">Recuperacion de Clases </a>
-                         </li>
-                         <li class="nav-item">
-                              <a class="nav-link" href="#">GPI</a>
-                         </li>
-                         <li class="nav-item">
-                              <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Deshabilitado</a>
-                         </li>
-                    </ul>
-               </div>
-          </div>
-     </nav>
+{% extends 'templates/base.html' %}
 
-     <!-- Contenido principal -->
-     <div class="container mt-5">
-          <div class="row">
-               <div class="col-md-12">
-                    <h1 class="text-center">Bienvenido a Mi Proyecto</h1>
-                    <p class="text-center">Este es un ejemplo básico de una página HTML5 integrada con Bootstrap. Aquí
-                         puedes agregar tu contenido personalizado.</p>
-               </div>
-          </div>
+{% block title %}Gestión de Reemplazo{% endblock %}
 
+{% block content %}
+<!-- Contenedor principal para el perfil de los docentes -->
+<div class="container mt-4">
+    <!-- Título centrado -->
+    <div class="text-center mb-4">
+        <h1>Perfil Docentes</h1>
+    </div>
 
-     </div>
+    <!-- Formulario de búsqueda debajo del título, centrado y alargado -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-8">
+            <form method="GET" action="{% url 'docente' %}">
+                <div class="input-group">
+                    <input type="text" name="filter" class="form-control" placeholder="Buscar por nombre docente...">
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-     <!-- Pie de página -->
-     <footer class="bg-light text-center text-lg-start mt-5">
-          <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
-               © 2024 Mi Proyecto:
-               <a class="text-dark" href="#">miproyecto.com</a>
-          </div>
-     </footer>
+    <!-- Botón para abrir el modal de Agregar Profesor alineado a la derecha -->
+    <div class="d-flex justify-content-end mb-3">
+        <button type="button" class="btn btn-dark btn-lg" data-toggle="modal" data-target="#extraLargeModal">
+            Agregar Profesor
+        </button>
+    </div>
 
-     <!-- Bootstrap JS -->
-     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+    <!-- Tarjeta de perfil de docente -->
+    <div class="card mb-3" style="background-color: #f8f8d8; border-radius: 20px;">
+        <div class="d-flex align-items-center p-3">
+            <!-- Imagen del docente -->
+            <div class="mr-3" style="flex-shrink: 0;">
+                <img src="https://via.placeholder.com/80" class="rounded-circle" alt="Foto del docente">
+            </div>
+
+            <!-- Nombre del docente -->
+            <div class="flex-grow-1">
+                <h5 class="mb-0">Claudio Balboa</h5>
+            </div>
+
+            <!-- Botones alineados a la derecha con mayor separación -->
+            <div class="d-flex" style="gap: 20px;">
+                <!-- Actualización: Botón para abrir el modal de Agregar Licencia -->
+                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#licenciaModal">
+                    Agregar Licencia
+                </button>
+                <button type="button" class="btn btn-success">Modificar</button>
+                <button type="button" class="btn btn-danger">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+<!-- Modal para agregar nuevo docente -->
+<div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="extraLargeModalLabel">Agregar Nuevo Docente</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Primer Nombre</th>
+                                <th>Segundo Nombre</th>
+                                <th>Primer Apellido</th>
+                                <th>Segundo Apellido</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" name="primer_nombre" class="form-control" placeholder="Primer Nombre"></td>
+                                <td><input type="text" name="segundo_nombre" class="form-control" placeholder="Segundo Nombre"></td>
+                                <td><input type="text" name="primer_apellido" class="form-control" placeholder="Primer Apellido"></td>
+                                <td><input type="text" name="segundo_apellido" class="form-control" placeholder="Segundo Apellido"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-right">
+                        <button type="submit" class="btn btn-primary">Agregar Docente</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar licencia -->
+<div class="modal fade" id="licenciaModal" tabindex="-1" aria-labelledby="licenciaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="licenciaModalLabel">Agregar Licencia</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <!-- Campos del formulario para agregar licencia -->
+                    <div class="mb-3">
+                        <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
+                        <input type="date" class="form-control" id="fechaInicio" name="fecha_inicio">
+                    </div>
+                    <div class="mb-3">
+                        <label for="fechaFin" class="form-label">Fecha de Término</label>
+                        <input type="date" class="form-control" id="fechaFin" name="fecha_fin">
+                    </div>
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo</label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="observaciones" class="form-label">Observaciones</label>
+                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
+                    </div>
+                    <div class="text-right">
+                        <button type="submit" class="btn btn-primary">Guardar Licencia</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // No es necesario mostrar los modales automáticamente al cargar la página.
+        // $('#extraLargeModal').modal('show');
+        // $('#licenciaModal').modal('show');
+    });
+</script>
+{% endblock %}
