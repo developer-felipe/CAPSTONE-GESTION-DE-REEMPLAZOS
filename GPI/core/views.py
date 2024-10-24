@@ -28,5 +28,8 @@ def recuperacion_view(request):
 def docente_view(request):
     return render(request, 'templates/docente.html')
 
+def reportes_view(request):
+    return render(request, 'templates/reportes.html')
+
 def base_view(request):
     return render(request, 'templates/base.html')
