@@ -22,6 +22,8 @@
         </div>
     </div>
 
+
+
     <!-- Botón para abrir el modal de Agregar Profesor alineado a la derecha -->
     <div class="d-flex justify-content-end mb-3">
         <button type="button" class="btn btn-dark btn-lg" data-toggle="modal" data-target="#extraLargeModal">
@@ -29,13 +31,11 @@
         </button>
     </div>
 
+
+
     <!-- Tarjeta de perfil de docente -->
     <div class="card mb-3" style="background-color: #f8f8d8; border-radius: 20px;">
         <div class="d-flex align-items-center p-3">
-            <!-- Imagen del docente -->
-            <div class="mr-3" style="flex-shrink: 0;">
-                <img src="https://via.placeholder.com/80" class="rounded-circle" alt="Foto del docente">
-            </div>
 
             <!-- Nombre del docente -->
             <div class="flex-grow-1">
@@ -66,38 +66,298 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <form method="POST" action="">
-                    {% csrf_token %}
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Primer Nombre</th>
-                                <th>Segundo Nombre</th>
-                                <th>Primer Apellido</th>
-                                <th>Segundo Apellido</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><input type="text" name="primer_nombre" class="form-control" placeholder="Primer Nombre"></td>
-                                <td><input type="text" name="segundo_nombre" class="form-control" placeholder="Segundo Nombre"></td>
-                                <td><input type="text" name="primer_apellido" class="form-control" placeholder="Primer Apellido"></td>
-                                <td><input type="text" name="segundo_apellido" class="form-control" placeholder="Segundo Apellido"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="text-right">
-                        <button type="submit" class="btn btn-primary">Agregar Docente</button>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-            </div>
+            <div class="modal-body" id="modalContent" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Parte 1: Datos del Docente -->
+                <div id="docenteForm">
+                    <form  method="POST" action="">
+                        {% csrf_token %}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Primer Nombre</th>
+                                    <th>Segundo Nombre</th>
+                                    <th>Primer Apellido</th>
+                                    <th>Segundo Apellido</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" name="primer_nombre" class="form-control" placeholder="Primer Nombre" required></td>
+                                    <td><input type="text" name="segundo_nombre" class="form-control" placeholder="Segundo Nombre"></td>
+                                    <td><input type="text" name="primer_apellido" class="form-control" placeholder="Primer Apellido" required></td>
+                                    <td><input type="text" name="segundo_apellido" class="form-control" placeholder="Segundo Apellido"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="text-right">
+                            <button type="button" class="btn btn-primary" >Guardar</button>
+                            <button type="button" class="btn btn-primary" id="siguienteBtn">Siguiente</button>
+                        </div>
+                    </form>
+                </div>
+
+<!-- Parte 2: Datos de Asignatura -->
+<div id="asignaturaForm" style="display:none;">
+    <form method="POST" action="">
+        {% csrf_token %}
+        <div id="fields-container">
+            <table class="table" style="width: 190px; height: 30px;">
+                <thead>
+                    <tr>
+                        <th>Asignatura</th>
+                        <th class="text-right" style="width: 80px;">Sección</th>
+                        <th class="text-right" style="width: 80px;">Jornada</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="field-group">
+                        <td><input type="text" name="asignatura" class="form-control form-control-sm" placeholder="Asignatura" style="width: 150px; height: 30px;"></td>
+                        <td><input type="text" name="seccion" class="form-control form-control-sm" placeholder="Sección" style="width: 150px; height: 30px;"></td>
+                        <td>
+                            <select class="form-control form-control-sm" name="jornada" style="width: 80px; height: 30px;">
+                                <option value="D">D</option>
+                                <option value="V">V</option>
+                            </select>
+                        </td>
+                        <td><button type="button" class="remove-btn btn btn-danger btn-sm">Eliminar</button></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </div>
+        <div class="text-right">
+            <button type="button" class="btn btn-primary btn-sm" id="add-btn">Agregar +</button>
+            <button type="button" class="btn btn-primary btn-sm">Guardar</button>
+            <button type="button" class="btn btn-primary btn-sm" id="siguiente2Btn">Siguiente</button>
+            <button type="button" class="btn btn-primary btn-sm" id="atras2Btn">Atrás</button>
+        </div>
+    </form>
 </div>
+
+ <!-- Parte 3: Datos de Jornada -->
+ <div id="jornadaForm" style="display:none;">
+    <form method="POST" action="">
+        {% csrf_token %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Modulo</th>
+                    <th>Lunes</th>
+                    <th>Martes</th>
+                    <th>Miércoles</th>
+                    <th>Jueves</th>
+                    <th>Viernes</th>
+                    <th>Sábado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>08:31
+                        09:10</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>09:11
+                        09:50</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>10:01
+                        10:40</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>10:41
+                        11:20</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>11:31
+                        12:10</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>12:11
+                        12:50</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>13:01
+                        13:40</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>13:41
+                        14:20</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>14:31
+                        15:10</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>15:11
+                        15:50</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>16:01
+                        16:40</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>16:41
+                        17:20</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>17:31
+                        18:10</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>18:11
+                        18:50</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>19:01
+                        19:40</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>19:41
+                        20:20</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>20:31
+                        21:10</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>21:11
+                        21:50</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>21:51
+                        22:30</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="text-right">
+            <button type="button" class="btn btn-success" id="confirmarBtn">Guardar</button>
+            <button type="button" class="btn btn-secondary" id="atrasBtn">Atrás</button>
+            
+        </div>
+    </form>
+</div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+</div>
+</div>
+</div>
+</div>
+
+
 
 <!-- Modal para agregar licencia -->
 <div class="modal fade" id="licenciaModal" tabindex="-1" aria-labelledby="licenciaModalLabel" aria-hidden="true">
@@ -136,6 +396,83 @@
     </div>
 </div>
 
+
+
+
+<script>
+    document.getElementById('add-btn').addEventListener('click', function() {
+    const container = document.getElementById('fields-container');
+    const newFieldGroup = document.createElement('tr');
+    newFieldGroup.className = 'field-group';
+    newFieldGroup.innerHTML = `
+        <td><input type="text" name="asignatura" class="form-control form-control-sm" placeholder="Asignatura" style="width: 150px; height: 30px;"></td>
+        <td><input type="text" name="seccion" class="form-control form-control-sm" placeholder="Sección" style="width: 150px; height: 30px;"></td>
+        <td>
+            <select class="form-control form-control-sm" name="jornada" style="width: 80px; height: 30px;">
+                <option value="D">D</option>
+                <option value="V">V</option>
+            </select>
+        </td>
+        <td><button type="button" class="remove-btn btn btn-danger btn-sm">Eliminar</button></td>
+    `;
+    container.querySelector('tbody').appendChild(newFieldGroup);
+});
+
+// Funcionalidad para eliminar un grupo de campos
+document.getElementById('fields-container').addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-btn')) {
+        e.target.closest('.field-group').remove();
+    }
+});
+
+
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Manejar clic en el botón "Siguiente de docente"
+        $('#siguienteBtn').click(function() {
+            // Ocultar el formulario de docente y mostrar el formulario de jornada
+            $('#docenteForm').hide();
+            $('#asignaturaForm').show();
+            $('#extraLargeModalLabel').text('Agregar Asignatura'); // Cambiar el título del modal
+        });
+
+        // Manejar clic en el botón "Siguiente de asignatura"
+        $('#siguiente2Btn').click(function() {
+            // Ocultar el formulario de asignatura y mostrar el formulario de jornada
+            $('#asignaturaForm').hide();
+            $('#jornadaForm').show();
+            $('#extraLargeModalLabel').text('Agregar Jornada'); // Cambiar el título del modal
+        });
+    
+    
+
+        // Manejar clic en el botón "Atrás para jornada"
+        $('#atrasBtn').click(function() {
+            // Ocultar el formulario de jornada y mostrar el formulario de docente
+            $('#jornadaForm').hide();
+            $('#docenteForm').show();
+            $('#extraLargeModalLabel').text('Agregar Nuevo Docente'); // Cambiar el título del modal
+        });
+
+        // Manejar clic en el botón "Atrás para asignatura"
+        $('#atras2Btn').click(function() {
+            // Ocultar el formulario de jornada y mostrar el formulario de docente
+            $('#asignaturaForm').hide();
+            $('#docenteForm').show();
+            $('#extraLargeModalLabel').text('Agregar Nuevo Docente'); // Cambiar el título del modal
+        });
+
+        // Manejar clic en el botón "Confirmar"
+        $('#confirmarBtn').click(function() {
+            // Aquí puedes agregar la lógica para confirmar la información y enviar los datos.
+            alert('Información confirmada.'); // Ejemplo de acción al confirmar
+            $('#extraLargeModal').modal('hide'); // Cerrar el modal (opcional)
+        });
+    });
+</script>
 <script>
     $(document).ready(function () {
         // No es necesario mostrar los modales automáticamente al cargar la página.
