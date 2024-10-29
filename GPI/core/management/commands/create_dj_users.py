@@ -6,7 +6,7 @@ class Command(BaseCommand):
     help = 'Crea usuarios por defecto en la base de datos'
 
     def handle(self, *args, **kwargs):
-        User = get_user_model()  # Obtiene el modelo de usuario personalizado
+        User = get_user_model()
 
         users = [
             {'usuario': 'admin', 'password': 'admin', 'is_staff': True, 'is_superuser': True},
@@ -27,7 +27,6 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(self.style.WARNING(f'El usuario "{user.usuario}" ya existe.'))
 
-        # Asegúrate de que las contraseñas estén correctamente hasheadas
         for user_data in users:
             user = User.objects.get(usuario=user_data['usuario'])
             user.set_password(user_data['password'])
