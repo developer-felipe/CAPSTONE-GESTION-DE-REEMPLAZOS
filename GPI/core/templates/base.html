@@ -13,16 +13,14 @@
 <body>
     <nav class="navbar navbar-light bg-light">
         <div class="container-fluid">
-            <a href="{% url 'reemplazos' %}"><img src="{% static 'images/PGR.png' %}" class="navbar-brand" width="70" height="70" alt="Logo"></a>
+            <a href="{% url 'reemplazos' %}"><img src="{% static 'images/PGR.png' %}" class="navbar-brand" width="70"
+                    height="70" alt="Logo"></a>
             <ul class="nav justify-content-center">
-                {% if request.user.is_admin %}
+                {% if request.user.is_staff %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'docente' %}">Profesores</a>
                 </li>
                 {% endif %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'docente' %}">Profesores (por mientras)</a>
-                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'reemplazos' %}">Gestion de Reemplazo</a>
                 </li>
@@ -43,4 +41,5 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>
