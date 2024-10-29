@@ -15,8 +15,10 @@
     </form>
 
     <div class="w-50 p-1">
+        {% if request.user.is_staff %}
         <button type="button" class="btn btn-success" data-toggle="modal" data-target="#extraLargeModal">Agregar
             Reemplazo</button>
+        {% endif %}
     </div>
     <div class="modal fade" id="extraLargeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
         aria-hidden="true">

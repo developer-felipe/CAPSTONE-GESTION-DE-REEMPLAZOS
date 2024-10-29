@@ -30,6 +30,13 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'reportes' %}">Reportes</a>
                 </li>
+                {% if user.is_authenticated %}
+                <li class="nav-item ms-3">
+                    <a class="nav-link" href="{% url 'logout' %}">
+                        <i class="material-icons me-2">logout</i>
+                    </a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </nav>

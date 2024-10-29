@@ -1,6 +1,8 @@
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
 from django.contrib import messages
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -28,3 +30,6 @@ def reportes_view(request):
 
 def base_view(request):
     return render(request, 'templates/base.html')
+
+def CustomLogoutView(request):
+    return render(request, 'templates/login.html')
