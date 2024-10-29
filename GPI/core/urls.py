@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.shortcuts import redirect
-from .views import login_view, reemplazos_view, recuperacion_view,base_view,docente_view
+from .views import login_view, reemplazos_view, recuperacion_view,base_view,docente_view, reportes_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,5 +25,6 @@ urlpatterns = [
     path('reemplazos/', reemplazos_view, name='reemplazos'), 
     path('recuperacion/', recuperacion_view, name='recuperacion'),
     path('docente/', docente_view, name='docente'),
+    path('reportes/', reportes_view, name='reportes'),
     path('', base_view, name='base'),
 ]
