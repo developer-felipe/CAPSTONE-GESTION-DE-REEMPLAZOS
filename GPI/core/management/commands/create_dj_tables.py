@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS semestre (
 
 CREATE TABLE IF NOT EXISTS horario (
     id_horario                 INT AUTO_INCREMENT PRIMARY KEY,
-    seccion                    INT NOT NULL,
+    seccion                    INT(3) NOT NULL,
     jornada                    CHAR(1) NOT NULL,
     asignatura_id_asignatura   INT NOT NULL,
     sala_id_sala               INT NOT NULL,

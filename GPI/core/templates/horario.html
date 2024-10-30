@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Tabla con Modal</title>
+</head>
+
+<body>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                {% for dia in dias %}
+                <th>{{ dia.nombre_dia }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for modulo in modulos %}
+            <tr>
+                <th scope="row">{{ modulo.hora_modulo }}</th>
+                {% for dia in dias %}
+                <td>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                        <span class="material-icons me-2">add</span>
+                    </button>
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Modal para Asignar Horario -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Asignar horario</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="asignatura" class="col-form-label">Asignatura</label>
+                            <select class="form-control" id="asignatura" onchange="checkOption(this, 'agregarModal')">
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="seccion" class="col-form-label">Jornada</label>
+                            <select class="form-control" id="jornada">
+                                <option value="">Selecciona una jornada</option>
+                                <option value="d">Diurno</option>
+                                <option value="v">Vespertino</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="seccion" class="col-form-label">Sección</label>
+                            <input type="number" class="form-control" id="seccion" placeholder="Seccion"
+                                aria-label="seccion" min="1" max="999" required>
+
+                        </div>
+                        <div class="mb-3">
+                            <label for="sala" class="col-form-label">Sala</label>
+                            <select class="form-control" id="sala" onchange="checkOption(this, 'agregarSalaModal')">
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary">Establecer bloque</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Nueva Asignatura -->
+    <div class="modal fade" id="agregarModal" tabindex="-1" aria-labelledby="agregarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="agregarModalLabel">Agregar Nueva Asignatura</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="nueva-asignatura" class="col-form-label">Nombre de Asignatura</label>
+                            <input type="text" class="form-control" id="nueva-asignatura">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn btn-primary" onclick="addAsignatura()">Agregar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Nueva Sección -->
+    <div class="modal fade" id="agregarSeccionModal" tabindex="-1" aria-labelledby="agregarSeccionModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="agregarSeccionModalLabel">Agregar Nueva Sección</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="nueva-seccion" class="col-form-label">Nombre de Sección</label>
+                            <input type="text" class="form-control" id="nueva-seccion">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn btn-primary" onclick="addSeccion()">Agregar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Nueva Sala -->
+    <div class="modal fade" id="agregarSalaModal" tabindex="-1" aria-labelledby="agregarSalaModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="agregarSalaModalLabel">Agregar Nueva Sala</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="nueva-sala" class="col-form-label">Nombre de Sala</label>
+                            <input type="text" class="form-control" id="nueva-sala">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn btn-primary" onclick="addSala()">Agregar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"></script>
+
+    <script>
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        $(document).ready(function () {
+            obtenerAsignaturas();
+            obtenerSalas();
+        });
+
+        function checkOption(select, modalId) {
+            if (select.value === 'agregar') {
+                $(`#${modalId}`).modal('show');
+            }
+        }
+
+        function obtenerAsignaturas() {
+            $.ajax({
+                url: '/asignaturas/',
+                method: 'GET',
+                success: function (data) {
+                    const select = $('#asignatura');
+                    select.empty();
+                    select.append('<option value="">Selecciona una asignatura</option>');
+
+                    data.forEach(function (asignatura) {
+                        select.append(`<option value="${asignatura.id_asignatura}">${asignatura.nombre_asignatura}</option>`);
+                    });
+                    select.append('<option value="agregar">Agregar asignatura</option>');
+                },
+                error: function (error) {
+                    console.log('Error al obtener asignaturas:', error);
+                }
+            });
+        }
+
+        function obtenerSalas() {
+            $.ajax({
+                url: '/salas/',
+                method: 'GET',
+                success: function (data) {
+                    const select = $('#sala');
+                    select.empty();
+                    select.append('<option value="">Selecciona una sala</option>');
+
+                    data.forEach(function (sala) {
+                        select.append(`<option value="${sala.id_sala}">${sala.numero_sala}</option>`);
+                    });
+                    select.append('<option value="agregar">Agregar sala</option>');
+                },
+                error: function (error) {
+                    console.log('Error al obtener salas:', error);
+                }
+            });
+        }
+
+        function addAsignatura() {
+            const nuevaAsignatura = document.getElementById('nueva-asignatura').value;
+
+            if (nuevaAsignatura.trim() === '') {
+                alert('Por favor, ingrese un nombre para la asignatura.');
+                return;
+            }
+
+            $.ajax({
+                url: '/asignaturas/',
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken },  // Agrega el token CSRF
+                contentType: 'application/json',
+                data: JSON.stringify({ nombre: nuevaAsignatura }),
+                success: function (response) {
+                    alert('Asignatura agregada: ' + nuevaAsignatura);
+                    $('#agregarModal').modal('hide');
+                },
+                error: function (error) {
+                    console.log('Error al agregar asignatura:', error);
+                    alert('Hubo un error al agregar la asignatura.');
+                }
+            });
+        }
+
+        function addSala() {
+            let nuevaSala = document.getElementById('nueva-sala').value;
+            if (nuevaSala.trim() === '') {
+                alert('Por favor, ingrese un número para la sala.');
+                return;
+            }
+
+            nuevaSala = nuevaSala.charAt(0).toUpperCase() + nuevaSala.slice(1);
+
+            $.ajax({
+                url: '/salas/',
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken },
+                contentType: 'application/json',
+                data: JSON.stringify({ numero_sala: nuevaSala }),
+                success: function (response) {
+                    alert('Sala agregada: ' + nuevaSala);
+                    $('#agregarModal').modal('hide');
+                },
+                error: function (error) {
+                    console.log('Error al agregar sala:', error);
+                    alert('Hubo un error al agregar la sala.');
+                }
+            });
+        }
+
+        document.getElementById('seccion').addEventListener('blur', function () {
+            let value = this.value;
+
+            if (!isNaN(value) && value !== '') {
+                let formattedValue = String(value).padStart(3, '0');
+                this.value = formattedValue;
+            }
+        });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6h

@@ -6,12 +6,12 @@ class Command(BaseCommand):
     
     def handle(self, *args, **kwargs):
         dias = [
-            (1, 'lunes'),
-            (2, 'martes'),
-            (3, 'miércoles'),
-            (4, 'jueves'),
-            (5, 'viernes'),
-            (6, 'sábado'),
+            (1, 'Lunes'),
+            (2, 'Martes'),
+            (3, 'Miércoles'),
+            (4, 'Jueves'),
+            (5, 'Viernes'),
+            (6, 'Sábado'),
         ]
 
         try:
