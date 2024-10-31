@@ -3,6 +3,13 @@
 {% block title %}Gestión de Reemplazo{% endblock %}
 
 {% block content %}
+
+            {% if messages %}
+                {% for message in messages %}
+            <div class="alert alert-success">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+
 <!-- Contenedor principal para el perfil de los docentes -->
 <div class="container mt-4">
     <!-- Título centrado -->
@@ -22,22 +29,14 @@
         </div>
     </div>
 
-    <!-- Botón para abrir el modal de Agregar Profesor alineado a la derecha -->
-    <div class="d-flex justify-content-end mb-3">
-        <button type="button" class="btn btn-dark btn-lg" data-toggle="modal" data-target="#extraLargeModal">
-            Agregar Profesor
-        </button>
-    </div>
+    <!-- Botón para abrir el modal de Agregar Profesor -->
+<div class="d-flex justify-content-end mb-3">
+    <button type="button" class="btn btn-dark btn-lg" data-toggle="modal" data-target="#extraLargeModal">
+        Agregar Profesor
+    </button>
+</div>
 
-    <div class="container">
-        <!-- Mostrar mensajes de éxito o error -->
-    {% if success %}
-    <div class="alert alert-success">{{ success }}</div>
-    {% endif %}
-    {% if error %}
-    <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
-    
+
         <!-- Tarjetas de los docentes -->
         {% for profesor in profesores %}
         <div class="card mb-3" style="background-color: #f8f8d8; border-radius: 20px;">
@@ -58,7 +57,7 @@
                         Agregar Licencia
                     </button>
                     <button type="button" class="btn btn-success">Modificar</button>
-                    <form method="POST" style="display:inline;">
+                    <form method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este docente?');">
                         {% csrf_token %}
                         <input type="hidden" name="id_profesor" value="{{ profesor.id_profesor }}">
                         <button type="submit" name="eliminar" class="btn btn-danger">Eliminar</button>
@@ -69,6 +68,7 @@
         {% endfor %}
     </div>
     
+
 
     
 <!-- Modal para agregar nuevo docente -->
@@ -82,6 +82,7 @@
                 </button>
             </div>
             <div class="modal-body">
+                
                 <form method="POST" action="">
                     {% csrf_token %}
                     <table class="table">
@@ -113,6 +114,9 @@
         </div>
     </div>
 </div>
+
+
+
 
 
 <!-- Modal para agregar licencia -->
@@ -152,11 +156,29 @@
     </div>
 </div>
 
+
+
+</div>
+
+<!-- Script para mostrar el modal de mensajes si hay algún mensaje -->
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    $(document).ready(function () {
-        // No es necesario mostrar los modales automáticamente al cargar la página.
-        // $('#extraLargeModal').modal('show');
-        // $('#licenciaModal').modal('show');
+    // Mostrar el modal si hay mensajes
+    $(document).ready(function() {
+        var messageAlerts = $('#messageModal .alert');
+        
+        if (messageAlerts.length > 0) {
+            $('#messageModal').modal('show');
+        }
     });
 </script>
+
+
+
+
+
 {% endblock %}

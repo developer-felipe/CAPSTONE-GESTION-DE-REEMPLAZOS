@@ -22,20 +22,26 @@ def login_view(request):
 def docente_view(request):
     if request.method == 'POST':
         if 'eliminar' in request.POST:
+            # Eliminar profesor
             id_profesor = request.POST.get('id_profesor')
-            profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
-            profesor_a_eliminar.delete()
-            # Mostrar un mensaje de éxito si es necesario
-
+            try:
+                profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
+                profesor_a_eliminar.delete()
+                messages.success(request, "Profesor eliminado exitosamente.")
+            except Profesor.DoesNotExist:
+                messages.error(request, "El profesor no existe.")
+                
         else:  # Maneja el caso de agregar un nuevo profesor
-            nombre = request.POST.get('primer_nombre').strip().capitalize()  # Eliminar espacios en blanco
-            segundo_nombre = request.POST.get('segundo_nombre').strip().capitalize()if request.POST.get('segundo_nombre') else None  # Eliminar espacios en blanco
-            apellido = request.POST.get('primer_apellido').strip().capitalize()  # Eliminar espacios en blanco
-            segundo_apellido = request.POST.get('segundo_apellido').strip().capitalize()if request.POST.get('segundo_apellido') else None  # Eliminar espacios en blanco
+            # Obtener y capitalizar los datos del formulario
+            nombre = request.POST.get('primer_nombre').strip().capitalize()
+            segundo_nombre = request.POST.get('segundo_nombre').strip().capitalize() 
+            apellido = request.POST.get('primer_apellido').strip().capitalize()
+            segundo_apellido = request.POST.get('segundo_apellido').strip().capitalize() 
 
             # Verificar que los nombres y apellidos no estén vacíos
             if not nombre or not apellido:
-                return render(request, 'templates/docente.html', {'error': 'Los nombres y apellidos son obligatorios.'})
+                messages.error(request, 'Los nombres y apellidos son obligatorios.')
+                return redirect('docente')
 
             # Agregar el nuevo profesor a la base de datos
             nuevo_profesor = Profesor(
@@ -45,6 +51,10 @@ def docente_view(request):
                 segundo_apellido=segundo_apellido
             )
             nuevo_profesor.save()
+            messages.success(request, "Profesor agregado exitosamente.")
+        
+        # Redirigir para evitar reenvío del formulario
+        return redirect('docente')
 
     # Recuperar todos los profesores para pasar a la plantilla
     profesores = Profesor.objects.all()
