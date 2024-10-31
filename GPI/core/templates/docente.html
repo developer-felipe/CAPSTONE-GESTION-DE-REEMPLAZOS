@@ -29,31 +29,46 @@
         </button>
     </div>
 
-    <!-- Tarjeta de perfil de docente -->
-    <div class="card mb-3" style="background-color: #f8f8d8; border-radius: 20px;">
-        <div class="d-flex align-items-center p-3">
-            <!-- Imagen del docente -->
-            <div class="mr-3" style="flex-shrink: 0;">
-                <img src="https://via.placeholder.com/80" class="rounded-circle" alt="Foto del docente">
-            </div>
-
-            <!-- Nombre del docente -->
-            <div class="flex-grow-1">
-                <h5 class="mb-0">Claudio Balboa</h5>
-            </div>
-
-            <!-- Botones alineados a la derecha con mayor separación -->
-            <div class="d-flex" style="gap: 20px;">
-                <!-- Actualización: Botón para abrir el modal de Agregar Licencia -->
-                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#licenciaModal">
-                    Agregar Licencia
-                </button>
-                <button type="button" class="btn btn-success">Modificar</button>
-                <button type="button" class="btn btn-danger">Eliminar</button>
+    <div class="container">
+        <!-- Mostrar mensajes de éxito o error -->
+    {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+    {% endif %}
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    
+        <!-- Tarjetas de los docentes -->
+        {% for profesor in profesores %}
+        <div class="card mb-3" style="background-color: #f8f8d8; border-radius: 20px;">
+            <div class="d-flex align-items-center p-3">
+                <!-- Imagen del docente -->
+                <div class="mr-3" style="flex-shrink: 0;">
+                    <img src="https://via.placeholder.com/80" class="rounded-circle" alt="Foto del docente">
+                </div>
+    
+                <!-- Nombre del docente -->
+                <div class="flex-grow-1">
+                    <h5 class="mb-0">{{ profesor.nombre }} {{ profesor.segundo_nombre }} {{ profesor.apellido }} {{ profesor.segundo_apellido }}</h5>
+                </div>
+    
+                <!-- Botones alineados a la derecha con mayor separación -->
+                <div class="d-flex" style="gap: 20px;">
+                    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#licenciaModal">
+                        Agregar Licencia
+                    </button>
+                    <button type="button" class="btn btn-success">Modificar</button>
+                    <form method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="id_profesor" value="{{ profesor.id_profesor }}">
+                        <button type="submit" name="eliminar" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </div>
             </div>
         </div>
+        {% endfor %}
     </div>
-</div>
+    
 
     
 <!-- Modal para agregar nuevo docente -->
@@ -80,9 +95,9 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><input type="text" name="primer_nombre" class="form-control" placeholder="Primer Nombre"></td>
+                                <td><input type="text" name="primer_nombre" class="form-control" placeholder="Primer Nombre" required></td>
                                 <td><input type="text" name="segundo_nombre" class="form-control" placeholder="Segundo Nombre"></td>
-                                <td><input type="text" name="primer_apellido" class="form-control" placeholder="Primer Apellido"></td>
+                                <td><input type="text" name="primer_apellido" class="form-control" placeholder="Primer Apellido" required></td>
                                 <td><input type="text" name="segundo_apellido" class="form-control" placeholder="Segundo Apellido"></td>
                             </tr>
                         </tbody>
@@ -98,6 +113,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- Modal para agregar licencia -->
 <div class="modal fade" id="licenciaModal" tabindex="-1" aria-labelledby="licenciaModalLabel" aria-hidden="true">
