@@ -23,12 +23,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', base_view, name='base'),
     path('login/', login_view, name='login'),
-    path('login/', CustomLogoutView, name='logout'),
-    path('reemplazos/', reemplazos_view, name='reemplazos'), 
+    path('logout/', CustomLogoutView, name='logout'),  # Cambia 'login/' a 'logout/'
+    path('reemplazos/', reemplazos_view, name='reemplazos'),
     path('recuperacion/', recuperacion_view, name='recuperacion'),
     path('docente/', docente_view, name='docente'),
-    path('reportes/', reportes_view, name='reportes'),  
-    path('cargar_horario/', horario_view, name='cargar_horario'), 
-    path('asignaturas/', asignatura_view, name='asignatura_list'), 
-    path('salas/',sala_view, name='sala_list' )
+    path('reportes/', reportes_view, name='reportes'),
+    path('cargar_horario/', horario_view, name='cargar_horario'),
+    path('asignaturas/', asignatura_view, name='asignatura_list'),
+    path('salas/', sala_view, name='sala_list')
 ]

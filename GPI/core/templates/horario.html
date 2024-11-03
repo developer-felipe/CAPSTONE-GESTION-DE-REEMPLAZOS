@@ -16,17 +16,18 @@
             <tr>
                 <th scope="col">#</th>
                 {% for dia in dias %}
-                <th>{{ dia.nombre_dia }}</th>
+                <th id="{{dia.id_dia}}">{{ dia.nombre_dia }}</th>
                 {% endfor %}
             </tr>
         </thead>
         <tbody>
             {% for modulo in modulos %}
             <tr>
-                <th scope="row">{{ modulo.hora_modulo }}</th>
+                <th scope="row" id="{{modulo.id_modulo}}">{{ modulo.hora_modulo }}</th>
                 {% for dia in dias %}
                 <td>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal"
+                        data-modulo-id="{{ modulo.id_modulo }}" data-dia-id="{{ dia.id_dia }}">
                         <span class="material-icons me-2">add</span>
                     </button>
                 </td>
@@ -38,6 +39,7 @@
 
     <!-- Modal para Asignar Horario -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -45,7 +47,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form id="bloque">
                         <div class="mb-3">
                             <label for="asignatura" class="col-form-label">Asignatura</label>
                             <select class="form-control" id="asignatura" onchange="checkOption(this, 'agregarModal')">
@@ -239,7 +241,7 @@
             $.ajax({
                 url: '/asignaturas/',
                 method: 'POST',
-                headers: { 'X-CSRFToken': csrftoken },  // Agrega el token CSRF
+                headers: { 'X-CSRFToken': csrftoken },
                 contentType: 'application/json',
                 data: JSON.stringify({ nombre: nuevaAsignatura }),
                 success: function (response) {
@@ -287,6 +289,53 @@
                 this.value = formattedValue;
             }
         });
+
+        $(document).ready(function () {
+            $(document).on('click', '[data-toggle="modal"]', function () {
+                abrirModal(this);
+            });
+        });
+
+        function abrirModal(button) {
+            const moduloId = button.getAttribute('data-modulo-id');
+            const diaId = button.getAttribute('data-dia-id');
+            console.log(diaId, moduloId)
+            $('#exampleModal').modal('show');
+        }
+
+        function addBloque() {
+            const asignatura = document.getElementById('asignatura').value;
+            const jornada = document.getElementById('jornada').value;
+            const seccion = document.getElementById('seccion').value;
+            const sala = document.getElementById('sala').value;
+
+            if (!asignatura || !jornada || !seccion || !sala) {
+                alert('Por favor, complete todos los campos.');
+                return;
+            }
+
+            $.ajax({
+                url: '/ruta/del/servidor/', // Cambia esto por la ruta correcta
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken },
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    asignatura: asignatura,
+                    jornada: jornada,
+                    seccion: seccion,
+                    sala: sala,
+                    modulo_id: moduloId,
+                    dia_id: diaId
+                }),
+                success: function (response) {
+                    alert('Bloque establecido con éxito.');
+                },
+                error: function (error) {
+                    console.log('Error al establecer bloque:', error);
+                    alert('Hubo un error al establecer el bloque.');
+                }
+            });
+        }
     </script>
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"

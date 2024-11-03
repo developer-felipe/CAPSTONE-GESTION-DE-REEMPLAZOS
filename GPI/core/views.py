@@ -22,7 +22,6 @@ def login_view(request):
 def docente_view(request):
     if request.method == 'POST':
         if 'eliminar' in request.POST:
-            # Eliminar profesor
             id_profesor = request.POST.get('id_profesor')
             try:
                 profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
@@ -31,19 +30,16 @@ def docente_view(request):
             except Profesor.DoesNotExist:
                 messages.error(request, "El profesor no existe.")
                 
-        else:  # Maneja el caso de agregar un nuevo profesor
-            # Obtener y capitalizar los datos del formulario
+        else:
             nombre = request.POST.get('primer_nombre').strip().capitalize()
             segundo_nombre = request.POST.get('segundo_nombre').strip().capitalize() 
             apellido = request.POST.get('primer_apellido').strip().capitalize()
             segundo_apellido = request.POST.get('segundo_apellido').strip().capitalize() 
 
-            # Verificar que los nombres y apellidos no estén vacíos
             if not nombre or not apellido:
                 messages.error(request, 'Los nombres y apellidos son obligatorios.')
                 return redirect('docente')
 
-            # Agregar el nuevo profesor a la base de datos
             nuevo_profesor = Profesor(
                 nombre=nombre,
                 segundo_nombre=segundo_nombre,
@@ -52,15 +48,10 @@ def docente_view(request):
             )
             nuevo_profesor.save()
             messages.success(request, "Profesor agregado exitosamente.")
-        
-        # Redirigir para evitar reenvío del formulario
         return redirect('docente')
-
-    # Recuperar todos los profesores para pasar a la plantilla
+    
     profesores = Profesor.objects.all()
     return render(request, 'templates/docente.html', {'profesores': profesores})
-
-
 
 
 def reemplazos_view(request):

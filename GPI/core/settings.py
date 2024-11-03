@@ -84,6 +84,7 @@ DATABASES = {
 
 
 AUTH_USER_MODEL = 'core.Usuario'
+LOGIN_URL = '/login/'
 
 AUTH_PASSWORD_VALIDATORS = [
     {

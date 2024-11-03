@@ -41,11 +41,6 @@
         {% for profesor in profesores %}
         <div class="card mb-3" style="background-color: #f8f8d8; border-radius: 20px;">
             <div class="d-flex align-items-center p-3">
-                <!-- Imagen del docente -->
-                <div class="mr-3" style="flex-shrink: 0;">
-                    <img src="https://via.placeholder.com/80" class="rounded-circle" alt="Foto del docente">
-                </div>
-    
                 <!-- Nombre del docente -->
                 <div class="flex-grow-1">
                     <h5 class="mb-0">{{ profesor.nombre }} {{ profesor.segundo_nombre }} {{ profesor.apellido }} {{ profesor.segundo_apellido }}</h5>
@@ -67,9 +62,6 @@
         </div>
         {% endfor %}
     </div>
-    
-
-
     
 <!-- Modal para agregar nuevo docente -->
 <div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel" aria-hidden="true">
