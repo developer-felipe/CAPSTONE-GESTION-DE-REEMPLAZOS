@@ -9,6 +9,7 @@ class Command(BaseCommand):
 CREATE TABLE IF NOT EXISTS asignatura (
     id_asignatura       INT AUTO_INCREMENT PRIMARY KEY,
     nombre_asignatura   VARCHAR(24) NOT NULL
+    sigla_asignatura   VARCHAR(26) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS dia_semana (
