@@ -20,6 +20,16 @@ def login_view(request):
 
 
 def docente_view(request):
+    modulos = Modulo.objects.all()
+    dias = DiaSemana.objects.all()
+    profesores = Profesor.objects.all()
+
+    context = {
+        'modulos': modulos,
+        'dias': dias,
+        'profesores': profesores,
+    }
+
     if request.method == 'POST':
         if 'eliminar' in request.POST:
             id_profesor = request.POST.get('id_profesor')
@@ -29,12 +39,11 @@ def docente_view(request):
                 messages.success(request, "Profesor eliminado exitosamente.")
             except Profesor.DoesNotExist:
                 messages.error(request, "El profesor no existe.")
-                
         else:
             nombre = request.POST.get('primer_nombre').strip().capitalize()
             segundo_nombre = request.POST.get('segundo_nombre').strip().capitalize() 
             apellido = request.POST.get('primer_apellido').strip().capitalize()
-            segundo_apellido = request.POST.get('segundo_apellido').strip().capitalize() 
+            segundo_apellido = request.POST.get('segundo_apellido').strip().capitalize()
 
             if not nombre or not apellido:
                 messages.error(request, 'Los nombres y apellidos son obligatorios.')
@@ -48,14 +57,12 @@ def docente_view(request):
             )
             nuevo_profesor.save()
             messages.success(request, "Profesor agregado exitosamente.")
-        return redirect('docente')
-    
-    profesores = Profesor.objects.all()
-    return render(request, 'templates/docente.html', {'profesores': profesores})
 
+    return render(request, 'templates/docente.html', context)
 
 def reemplazos_view(request):
     return render(request, 'templates/gestion_reemplazo.html')
+
 
 def recuperacion_view(request):
     return render(request, 'templates/gestion_recuperacion.html')
@@ -64,21 +71,14 @@ def recuperacion_view(request):
 def reportes_view(request):
     return render(request, 'templates/reportes.html')
 
+
 def base_view(request):
     return render(request, 'templates/base.html')
+
 
 def CustomLogoutView(request):
     return render(request, 'templates/login.html')
 
-def horario_view(request):
-    modulos = Modulo.objects.all()
-    dias = DiaSemana.objects.all()
-    
-    context = {
-        'modulos' : modulos,
-        'dias' : dias
-    }
-    return render(request, 'templates/horario.html',context)
 
 def asignatura_view(request):
     if request.method == 'GET':
@@ -98,6 +98,7 @@ def asignatura_view(request):
             return JsonResponse({'error': 'Nombre de asignatura no proporcionado'}, status=400)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
 
 def sala_view(request):
     if request.method == 'GET':
