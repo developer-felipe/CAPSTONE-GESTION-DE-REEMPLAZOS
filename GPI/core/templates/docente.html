@@ -31,7 +31,7 @@
 
     <!-- Botón para abrir el modal de Agregar Profesor -->
     <div class="d-flex justify-content-end mb-3">
-        <button type="button" class="btn btn-dark btn-lg" data-toggle="modal" data-target="#modalProfe">
+        <button type="button" class="btn btn-dark btn-lg" data-bs-toggle="modal" data-bs-target="#modalProfe1">
             Agregar Profesor
         </button>
     </div>
@@ -64,100 +64,139 @@
     {% endfor %}
 </div>
 
-<!-- Modal para agregar nuevo docente -->
-<div class="modal fade" id="modalProfe" tabindex="-1" aria-labelledby="extraLargeModalLabel" aria-hidden="true">
+<!-- Modal para agregar nuevo docente con Tabs -->
+<div class="modal fade" id="modalProfe1" tabindex="-1" aria-labelledby="extraLargeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="extraLargeModalLabel">Agregar Nuevo Docente</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="">
-                    {% csrf_token %}
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Primer Nombre</th>
-                                <th>Segundo Nombre</th>
-                                <th>Primer Apellido</th>
-                                <th>Segundo Apellido</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><input type="text" name="primer_nombre" class="form-control"
-                                        placeholder="Primer Nombre"></td>
-                                <td><input type="text" name="segundo_nombre" class="form-control"
-                                        placeholder="Segundo Nombre"></td>
-                                <td><input type="text" name="primer_apellido" class="form-control"
-                                        placeholder="Primer Apellido"></td>
-                                <td><input type="text" name="segundo_apellido" class="form-control"
-                                        placeholder="Segundo Apellido"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="text-right">
-                        <!-- Botón "Siguiente" que abre el modal del horario -->
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalHorario"
-                            onclick="$('#modalProfe').modal('hide');">
-                            Siguiente
-                        </button>
+                <!-- Contenedor de Tabs -->
+                <ul class="nav nav-tabs" id="tabContent">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="docente-tab" data-bs-toggle="tab" data-bs-target="#docente" type="button">Docente</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="horario-tab" data-bs-toggle="tab" data-bs-target="#horario" type="button" disabled>Horario</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="asignar-tab" data-bs-toggle="tab" data-bs-target="#asignar" type="button" disabled>Asignar Horario</button>
+                    </li>
+                </ul>
+
+                <!-- Contenido de Tabs -->
+                <div class="tab-content mt-3">
+                    <!-- Tab para Docente -->
+                    <div class="tab-pane fade show active" id="docente" role="tabpanel">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Primer Nombre</th>
+                                        <th>Segundo Nombre</th>
+                                        <th>Primer Apellido</th>
+                                        <th>Segundo Apellido</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="text" name="primer_nombre" class="form-control"
+                                                placeholder="Primer Nombre" oninput="toggleSiguienteButton()"></td>
+                                        <td><input type="text" name="segundo_nombre" class="form-control"
+                                                placeholder="Segundo Nombre"></td>
+                                        <td><input type="text" name="primer_apellido" class="form-control"
+                                                placeholder="Primer Apellido" oninput="toggleSiguienteButton()"></td>
+                                        <td><input type="text" name="segundo_apellido" class="form-control"
+                                                placeholder="Segundo Apellido"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="text-right">
+                                <button type="button" id="siguienteButton" class="btn btn-primary" 
+                                        data-bs-toggle="tab" data-bs-target="#horario" disabled>Ir a Horario</button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+
+                    <!-- Tab para Horario -->
+                    <div class="tab-pane fade" id="horario" role="tabpanel">
+                        <h5>Asignar Horario</h5>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    {% for dia in dias %}
+                                    <th id="{{dia.id_dia}}">{{ dia.nombre_dia }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for modulo in modulos %}
+                                <tr>
+                                    <th scope="row" id="{{modulo.id_modulo}}">{{ modulo.hora_modulo }}</th>
+                                    {% for dia in dias %}
+                                    <td>
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="tab" data-bs-target="#asignar" data-modulo-id="{{ modulo.id_modulo }}" data-dia-id="{{ dia.id_dia }}">
+                                            <span class="material-icons me-2">add</span>
+                                        </button>
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div class="text-right">
+                            <button type="button" class="btn btn-primary">Guardar Horario</button>
+                        </div>
+                    </div>
+
+                    <!-- Tab para Asignar Horario -->
+                    <div class="tab-pane fade" id="asignar" role="tabpanel">
+                        <h5>Asignar Horario</h5>
+                        <form id="bloque">
+                            <div class="mb-3">
+                                <label for="asignatura" class="col-form-label">Asignatura</label>
+                                <select class="form-control" id="asignatura" onchange="checkOption(this, 'agregarModal')">
+                                    <!-- Opciones de asignatura se deben llenar aquí -->
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="jornada" class="col-form-label">Jornada</label>
+                                <select class="form-control" id="jornada">
+                                    <option value="">Selecciona una jornada</option>
+                                    <option value="d">Diurno</option>
+                                    <option value="v">Vespertino</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="seccion" class="col-form-label">Sección</label>
+                                <input type="number" class="form-control" id="seccion" placeholder="Sección"
+                                    aria-label="seccion" min="1" max="999" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="sala" class="col-form-label">Sala</label>
+                                <select class="form-control" id="sala" onchange="checkOption(this, 'agregarSalaModal')">
+                                    <!-- Opciones de sala se deben llenar aquí -->
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal para agregar horario -->
-<div class="modal fade" id="modalHorario" tabindex="-1" aria-labelledby="horarioModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="horarioModalLabel">Asignar Horario</h5>
-                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            {% for dia in dias %}
-                            <th id="{{dia.id_dia}}">{{ dia.nombre_dia }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for modulo in modulos %}
-                        <tr>
-                            <th scope="row" id="{{modulo.id_modulo}}">{{ modulo.hora_modulo }}</th>
-                            {% for dia in dias %}
-                            <td>
-                                <button type="button" class="btn btn-primary" data-toggle="modal"
-                                    data-target="#modalHorario" data-modulo-id="{{ modulo.id_modulo }}"
-                                    data-dia-id="{{ dia.id_dia }}">
-                                    <span class="material-icons me-2">add</span>
-                                </button>
-                            </td>
-                            {% endfor %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="submitHorario()">Guardar Horario</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-            </div>
-        </div>
-    </div>
-</div>
+
+
 
 <!-- Modal para agregar licencia -->
 <div class="modal fade" id="licenciaModal" tabindex="-1" aria-labelledby="licenciaModalLabel" aria-hidden="true">
@@ -271,27 +310,72 @@
 
 </div>
 
-<!-- Script para mostrar el modal de mensajes si hay algún mensaje -->
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Bootstrap JS -->
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" 
-    integrity="sha384-UO2eT0CpHqdSJQ6h" ></script>
-
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 
 <script>
-    $(document).ready(function () {
-        // Función para formatear el número de la sección
-        document.getElementById('seccion').addEventListener('blur', function () {
-            let value = this.value;
 
-            if (!isNaN(value) && value !== '') {
-                this.value = value.padStart(3, '0');
-            }
+    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(function(button) {
+        button.addEventListener('click', function(event) {
+          const modalId = this.getAttribute('data-bs-target');
+          const modalElement = document.querySelector(modalId);
+          if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+          } else {
+            console.error(`No se encontró el modal con id: ${modalId}`);
+          }
         });
-    });
+      });
+      
+      document.addEventListener('hidden.bs.modal', function(event) {
+        const openModals = document.querySelectorAll('.modal.show');
+        if (openModals.length === 0) {
+          const backdrop = document.querySelector('.modal-backdrop');
+          if (backdrop) {
+            backdrop.remove();
+          }
+          document.body.classList.remove('modal-open');
+        }
+      });
 
+
+      // Función para habilitar el botón "Siguiente" y los tabs
+// Función para habilitar el botón "Siguiente" y los tabs
+function toggleSiguienteButton() {
+    const primerNombre = document.querySelector('[name="primer_nombre"]').value;
+    const primerApellido = document.querySelector('[name="primer_apellido"]').value;
+    const siguienteButton = document.getElementById('siguienteButton');
+    const horarioTabButton = document.getElementById('horario-tab');
+    const asignarTabButton = document.getElementById('asignar-tab');
+
+    // Habilitar botón "Ir a Horario" y tabs de "Horario" y "Asignar Horario"
+    if (primerNombre && primerApellido) {
+        siguienteButton.disabled = false;
+        horarioTabButton.disabled = false; // Habilitar el tab de Horario
+        asignarTabButton.disabled = false; // Habilitar el tab de Asignar Horario
+    } else {
+        siguienteButton.disabled = true;
+        horarioTabButton.disabled = true; // Deshabilitar el tab de Horario
+        asignarTabButton.disabled = true; // Deshabilitar el tab de Asignar Horario
+    }
+}
+
+// Asegúrate de que la pestaña se active cuando se hace clic en el botón "Siguiente"
+document.getElementById('siguienteButton').addEventListener('click', function() {
+    // Activar la pestaña de Horario
+    const tabHorarios = new bootstrap.Tab(document.getElementById('horario-tab'));
+    tabHorarios.show(); // Cambia a la pestaña de Horario
+});
+
+// Función para cambiar a la pestaña de "Asignar Horario" después de hacer clic en el botón "add" dentro de Horario
+document.querySelectorAll('[data-bs-toggle="tab"][data-bs-target="#asignar"]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        // Cambiar automáticamente a la pestaña de "Asignar Horario"
+        const tabAsignar = new bootstrap.Tab(document.getElementById('asignar-tab'));
+        tabAsignar.show(); // Cambia a la pestaña de Asignar Horario
+    });
+});
 
     function getCookie(name) {
         let cookieValue = null;
@@ -314,12 +398,6 @@
         obtenerAsignaturas();
         obtenerSalas();
     });
-
-    function checkOption(select, modalId) {
-        if (select.value === 'agregar') {
-            $(`#${modalId}`).modal('show');
-        }
-    }
 
     function obtenerAsignaturas() {
         $.ajax({
@@ -419,20 +497,7 @@
             let formattedValue = String(value).padStart(3, '0');
             this.value = formattedValue;
         }
-    });
-
-    $(document).ready(function () {
-        $(document).on('click', '[data-toggle="modal"]', function () {
-            abrirModal(this);
-        });
-    });
-
-    function abrirModal(button) {
-        const moduloId = button.getAttribute('data-modulo-id');
-        const diaId = button.getAttribute('data-dia-id');
-        console.log(diaId, moduloId)
-        $('#modalHorario').modal('show');
-    }
+    });      
 
     function addBloque() {
         const asignatura = document.getElementById('asignatura').value;
@@ -467,7 +532,7 @@
             }
         });
     }
-    
+
 </script>
 
 {% endblock %}
