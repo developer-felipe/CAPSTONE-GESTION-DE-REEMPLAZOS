@@ -209,25 +209,26 @@
             <div class="modal-body">
                 <form method="POST" action="{% url 'guardar_licencia' %}" id="licenciaForm">
                     {% csrf_token %}
+                    
                     <!-- Campo oculto para el id del profesor -->
-                    <input type="hidden" id="idProfesor" name="profesor_id_profesor" value="{{ profesor_id }}">
-
+                    <input type="hidden" id="idProfesor" name="profesor_id_profesor">
+    
                     <!-- Campos del formulario para agregar licencia -->
                     <div class="mb-3">
                         <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
-                        <input type="date" class="form-control" id="fechaInicio" name="fecha_inicio">
+                        <input type="date" class="form-control" id="fechaInicio" name="fecha_inicio" required>
                     </div>
                     <div class="mb-3">
                         <label for="fechaFin" class="form-label">Fecha de Término</label>
-                        <input type="date" class="form-control" id="fechaFin" name="fecha_fin">
+                        <input type="date" class="form-control" id="fechaFin" name="fecha_fin" required>
                     </div>
                     <div class="mb-3">
                         <label for="motivo" class="form-label">Motivo</label>
-                        <textarea class="form-control" id="motivo" name="motivo" rows="3"></textarea>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="observaciones" class="form-label">Observaciones</label>
-                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
+                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3" required></textarea>
                     </div>
                     <div class="text-right">
                         <button type="button" class="btn btn-primary" onclick="guardarLicencia()">Guardar Licencia</button>
@@ -237,6 +238,7 @@
         </div>
     </div>
 </div>
+
 
 
 <!-- Modal para Agregar Nueva Asignatura -->
@@ -320,55 +322,88 @@
 <script>
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Obtenemos el botón que abre el modal
-    const btnAbrirModal = document.getElementById('agregarLicenciaBtn');
+    // Obtener los campos de fecha de inicio y fecha de término
+    const fechaInicioInput = document.getElementById('fechaInicio');
+    const fechaFinInput = document.getElementById('fechaFin');
+
+    // Función para validar las fechas
+    function validarFechas() {
+        const fechaInicio = new Date(fechaInicioInput.value);
+        const fechaFin = new Date(fechaFinInput.value);
+
+        // Verificar si la fecha de término es anterior a la de inicio
+        if (fechaFin < fechaInicio) {
+            fechaFinInput.setCustomValidity("La fecha de término no puede ser anterior a la de inicio.");
+            // Opcional: Puedes mostrar un mensaje de error
+            fechaFinInput.reportValidity();
+        } else {
+            fechaFinInput.setCustomValidity("");  // Resetea el mensaje de error
+        }
+    }
+
+    // Asignar eventos de cambio para validar las fechas
+    fechaInicioInput.addEventListener('input', validarFechas);
+    fechaFinInput.addEventListener('input', validarFechas);
+});
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Obtenemos todos los botones que abren el modal
+    const botonesAbrirModal = document.querySelectorAll('.btn-primary[data-id]');  // Seleccionamos todos los botones con clase btn-primary y atributo data-id
     
     // Obtenemos el modal
     const licenciaModal = new bootstrap.Modal(document.getElementById('licenciaModal'));
 
-    // Escuchamos el clic en el botón
-    btnAbrirModal.addEventListener('click', function (event) {
-        // Obtenemos el id del profesor desde el atributo data-id
-        const profesorId = event.target.getAttribute('data-id');
-        
-        // Asignamos el id del profesor al campo oculto
-        document.getElementById('idProfesor').value = profesorId;
-        
-        // Abrimos el modal
-        licenciaModal.show();
+    // Recorremos todos los botones y añadimos el evento
+    botonesAbrirModal.forEach(function(btn) {
+        btn.addEventListener('click', function (event) {
+            // Obtenemos el id del profesor desde el atributo data-id
+            const profesorId = event.target.getAttribute('data-id');
+            
+            // Asignamos el id del profesor al campo oculto
+            document.getElementById('idProfesor').value = profesorId;
+            
+            // Abrimos el modal
+            licenciaModal.show();
+        });
     });
 });
 
-// Cuando el modal se abra, asignamos el id del profesor al campo oculto
-$('#licenciaModal').on('show.bs.modal', function (event) {
-    var button = $(event.relatedTarget);  // El botón que activó el modal
-    var profesorId = button.data('id');  // Obtén el id del profesor del atributo data-id
-
-    var modal = $(this);
-    modal.find('#idProfesor').val(profesorId);  // Asigna el id al campo oculto en el formulario
-});
-
-
 function guardarLicencia() {
     const form = document.getElementById('licenciaForm');
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;  // Obtener el token CSRF
-    const formData = new FormData(form);  // Recoger los datos del formulario
+    
+    const fechaInicio = new Date(document.getElementById('fechaInicio').value);
+    const fechaFin = new Date(document.getElementById('fechaFin').value);
+    
+    // Verificar si la fecha de término es anterior a la de inicio
+    if (fechaFin < fechaInicio) {
+        alert("La fecha de término no puede ser anterior a la de inicio.");
+        return;  // Detener el envío del formulario
+    }
 
-    // Enviar la solicitud AJAX
+    // Si las fechas son correctas, continuamos con el envío
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value; // Asegúrate de obtener el token CSRF
+    const formData = new FormData(form); // Obtener los datos del formulario
+
     fetch(form.action, {
         method: 'POST',
-        body: formData,  // Enviar los datos del formulario con FormData
+        body: formData, // Pasar el formulario con FormData
         headers: {
-            'X-CSRFToken': csrftoken  // Incluir el token CSRF en la solicitud
+            'X-CSRFToken': csrftoken
         }
     })
-    .then(response => response.json())  // Procesar la respuesta JSON
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             alert("Licencia guardada con éxito.");
-            $('#licenciaModal').modal('hide');  // Cerrar el modal
+            $('#licenciaModal').modal('hide'); // Cerrar el modal
         } else {
-            alert("Hubo un error al guardar la licencia: " + (data.error || "Error desconocido"));
+            alert("Hubo un error al guardar la licencia.");
         }
     })
     .catch(error => {
@@ -376,6 +411,7 @@ function guardarLicencia() {
         alert("Ocurrió un problema al intentar guardar la licencia.");
     });
 }
+
 
 
     document.querySelectorAll('[data-bs-toggle="modal"]').forEach(function(button) {
