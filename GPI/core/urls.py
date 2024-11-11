@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path
-from .views import login_view, reemplazos_view, recuperacion_view, base_view, docente_view, reportes_view, CustomLogoutView, asignatura_view, sala_view, crear_docente_view, crear_profesor_y_horarios
+from .views import login_view, reemplazos_view,guardar_licencia ,recuperacion_view, base_view, docente_view, reportes_view, CustomLogoutView,asignatura_view, sala_view, crear_docente_view, crear_profesor_y_horarios
 
 
 urlpatterns = [
@@ -14,6 +14,8 @@ urlpatterns = [
     path('reportes/', reportes_view, name='reportes'),
     path('asignaturas/', asignatura_view, name='asignatura_list'),
     path('salas/', sala_view, name='sala_list'),
+    path('guardar_licencia/', guardar_licencia, name='guardar_licencia'),
+    path('profesor/<int:profesor_id>/guardar_licencia/', guardar_licencia, name='guardar_licencia'),
     path('crear_docente/', crear_docente_view, name='crear_docente'),
     path('crear_profesor_y_horarios/',crear_profesor_y_horarios, name='crear_docente_horario')
 ]

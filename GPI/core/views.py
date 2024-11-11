@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.http import JsonResponse
-from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Semestre
+from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Semestre, Licencia
 import json
 import logging
 
@@ -61,6 +61,41 @@ def docente_view(request):
             messages.success(request, "Profesor agregado exitosamente.")
 
     return render(request, 'templates/docente.html', context)
+
+
+
+
+def guardar_licencia(request):
+    if request.method == 'POST':
+        # Obtener los datos del formulario
+        profesor_id = request.POST.get('profesor_id_profesor')  # ID del profesor
+        fecha_inicio = request.POST.get('fecha_inicio')
+        fecha_termino = request.POST.get('fecha_fin')
+        motivo = request.POST.get('motivo')
+        observaciones = request.POST.get('observaciones')
+        
+        # Verificar que se haya recibido el ID del profesor
+        if not profesor_id:
+            return JsonResponse({'success': False, 'error': 'Falta el ID del profesor'})
+
+        # Obtener el profesor o devolver error si no existe
+        profesor = get_object_or_404(Profesor, id_profesor=profesor_id)
+
+        # Crear la licencia
+        try:
+            nueva_licencia = Licencia.objects.create(
+                profesor_id_profesor=profesor,
+                fecha_inicio=fecha_inicio,
+                fecha_termino=fecha_termino,
+                motivo=motivo,
+                observaciones=observaciones
+            )
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    # Si no es un POST, devuelve un error
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 def reemplazos_view(request):
     return render(request, 'templates/gestion_reemplazo.html')

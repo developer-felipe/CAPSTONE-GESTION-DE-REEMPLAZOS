@@ -48,9 +48,9 @@
 
             <!-- Botones alineados a la derecha con mayor separación -->
             <div class="d-flex" style="gap: 20px;">
-                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#licenciaModal">
+                <button type="button" class="btn btn-primary" id="agregarLicenciaBtn" data-id="{{ profesor.id_profesor }}">
                     Agregar Licencia
-                </button>
+                </button>                
                 <button type="button" class="btn btn-success">Modificar</button>
                 <form method="POST" style="display:inline;"
                     onsubmit="return confirm('¿Estás seguro de que deseas eliminar este docente?');">
@@ -204,11 +204,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="licenciaModalLabel">Agregar Licencia</h5>
-                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="">
+                <form method="POST" action="{% url 'guardar_licencia' %}" id="licenciaForm">
                     {% csrf_token %}
+                    <!-- Campo oculto para el id del profesor -->
+                    <input type="hidden" id="idProfesor" name="profesor_id_profesor" value="{{ profesor_id }}">
+
                     <!-- Campos del formulario para agregar licencia -->
                     <div class="mb-3">
                         <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
@@ -227,13 +230,14 @@
                         <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
                     </div>
                     <div class="text-right">
-                        <button type="submit" class="btn btn-primary">Guardar Licencia</button>
+                        <button type="button" class="btn btn-primary" onclick="guardarLicencia()">Guardar Licencia</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- Modal para Agregar Nueva Asignatura -->
 <div class="modal fade" id="agregarModal" tabindex="-1" aria-labelledby="agregarModalLabel" aria-hidden="true">
@@ -314,6 +318,65 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 
 <script>
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Obtenemos el botón que abre el modal
+    const btnAbrirModal = document.getElementById('agregarLicenciaBtn');
+    
+    // Obtenemos el modal
+    const licenciaModal = new bootstrap.Modal(document.getElementById('licenciaModal'));
+
+    // Escuchamos el clic en el botón
+    btnAbrirModal.addEventListener('click', function (event) {
+        // Obtenemos el id del profesor desde el atributo data-id
+        const profesorId = event.target.getAttribute('data-id');
+        
+        // Asignamos el id del profesor al campo oculto
+        document.getElementById('idProfesor').value = profesorId;
+        
+        // Abrimos el modal
+        licenciaModal.show();
+    });
+});
+
+// Cuando el modal se abra, asignamos el id del profesor al campo oculto
+$('#licenciaModal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);  // El botón que activó el modal
+    var profesorId = button.data('id');  // Obtén el id del profesor del atributo data-id
+
+    var modal = $(this);
+    modal.find('#idProfesor').val(profesorId);  // Asigna el id al campo oculto en el formulario
+});
+
+
+function guardarLicencia() {
+    const form = document.getElementById('licenciaForm');
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;  // Obtener el token CSRF
+    const formData = new FormData(form);  // Recoger los datos del formulario
+
+    // Enviar la solicitud AJAX
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,  // Enviar los datos del formulario con FormData
+        headers: {
+            'X-CSRFToken': csrftoken  // Incluir el token CSRF en la solicitud
+        }
+    })
+    .then(response => response.json())  // Procesar la respuesta JSON
+    .then(data => {
+        if (data.success) {
+            alert("Licencia guardada con éxito.");
+            $('#licenciaModal').modal('hide');  // Cerrar el modal
+        } else {
+            alert("Hubo un error al guardar la licencia: " + (data.error || "Error desconocido"));
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Ocurrió un problema al intentar guardar la licencia.");
+    });
+}
+
 
     document.querySelectorAll('[data-bs-toggle="modal"]').forEach(function(button) {
         button.addEventListener('click', function(event) {
