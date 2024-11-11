@@ -363,6 +363,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+
 function guardarLicencia() {
     const form = document.getElementById('licenciaForm');
     
@@ -393,7 +394,14 @@ function guardarLicencia() {
     .then(data => {
         if (data.success) {
             alert("Licencia guardada con éxito.");
+
             $('#licenciaModal').modal('hide'); 
+
+            document.getElementById('fechaInicio').value = '';
+            document.getElementById('fechaFin').value = '';
+            document.getElementById('motivo').value = '';
+            document.getElementById('observaciones').value = '';
+
         } else {
             alert("Hubo un error al guardar la licencia.");
         }
