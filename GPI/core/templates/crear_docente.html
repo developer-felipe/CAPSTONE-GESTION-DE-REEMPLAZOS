@@ -7,7 +7,7 @@
     <form id="form-profesor">
         <div class="form-nombre pt-2">
             <label for="primer_nombre" data-last="{{ ultimo_id }}">Primer Nombre</label>
-            <input type="text" id="primer_nombre" name="primer_nombre" class="form-control">
+            <input type="text" id="primer_nombre" name="primer_nombre" class="form-control" required>
         </div>
         <div class="form-group pt-3">
             <label for="segundo_nombre">Segundo Nombre</label>
@@ -15,7 +15,7 @@
         </div>
         <div class="form-group pt-3">
             <label for="primer_apellido">Primer Apellido</label>
-            <input type="text" id="primer_apellido" name="primer_apellido" class="form-control">
+            <input type="text" id="primer_apellido" name="primer_apellido" class="form-control" required>
         </div>
         <div class="form-group pt-3">
             <label for="segundo_apellido">Segundo Apellido</label>
@@ -254,11 +254,15 @@
     $(document).ready(function () {
     const ultimoId = $('label[for="primer_nombre"]').data('last');
     $('#btn-horario').on('click', function () {
+        if ($('#primer_nombre').val().trim() === '' || $('#primer_apellido').val().trim() === '') {
+    alert('El primer nombre y el primer apellido son obligatorios.');
+    return;
+    }
         const datosFormulario = {
             profesor: {
                 id: ultimoId,
-                nombre: $('#primer_nombre').val(),
-                apellido: $('#primer_apellido').val(),
+                nombre: $('#primer_nombre').val().trim(),
+                apellido: $('#primer_apellido').val().trim(),
                 segundo_nombre: $('#segundo_nombre').val() || '',
                 segundo_apellido: $('#segundo_apellido').val() || ''
             },
@@ -327,27 +331,35 @@
     });
 
     function addAsignatura() {
-        const nuevaAsignatura = document.getElementById('nueva-asignatura').value;
-        if (nuevaAsignatura.trim() === '') {
-            alert('Por favor, ingrese un nombre para la asignatura.');
-            return;
-        }
-        $.ajax({
-            url: '/asignaturas/',
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
-            contentType: 'application/json',
-            data: JSON.stringify({ nombre: nuevaAsignatura }),
-            success: function (response) {
-                alert('Asignatura agregada: ' + nuevaAsignatura);
-                $('#agregarAsignatura').modal('hide');
-            },
-            error: function (error) {
-                console.log('Error al agregar asignatura:', error);
-                alert('Hubo un error al agregar la asignatura.');
-            }
-        });
+    const nuevaAsignatura = document.getElementById('nueva-asignatura').value;
+    
+    if (nuevaAsignatura.trim() === '') {
+        alert('Por favor, ingrese un nombre para la asignatura.');
+        return;
     }
+    
+    $.ajax({
+        url: '/asignaturas/', 
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrftoken },
+        contentType: 'application/json',
+        data: JSON.stringify({ nombre: nuevaAsignatura }),
+        success: function (response) {
+            alert('Asignatura agregada: ' + nuevaAsignatura);
+            
+            const newOption = new Option(nuevaAsignatura, response.id);  
+            $('#asignatura').append(newOption); 
+            
+            document.getElementById('nueva-asignatura').value = '';
+            
+            $('#agregarAsignatura').modal('hide');
+        },
+        error: function (error) {
+            console.log('Error al agregar asignatura:', error);
+            alert('Hubo un error al agregar la asignatura.');
+        }
+    });
+}
 
     function addSala() {
         let nuevaSala = document.getElementById('nueva-sala').value;

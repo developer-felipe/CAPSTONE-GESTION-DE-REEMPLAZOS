@@ -37,8 +37,12 @@ def docente_view(request):
             id_profesor = request.POST.get('id_profesor')
             try:
                 profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
+
+                Licencia.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
+
                 profesor_a_eliminar.delete()
-                messages.success(request, "Profesor eliminado exitosamente.")
+
+                messages.success(request, "Profesor y sus licencias eliminadas exitosamente.")
             except Profesor.DoesNotExist:
                 messages.error(request, "El profesor no existe.")
         else:
@@ -67,21 +71,17 @@ def docente_view(request):
 
 def guardar_licencia(request):
     if request.method == 'POST':
-        # Obtener los datos del formulario
-        profesor_id = request.POST.get('profesor_id_profesor')  # ID del profesor
+        profesor_id = request.POST.get('profesor_id_profesor')  
         fecha_inicio = request.POST.get('fecha_inicio')
         fecha_termino = request.POST.get('fecha_fin')
         motivo = request.POST.get('motivo')
         observaciones = request.POST.get('observaciones')
         
-        # Verificar que se haya recibido el ID del profesor
         if not profesor_id:
             return JsonResponse({'success': False, 'error': 'Falta el ID del profesor'})
 
-        # Obtener el profesor o devolver error si no existe
         profesor = get_object_or_404(Profesor, id_profesor=profesor_id)
 
-        # Crear la licencia
         try:
             nueva_licencia = Licencia.objects.create(
                 profesor_id_profesor=profesor,
@@ -94,8 +94,9 @@ def guardar_licencia(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
 
-    # Si no es un POST, devuelve un error
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
+
+
 
 def reemplazos_view(request):
     return render(request, 'templates/gestion_reemplazo.html')
