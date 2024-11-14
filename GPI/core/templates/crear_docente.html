@@ -2,6 +2,22 @@
 {% block title %}Gestión de Reemplazo{% endblock %}
 {% block content %}
 
+
+{% if messages %}
+    <div id="toast-container" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; max-width: 350px; width: 100%;">
+        {% for message in messages %}
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: #007bff; color: white; border-radius: 10px; margin-bottom: 10px;">
+                <div class="toast-header" style="background-color: #0056b3; color: white; border-radius: 10px 10px 0 0;">
+                    
+                </div>
+                <div class="toast-body">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
 <div id="div-docente" class="container pt-5">
     <h3>Asignar nuevo Profesor</h3>
     <form id="form-profesor">
@@ -155,6 +171,15 @@
     </div>
 </div>
 
+<!-- Toastr CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+
+<!-- jQuery (Toastr depende de jQuery) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<!-- Toastr JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 
@@ -211,7 +236,7 @@
             actualizarBloque(moduloID, diaID, asignaturaSelect.options[asignaturaSelect.selectedIndex].text, jornadaSelect, salaSelect.options[salaSelect.selectedIndex].text, seccionSelect);
             $('#asignar').modal('hide');
         } else {
-            alert('Por favor, completa todos los campos.');
+            toastr.error('Por favor, completa todos los campos.');
         }
     });
 
@@ -255,7 +280,7 @@
     const ultimoId = $('label[for="primer_nombre"]').data('last');
     $('#btn-horario').on('click', function () {
         if ($('#primer_nombre').val().trim() === '' || $('#primer_apellido').val().trim() === '') {
-    alert('El primer nombre y el primer apellido son obligatorios.');
+    toastr.error('El primer nombre y el primer apellido son obligatorios.');
     return;
     }
         const datosFormulario = {
@@ -277,12 +302,12 @@
                     'X-CSRFToken': csrftoken
                 },
                 success: function (data) {
-                    alert('Profesor y horarios creados exitosamente!');
+                    toastr.success('Profesor y horarios creados exitosamente!');
                     console.log(data);
                 },
                 error: function (xhr, status, error) {
                     console.error('Error:', error);
-                    alert('Hubo un error al crear el profesor y los horarios.');
+                    toastr.error('Hubo un error al crear el profesor y los horarios.');
                 }
             });
         });
@@ -334,7 +359,7 @@
     const nuevaAsignatura = document.getElementById('nueva-asignatura').value;
     
     if (nuevaAsignatura.trim() === '') {
-        alert('Por favor, ingrese un nombre para la asignatura.');
+        toastr.error('Por favor, ingrese un nombre para la asignatura.');
         return;
     }
     
@@ -345,7 +370,7 @@
         contentType: 'application/json',
         data: JSON.stringify({ nombre: nuevaAsignatura }),
         success: function (response) {
-            alert('Asignatura agregada: ' + nuevaAsignatura);
+            toastr.success('Asignatura agregada: ' + nuevaAsignatura);
             
             const newOption = new Option(nuevaAsignatura, response.id);  
             $('#asignatura').append(newOption); 
@@ -356,7 +381,7 @@
         },
         error: function (error) {
             console.log('Error al agregar asignatura:', error);
-            alert('Hubo un error al agregar la asignatura.');
+            toastr.error('Hubo un error al agregar la asignatura.');
         }
     });
 }
@@ -364,7 +389,7 @@
     function addSala() {
         let nuevaSala = document.getElementById('nueva-sala').value;
         if (nuevaSala.trim() === '') {
-            alert('Por favor, ingrese un número para la sala.');
+            toastr.error('Por favor, ingrese un número para la sala.');
             return;
         }
         nuevaSala = nuevaSala.charAt(0).toUpperCase() + nuevaSala.slice(1);
@@ -375,12 +400,12 @@
             contentType: 'application/json',
             data: JSON.stringify({ numero_sala: nuevaSala }),
             success: function (response) {
-                alert('Sala agregada: ' + nuevaSala);
+                toastr.success('Sala agregada: ' + nuevaSala);
                 $('#agregarAsignatura').modal('hide');
             },
             error: function (error) {
                 console.log('Error al agregar sala:', error);
-                alert('Hubo un error al agregar la sala.');
+                toastr.error('Hubo un error al agregar la sala.');
             }
         });
     }

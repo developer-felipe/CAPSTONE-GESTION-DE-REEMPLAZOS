@@ -4,11 +4,25 @@
 
 {% block content %}
 
+
 {% if messages %}
-{% for message in messages %}
-<div class="alert alert-success">{{ message }}</div>
-{% endfor %}
+    <div id="toast-container" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; max-width: 350px; width: 100%;">
+        {% for message in messages %}
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: #007bff; color: white; border-radius: 10px; margin-bottom: 10px;">
+                <div class="toast-header" style="background-color: #0056b3; color: white; border-radius: 10px 10px 0 0;">
+                    
+                </div>
+                <div class="toast-body">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 {% endif %}
+
+
+{% load static %}
+
 
 <!-- Contenedor principal para el perfil de los docentes -->
 <div class="container mt-4">
@@ -65,142 +79,7 @@
     {% endfor %}
 </div>
 
-<!-- Modal para agregar nuevo docente con Tabs -->
-<div class="modal fade" id="modalProfe1" tabindex="-1" aria-labelledby="extraLargeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="extraLargeModalLabel">Agregar Nuevo Docente</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <!-- Contenedor de Tabs -->
-                <ul class="nav nav-tabs" id="tabContent">
-                    <li class="nav-item">
-                        <button class="nav-link active" id="docente-tab" data-bs-toggle="tab" data-bs-target="#docente"
-                            type="button">Docente</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" id="horario-tab" data-bs-toggle="tab" data-bs-target="#horario"
-                            type="button" disabled>Horario</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" id="asignar-tab" data-bs-toggle="tab" data-bs-target="#asignar"
-                            type="button" disabled>Asignar Horario</button>
-                    </li>
-                </ul>
 
-                <!-- Contenido de Tabs -->
-                <div class="tab-content mt-3">
-                    <!-- Tab para Docente -->
-                    <div class="tab-pane fade show active" id="docente" role="tabpanel">
-                        <form method="POST">
-                            {% csrf_token %}
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Primer Nombre</th>
-                                        <th>Segundo Nombre</th>
-                                        <th>Primer Apellido</th>
-                                        <th>Segundo Apellido</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><input type="text" name="primer_nombre" class="form-control"
-                                                placeholder="Primer Nombre" oninput="toggleSiguienteButton()"></td>
-                                        <td><input type="text" name="segundo_nombre" class="form-control"
-                                                placeholder="Segundo Nombre"></td>
-                                        <td><input type="text" name="primer_apellido" class="form-control"
-                                                placeholder="Primer Apellido" oninput="toggleSiguienteButton()"></td>
-                                        <td><input type="text" name="segundo_apellido" class="form-control"
-                                                placeholder="Segundo Apellido"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div class="text-right">
-                                <button type="button" id="siguienteButton" class="btn btn-primary" data-bs-toggle="tab"
-                                    data-bs-target="#horario" disabled>Ir a Horario</button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Tab para Horario -->
-                    <div class="tab-pane fade" id="horario" role="tabpanel">
-                        <h5>Asignar Horario</h5>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">#</th>
-                                    {% for dia in dias %}
-                                    <th id="{{dia.id_dia}}">{{ dia.nombre_dia }}</th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for modulo in modulos %}
-                                <tr>
-                                    <th scope="row" id="{{modulo.id_modulo}}">{{ modulo.hora_modulo }}</th>
-                                    {% for dia in dias %}
-                                    <td>
-                                        <button type="button" class="btn btn-primary" data-bs-toggle="tab"
-                                            data-bs-target="#asignar" data-modulo-id="{{ modulo.id_modulo }}"
-                                            data-dia-id="{{ dia.id_dia }}">
-                                            <span class="material-icons me-2">add</span>
-                                        </button>
-                                    </td>
-                                    {% endfor %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        <div class="text-right">
-                            <button type="button" class="btn btn-primary">Guardar Horario</button>
-                        </div>
-                    </div>
-
-                    <!-- Tab para Asignar Horario -->
-                    <div class="tab-pane fade" id="asignar" role="tabpanel">
-                        <h5>Asignar Horario</h5>
-                        <form id="bloque">
-                            <div class="mb-3">
-                                <label for="asignatura" class="col-form-label">Asignatura</label>
-                                <select class="form-control" id="asignatura"
-                                    onchange="checkOption(this, 'agregarModal')">
-                                    <!-- Opciones de asignatura se deben llenar aquí -->
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="jornada" class="col-form-label">Jornada</label>
-                                <select class="form-control" id="jornada">
-                                    <option value="">Selecciona una jornada</option>
-                                    <option value="d">Diurno</option>
-                                    <option value="v">Vespertino</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="seccion" class="col-form-label">Sección</label>
-                                <input type="number" class="form-control" id="seccion" placeholder="Sección"
-                                    aria-label="seccion" min="1" max="999" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="sala" class="col-form-label">Sala</label>
-                                <select class="form-control" id="sala" onchange="checkOption(this, 'agregarSalaModal')">
-                                    <!-- Opciones de sala se deben llenar aquí -->
-                                </select>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 
 
@@ -249,245 +128,29 @@
 </div>
 
 
-
-<!-- Modal para Agregar Nueva Asignatura -->
-<div class="modal fade" id="agregarModal" tabindex="-1" aria-labelledby="agregarModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="agregarModalLabel">Agregar Nueva Asignatura</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label for="nueva-asignatura" class="col-form-label">Nombre de Asignatura</label>
-                        <input type="text" class="form-control" id="nueva-asignatura">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                <button type="button" class="btn btn-primary" onclick="addAsignatura()">Agregar</button>
-            </div>
-        </div>
-    </div>
 </div>
 
-<!-- Modal para Agregar Nueva Sección -->
-<div class="modal fade" id="agregarSeccionModal" tabindex="-1" aria-labelledby="agregarSeccionModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="agregarSeccionModalLabel">Agregar Nueva Sección</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label for="nueva-seccion" class="col-form-label">Nombre de Sección</label>
-                        <input type="text" class="form-control" id="nueva-seccion">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                <button type="button" class="btn btn-primary" onclick="addSeccion()">Agregar</button>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Toastr CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
 
-<!-- Modal para Agregar Nueva Sala -->
-<div class="modal fade" id="agregarSalaModal" tabindex="-1" aria-labelledby="agregarSalaModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="agregarSalaModalLabel">Agregar Nueva Sala</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label for="nueva-sala" class="col-form-label">Nombre de Sala</label>
-                        <input type="text" class="form-control" id="nueva-sala">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                <button type="button" class="btn btn-primary" onclick="addSala()">Agregar</button>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- jQuery (Toastr depende de jQuery) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
-</div>
+<!-- Toastr JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-    crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
-    integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-    crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+
+<script src="{% static 'js/toastfun.js' %}"></script> 
+<script src="{% static 'js/licenciafun.js' %}"></script> 
+<script src="{% static 'js/modalfun.js' %}"></script> 
 <script>
 
-    document.addEventListener('DOMContentLoaded', function () {
-        // Obtener los campos de fecha de inicio y fecha de término
-        const fechaInicioInput = document.getElementById('fechaInicio');
-        const fechaFinInput = document.getElementById('fechaFin');
 
-        // Función para validar las fechas
-        function validarFechas() {
-            const fechaInicio = new Date(fechaInicioInput.value);
-            const fechaFin = new Date(fechaFinInput.value);
-
-            // Verificar si la fecha de término es anterior a la de inicio
-            if (fechaFin < fechaInicio) {
-                fechaFinInput.setCustomValidity("La fecha de término no puede ser anterior a la de inicio.");
-                // Opcional: Puedes mostrar un mensaje de error
-                fechaFinInput.reportValidity();
-            } else {
-                fechaFinInput.setCustomValidity("");  // Resetea el mensaje de error
-            }
-        }
-
-        // Asignar eventos de cambio para validar las fechas
-        fechaInicioInput.addEventListener('input', validarFechas);
-        fechaFinInput.addEventListener('input', validarFechas);
-    });
-
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const botonesAbrirModal = document.querySelectorAll('.btn-primary[data-id]');
-
-        const licenciaModal = new bootstrap.Modal(document.getElementById('licenciaModal'));
-
-        botonesAbrirModal.forEach(function (btn) {
-            btn.addEventListener('click', function (event) {
-                const profesorId = event.target.getAttribute('data-id');
-
-                document.getElementById('idProfesor').value = profesorId;
-
-                licenciaModal.show();
-            });
-        });
-    });
-
-
-    function guardarLicencia() {
-        const form = document.getElementById('licenciaForm');
-
-        const fechaInicio = new Date(document.getElementById('fechaInicio').value);
-        const fechaFin = new Date(document.getElementById('fechaFin').value);
-
-        if (fechaFin < fechaInicio) {
-            alert("La fecha de término no puede ser anterior a la de inicio.");
-            return;
-        }
-
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        const formData = new FormData(form);
-
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': csrftoken
-            }
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert("Licencia guardada con éxito.");
-
-                    $('#licenciaModal').modal('hide');
-
-                    document.getElementById('fechaInicio').value = '';
-                    document.getElementById('fechaFin').value = '';
-                    document.getElementById('motivo').value = '';
-                    document.getElementById('observaciones').value = '';
-
-                } else {
-                    alert("Hubo un error al guardar la licencia.");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("Ocurrió un problema al intentar guardar la licencia.");
-            });
-    }
-
-
-
-    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(function (button) {
-        button.addEventListener('click', function (event) {
-            const modalId = this.getAttribute('data-bs-target');
-            const modalElement = document.querySelector(modalId);
-            if (modalElement) {
-                const modal = new bootstrap.Modal(modalElement);
-                modal.show();
-            } else {
-                console.error(`No se encontró el modal con id: ${modalId}`);
-            }
-        });
-    });
-
-    document.addEventListener('hidden.bs.modal', function (event) {
-        const openModals = document.querySelectorAll('.modal.show');
-        if (openModals.length === 0) {
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
-            document.body.classList.remove('modal-open');
-        }
-    });
-
-
-    // Función para habilitar el botón "Siguiente" y los tabs
-    // Función para habilitar el botón "Siguiente" y los tabs
-    function toggleSiguienteButton() {
-        const primerNombre = document.querySelector('[name="primer_nombre"]').value;
-        const primerApellido = document.querySelector('[name="primer_apellido"]').value;
-        const siguienteButton = document.getElementById('siguienteButton');
-        const horarioTabButton = document.getElementById('horario-tab');
-        const asignarTabButton = document.getElementById('asignar-tab');
-
-        // Habilitar botón "Ir a Horario" y tabs de "Horario" y "Asignar Horario"
-        if (primerNombre && primerApellido) {
-            siguienteButton.disabled = false;
-            horarioTabButton.disabled = false; // Habilitar el tab de Horario
-            asignarTabButton.disabled = false; // Habilitar el tab de Asignar Horario
-        } else {
-            siguienteButton.disabled = true;
-            horarioTabButton.disabled = true; // Deshabilitar el tab de Horario
-            asignarTabButton.disabled = true; // Deshabilitar el tab de Asignar Horario
-        }
-    }
-
-    // Asegúrate de que la pestaña se active cuando se hace clic en el botón "Siguiente"
-    document.getElementById('siguienteButton').addEventListener('click', function () {
-        // Activar la pestaña de Horario
-        const tabHorarios = new bootstrap.Tab(document.getElementById('horario-tab'));
-        tabHorarios.show(); // Cambia a la pestaña de Horario
-    });
-
-    // Función para cambiar a la pestaña de "Asignar Horario" después de hacer clic en el botón "add" dentro de Horario
-    document.querySelectorAll('[data-bs-toggle="tab"][data-bs-target="#asignar"]').forEach(function (button) {
-        button.addEventListener('click', function () {
-            // Cambiar automáticamente a la pestaña de "Asignar Horario"
-            const tabAsignar = new bootstrap.Tab(document.getElementById('asignar-tab'));
-            tabAsignar.show(); // Cambia a la pestaña de Asignar Horario
-        });
-    });
 
     function getCookie(name) {
         let cookieValue = null;
@@ -506,144 +169,7 @@
 
     const csrftoken = getCookie('csrftoken');
 
-    $(document).ready(function () {
-        obtenerAsignaturas();
-        obtenerSalas();
-    });
-
-    function obtenerAsignaturas() {
-        $.ajax({
-            url: '/asignaturas/',
-            method: 'GET',
-            success: function (data) {
-                const select = $('#asignatura');
-                select.empty();
-                select.append('<option value="">Selecciona una asignatura</option>');
-
-                data.forEach(function (asignatura) {
-                    select.append(`<option value="${asignatura.id_asignatura}">${asignatura.nombre_asignatura}</option>`);
-                });
-                select.append('<option value="agregar">Agregar asignatura</option>');
-            },
-            error: function (error) {
-                console.log('Error al obtener asignaturas:', error);
-            }
-        });
-    }
-
-    function obtenerSalas() {
-        $.ajax({
-            url: '/salas/',
-            method: 'GET',
-            success: function (data) {
-                const select = $('#sala');
-                select.empty();
-                select.append('<option value="">Selecciona una sala</option>');
-
-                data.forEach(function (sala) {
-                    select.append(`<option value="${sala.id_sala}">${sala.numero_sala}</option>`);
-                });
-                select.append('<option value="agregar">Agregar sala</option>');
-            },
-            error: function (error) {
-                console.log('Error al obtener salas:', error);
-            }
-        });
-    }
-
-    function addAsignatura() {
-        const nuevaAsignatura = document.getElementById('nueva-asignatura').value;
-
-        if (nuevaAsignatura.trim() === '') {
-            alert('Por favor, ingrese un nombre para la asignatura.');
-            return;
-        }
-
-        $.ajax({
-            url: '/asignaturas/',
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
-            contentType: 'application/json',
-            data: JSON.stringify({ nombre: nuevaAsignatura }),
-            success: function (response) {
-                alert('Asignatura agregada: ' + nuevaAsignatura);
-                $('#agregarModal').modal('hide');
-            },
-            error: function (error) {
-                console.log('Error al agregar asignatura:', error);
-                alert('Hubo un error al agregar la asignatura.');
-            }
-        });
-    }
-
-    function addSala() {
-        let nuevaSala = document.getElementById('nueva-sala').value;
-        if (nuevaSala.trim() === '') {
-            alert('Por favor, ingrese un número para la sala.');
-            return;
-        }
-
-        nuevaSala = nuevaSala.charAt(0).toUpperCase() + nuevaSala.slice(1);
-
-        $.ajax({
-            url: '/salas/',
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
-            contentType: 'application/json',
-            data: JSON.stringify({ numero_sala: nuevaSala }),
-            success: function (response) {
-                alert('Sala agregada: ' + nuevaSala);
-                $('#agregarModal').modal('hide');
-            },
-            error: function (error) {
-                console.log('Error al agregar sala:', error);
-                alert('Hubo un error al agregar la sala.');
-            }
-        });
-    }
-
-    document.getElementById('seccion').addEventListener('blur', function () {
-        let value = this.value;
-
-        if (!isNaN(value) && value !== '') {
-            let formattedValue = String(value).padStart(3, '0');
-            this.value = formattedValue;
-        }
-    });
-
-    function addBloque() {
-        const asignatura = document.getElementById('asignatura').value;
-        const jornada = document.getElementById('jornada').value;
-        const seccion = document.getElementById('seccion').value;
-        const sala = document.getElementById('sala').value;
-
-        if (!asignatura || !jornada || !seccion || !sala) {
-            alert('Por favor, complete todos los campos.');
-            return;
-        }
-
-        $.ajax({
-            url: '/ruta/del/servidor/', // Cambia esto por la ruta correcta
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
-            contentType: 'application/json',
-            data: JSON.stringify({
-                asignatura: asignatura,
-                jornada: jornada,
-                seccion: seccion,
-                sala: sala,
-                modulo_id: moduloId,
-                dia_id: diaId
-            }),
-            success: function (response) {
-                alert('Bloque establecido con éxito.');
-            },
-            error: function (error) {
-                console.log('Error al establecer bloque:', error);
-                alert('Hubo un error al establecer el bloque.');
-            }
-        });
-    }
+   
 
 </script>
 

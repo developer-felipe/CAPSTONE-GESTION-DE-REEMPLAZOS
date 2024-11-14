@@ -89,3 +89,42 @@ footer{
     text-align: center;
 }
 
+
+
+
+/* Estilos del contenedor del toast */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    max-width: 350px; /* Limitar el tamaño */
+    width: 100%; /* Hacer que ocupe el ancho disponible */
+}
+
+/* Estilo del toast */
+.toast {
+    background-color: #007bff; /* Fondo azul */
+    color: white; /* Texto blanco */
+    border-radius: 10px; /* Bordes redondeados */
+    margin-bottom: 10px; /* Espacio entre los toasts */
+    padding: 15px;
+    font-size: 16px; /* Tamaño de texto adecuado */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra sutil */
+}
+
+/* Cabecera del toast */
+.toast-header {
+    background-color: #0056b3; /* Fondo más oscuro */
+    color: white; /* Texto blanco */
+    font-weight: bold;
+    border-radius: 10px 10px 0 0; /* Bordes superiores redondeados */
+}
+
+/* Cuerpo del toast */
+.toast-body {
+    font-size: 14px; /* Texto de tamaño más pequeño */
+    padding: 10px;
+}
+
+

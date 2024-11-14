@@ -1,162 +1,125 @@
 {% extends 'templates/base.html' %}
 
-{% block title %}Gestión de Reemplazo{% endblock %}
+{% block title %}Gestión de Recuperación{% endblock %}
 
 {% block content %}
+
 <div class="container">
     <h1>Gestión de Recuperación</h1>
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
     </div>
-    <form method="GET" action="{% url 'reemplazos' %}" class="mb-4">
+    <form method="POST" action="{% url 'gestionar_recuperacion' %}">
+        {% csrf_token %}
         <div class="input-group">
             <input type="text" name="filter" class="form-control" placeholder="Buscar por nombre docente...">
             <button type="submit" class="btn btn-primary">Buscar</button>
         </div>
     </form>
     <div class="w-50 p-1">
-        {% if request.user.is_staff %}
-        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#extraLargeModal">Agregar
-            Recuperación</button>
-            {% endif %}
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#extraLargeModal">Agregar Recuperación</button>
     </div>
-    <div class="modal fade" id="extraLargeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
+
+    <!-- Modal para agregar recuperación -->
+    <div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Formulario de Clases</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <h5 class="modal-title" id="extraLargeModalLabel">Agregar Recuperación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="POST" action="">
+                    <form method="POST" action="{% url 'gestionar_recuperacion' %}">
                         {% csrf_token %}
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Docente</th>
-                                    <th>Sección</th>
-                                    <th>Jornada</th>
-                                    <th>Hora Inicio</th>
-                                    <th>Hora Término</th>
-                                    <th>Número Módulos</th>
-                                    <th>Fecha de Clase</th>
-                                    <th>Fecha de Recuperación</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <select name="docente" class="form-control">
-                                            <option value="">Docente</option>
-                                            <option value="Docente 1">Docente 1</option>
-                                            <option value="Docente 2">Docente 2</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="seccion" class="form-control">
-                                            <option value="">Sección</option>
-                                            <option value="Sección A">Sección A</option>
-                                            <option value="Sección B">Sección B</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="jornada" class="form-control">
-                                            <option value="">Jornada</option>
-                                            <option value="Mañana">Mañana</option>
-                                            <option value="Tarde">Tarde</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="hora_inicio" class="form-control">
-                                            <option value="">Hora Inicio</option>
-                                            <option value="08:00">08:00</option>
-                                            <option value="10:00">10:00</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="hora_termino" class="form-control">
-                                            <option value="">Hora Término</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="12:00">12:00</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="numero_modulos" class="form-control">
-                                            <option value="">Número de Módulos</option>
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="fecha" class="form-control">
-                                            <option value="">Fecha de Clase</option>
-                                            <option value="2024-01-01">2024-01-01</option>
-                                            <option value="2024-01-02">2024-01-02</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="fecha_recuperacion" class="form-control">
-                                            <option value="">Fecha Recuperación</option>
-                                            <option value="2024-01-10">2024-01-10</option>
-                                            <option value="2024-01-11">2024-01-11</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="text-right">
-                            <button type="submit" class="btn btn-primary">Agregar Clase</button>
-                        </div>
+                        <label for="horario_id_horario">ID del Horario</label>
+                        <input type="text" name="horario_id_horario" id="horario_id_horario" class="form-control" placeholder="Ingrese el ID del horario" required>
+                        
+                        <label for="numero_modulos">Número de módulos</label>
+                        <input type="text" name="numero_modulos" class="form-control" required>
+                        
+                        <label for="fecha_clase">Fecha de clase</label>
+                        <input type="date" name="fecha_clase" class="form-control" required>
+                        
+                        <label for="fecha_recuperacion">Fecha de recuperación</label>
+                        <input type="date" name="fecha_recuperacion" class="form-control" required>
+                        
+                        <label for="hora_recuperacion">Hora de recuperación</label>
+                        <input type="time" name="hora_recuperacion" class="form-control" required>
+                        
+                        <label for="sala">Sala</label>
+                        <input type="text" name="sala" class="form-control" required>
+                    
+                        <button type="submit" class="btn btn-primary">Guardar recuperación</button>
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    
+                    {% if error %}
+                        <div class="alert alert-danger">
+                            {{ error }}
+                        </div>
+                    {% endif %}
+                    
                 </div>
             </div>
         </div>
     </div>
 
 
+
+
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
-                <th>Docente</th>
-                <th>Sección</th>
-                <th>Jornada</th>
-                <th>Hora Inicio</th>
-                <th>Hora Término</th>
-                <th>Número Módulos</th>
+                <th>Horario ID</th>
+                <th>Número de Módulos</th>
                 <th>Fecha de Clase</th>
                 <th>Fecha de Recuperación</th>
+                <th>Hora de Recuperación</th>
+                <th>Sala</th>
             </tr>
         </thead>
         <tbody>
-            {% for item in items %}
+            {% for recuperacion in recuperaciones %}
             <tr>
-                <td>{{ item.semana }}</td>
-                <td>{{ item.seccion }}</td>
-                <td>{{ item.jornada }}</td>
-                <td>{{ item.hora_inicio }}</td>
-                <td>{{ item.hora_termino }}</td>
-                <td>{{ item.numero_modulos }}</td>
-                <td>{{ item.sala }}</td>
-                <td>{{ item.fecha }}</td>
+                <td>{{ recuperacion.horario.id_horario }}</td>
+                <td>{{ recuperacion.numero_modulos }}</td>
+                <td>{{ recuperacion.fecha_clase }}</td>
+                <td>{{ recuperacion.fecha_recuperacion }}</td>
+                <td>{{ recuperacion.hora_recuperacion }}</td>
+                <td>{{ recuperacion.sala }}</td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8">No hay datos disponibles.</td>
+                <td colspan="6">No hay datos disponibles.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
 
-    $(document).ready(function () {
-        $('#extraLargeModal').modal('show');
+
+<!-- Script para mostrar el modal al cargar la página -->
+ <!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+    $('form').submit(function(e) {
+        e.preventDefault();
+        $.ajax({
+            type: $(this).attr('method'),
+            url: $(this).attr('action'),
+            data: $(this).serialize(),
+            success: function(response) {
+                // Realiza las acciones necesarias después de enviar el formulario
+                alert('Recuperación agregada');
+            },
+            error: function() {
+                alert("Error al agregar la recuperación");
+            }
+        });
     });
+});
 </script>
+  
 {% endblock %}

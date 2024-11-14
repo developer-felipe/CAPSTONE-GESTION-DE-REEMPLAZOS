@@ -4,7 +4,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
-from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Semestre, Licencia, Reemplazos
+from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Semestre, Licencia, Reemplazos,Recuperacion
+from django.core.exceptions import ObjectDoesNotExist
 import json
 from datetime import timedelta
 
@@ -26,6 +27,43 @@ def docente_view(request):
     context = {
         'profesores': profesores,
     }
+
+    if request.method == 'POST':
+        if 'eliminar' in request.POST:
+            id_profesor = request.POST.get('id_profesor')
+            try:
+                profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
+
+                Licencia.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
+
+                Horario.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
+
+                profesor_a_eliminar.delete()
+
+                messages.success(request, "Profesor y sus licencias eliminadas exitosamente.")
+                return redirect('docente')
+            except Profesor.DoesNotExist:
+                messages.error(request, "El profesor no existe.")
+                return redirect('docente')
+        else:
+            nombre = request.POST.get('primer_nombre').strip().capitalize()
+            segundo_nombre = request.POST.get('segundo_nombre').strip().capitalize() 
+            apellido = request.POST.get('primer_apellido').strip().capitalize()
+            segundo_apellido = request.POST.get('segundo_apellido').strip().capitalize()
+
+            if not nombre or not apellido:
+                messages.error(request, 'Los nombres y apellidos son obligatorios.')
+                return redirect('docente')
+
+            nuevo_profesor = Profesor(
+                nombre=nombre,
+                segundo_nombre=segundo_nombre,
+                apellido=apellido,
+                segundo_apellido=segundo_apellido
+            )
+            nuevo_profesor.save()
+            messages.success(request, "Profesor agregado exitosamente.")
+
     return render(request, 'templates/docente.html', context)
 
 def guardar_licencia(request):
@@ -35,10 +73,10 @@ def guardar_licencia(request):
         fecha_termino = request.POST.get('fecha_fin')
         motivo = request.POST.get('motivo')
         observaciones = request.POST.get('observaciones')
-        
+
         if not profesor_id:
             return JsonResponse({'success': False, 'error': 'Falta el ID del profesor'})
-
+        
         profesor = get_object_or_404(Profesor, id_profesor=profesor_id)
 
         try:
@@ -49,9 +87,11 @@ def guardar_licencia(request):
                 motivo=motivo,
                 observaciones=observaciones
             )
-            return JsonResponse({'success': True})
+            # Responder con éxito
+            return JsonResponse({'success': True, 'message': 'Licencia guardada exitosamente.'})
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+            # Manejar error en el proceso
+            return JsonResponse({'success': False, 'error': f'Ocurrió un error: {str(e)}'})
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
@@ -63,6 +103,62 @@ def reemplazos_view(request):
 
 def recuperacion_view(request):
     return render(request, 'templates/gestion_recuperacion.html')
+
+
+
+def gestionar_recuperacion(request):
+    # Obtener todos los horarios y recuperaciones
+    horarios = Horario.objects.all()
+    recuperaciones = Recuperacion.objects.all()
+
+    if request.method == 'POST':
+        # Obtener los datos del formulario
+        numero_modulos = request.POST.get('numero_modulos')
+        fecha_clase = request.POST.get('fecha_clase')
+        fecha_recuperacion = request.POST.get('fecha_recuperacion')
+        hora_recuperacion = request.POST.get('hora_recuperacion')
+        sala = request.POST.get('sala')
+        horario_id = request.POST.get('horario_id_horario')
+        
+        print(f"horario_id recibido: {horario_id}")  # Esto imprimirá el valor recibido de `horario_id_horario`
+
+        # Validar que el ID del horario sea correcto
+        try:
+            # Intenta convertir el ID a entero y buscar el horario
+            horario_id = int(horario_id)
+            horario = Horario.objects.get(id_horario=horario_id)
+        except (ValueError, ObjectDoesNotExist):
+            # Si no se encuentra el horario o el ID no es válido, muestra un mensaje de error
+            return render(request, 'gestion_recuperacion.html', {
+                'horarios': horarios,
+                'recuperaciones': recuperaciones,
+                'error': 'El ID del horario no es válido o no existe.'
+            })
+
+        # Crear la nueva recuperación
+        nueva_recuperacion = Recuperacion(
+            numero_modulos=numero_modulos,
+            fecha_clase=fecha_clase,
+            fecha_recuperacion=fecha_recuperacion,
+            hora_recuperacion=hora_recuperacion,
+            sala=sala,
+            horario=horario
+        )
+        nueva_recuperacion.save()
+
+        # Volver a cargar la página con la lista actualizada de horarios y recuperaciones
+        return render(request, 'gestion_recuperacion.html', {
+            'horarios': horarios,
+            'recuperaciones': Recuperacion.objects.all(),  # Aseguramos que las recuperaciones se recarguen
+            'success': 'Recuperación agregada exitosamente'
+        })
+
+    # Si no es POST, simplemente mostrar los horarios y recuperaciones
+    return render(request, 'gestion_recuperacion.html', {
+        'horarios': horarios,
+        'recuperaciones': recuperaciones
+    })
+
 
 
 def reportes_view(request):
@@ -196,6 +292,8 @@ def crear_docente_view(request):
             nuevo_profesor.save()
             messages.success(request, "Profesor agregado exitosamente.")
     return render(request, 'templates/crear_docente.html',context)
+
+
 
 def obtener_clases_a_reemplazar(profesor_id):
     # Obtener todas las licencias del profesor
