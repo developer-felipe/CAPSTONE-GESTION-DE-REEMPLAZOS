@@ -1,12 +1,12 @@
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from django.core.exceptions import ValidationError
 from django.contrib import messages
-from django.http import JsonResponse
-from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Semestre, Licencia
+from django.http import JsonResponse, HttpResponse
+from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Semestre, Licencia, Reemplazos
 import json
-import logging
-
+from datetime import timedelta
 
 def login_view(request):
     if request.method == 'POST':
@@ -22,52 +22,11 @@ def login_view(request):
 
 
 def docente_view(request):
-    modulos = Modulo.objects.all()
-    dias = DiaSemana.objects.all()
     profesores = Profesor.objects.all()
-
     context = {
-        'modulos': modulos,
-        'dias': dias,
         'profesores': profesores,
     }
-
-    if request.method == 'POST':
-        if 'eliminar' in request.POST:
-            id_profesor = request.POST.get('id_profesor')
-            try:
-                profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
-
-                Licencia.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
-
-                profesor_a_eliminar.delete()
-
-                messages.success(request, "Profesor y sus licencias eliminadas exitosamente.")
-            except Profesor.DoesNotExist:
-                messages.error(request, "El profesor no existe.")
-        else:
-            nombre = request.POST.get('primer_nombre').strip().capitalize()
-            segundo_nombre = request.POST.get('segundo_nombre').strip().capitalize() 
-            apellido = request.POST.get('primer_apellido').strip().capitalize()
-            segundo_apellido = request.POST.get('segundo_apellido').strip().capitalize()
-
-            if not nombre or not apellido:
-                messages.error(request, 'Los nombres y apellidos son obligatorios.')
-                return redirect('docente')
-
-            nuevo_profesor = Profesor(
-                nombre=nombre,
-                segundo_nombre=segundo_nombre,
-                apellido=apellido,
-                segundo_apellido=segundo_apellido
-            )
-            nuevo_profesor.save()
-            messages.success(request, "Profesor agregado exitosamente.")
-
     return render(request, 'templates/docente.html', context)
-
-
-
 
 def guardar_licencia(request):
     if request.method == 'POST':
@@ -97,8 +56,8 @@ def guardar_licencia(request):
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 
-
 def reemplazos_view(request):
+
     return render(request, 'templates/gestion_reemplazo.html')
 
 
@@ -157,7 +116,6 @@ def sala_view(request):
         
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-logger = logging.getLogger(__name__)
 def crear_profesor_y_horarios(request):
     if request.method == 'POST':
         try:
@@ -175,7 +133,6 @@ def crear_profesor_y_horarios(request):
                 segundo_nombre=profesor_data.get('segundo_nombre', ''),
                 segundo_apellido=profesor_data.get('segundo_apellido', '')
             )
-            logger.info(f"Profesor creado con ID: {profesor.id_profesor}")
             for horario_data in data['horarios_asignados']:
                 try:
                     asignatura = Asignatura.objects.get(id_asignatura=horario_data['asignaturaID'])
@@ -184,7 +141,6 @@ def crear_profesor_y_horarios(request):
                     dia = DiaSemana.objects.get(id_dia=horario_data['diaID'])
                     semestre = Semestre.objects.get(id_semestre=horario_data['semestreID'])
                 except Exception as e:
-                    logger.error(f"Error al obtener los objetos relacionados: {e}")
                     return JsonResponse({"error": f"Error al obtener los objetos relacionados: {str(e)}"}, status=500)
                 Horario.objects.create(
                     profesor_id_profesor=profesor,
@@ -196,13 +152,9 @@ def crear_profesor_y_horarios(request):
                     seccion=horario_data['seccion'],
                     jornada=horario_data['jornada']
                 )
-                logger.info(f"Horario creado para el profesor ID {profesor.id_profesor}.")
-
             return JsonResponse({"message": "Profesor y horarios creados exitosamente!"}, status=201)
         except Exception as e:
-            logger.error(f"Error inesperado: {e}")
             return JsonResponse({"error": str(e)}, status=500)
-
     
 def crear_docente_view(request):
     modulos = Modulo.objects.all()
@@ -244,3 +196,67 @@ def crear_docente_view(request):
             nuevo_profesor.save()
             messages.success(request, "Profesor agregado exitosamente.")
     return render(request, 'templates/crear_docente.html',context)
+
+def obtener_clases_a_reemplazar(profesor_id):
+    # Obtener todas las licencias del profesor
+    licencias = Licencia.objects.filter(profesor_id_profesor=profesor_id)
+
+    clases_a_reemplazar = []
+
+    for licencia in licencias:
+        # Filtrar los días de la semana que el profesor está en licencia
+        dias_licencia = obtener_dias_licencia(licencia.fecha_inicio, licencia.fecha_termino)
+        
+        for dia in dias_licencia:
+            # Obtener los horarios donde el docente tiene clases en esos días
+            horarios = Horario.objects.filter(
+                profesor_id_profesor=profesor_id,
+                dia_semana_id_dia__nombre_dia=dia
+            )
+
+            for horario in horarios:
+                clases_a_reemplazar.append(horario)
+    
+    return clases_a_reemplazar
+
+def obtener_dias_licencia(fecha_inicio, fecha_termino):
+    # Función que retorna los días de la semana dentro del rango de fechas
+    dias = []
+    fecha_actual = fecha_inicio
+    while fecha_actual <= fecha_termino:
+        dia_semana = fecha_actual.strftime('%A')  # Obtener el nombre del día de la semana
+        dias.append(dia_semana)
+        fecha_actual += timedelta(days=1)
+    return dias
+
+def obtener_profesor_disponible(horario):
+    profesores_disponibles = Profesor.objects.all()
+    profesores_libres = []
+
+    for profesor in profesores_disponibles:
+        # Buscar horarios del profesor que choquen con el horario de la clase a reemplazar
+        horarios_conflictivos = Horario.objects.filter(
+            profesor_id_profesor=profesor.id,
+            dia_semana_id_dia=horario.dia_semana_id_dia,
+            modulo_id_modulo=horario.modulo_id_modulo
+        )
+        
+        if not horarios_conflictivos.exists():
+            profesores_libres.append(profesor)
+    
+    return profesores_libres
+
+def crear_reemplazo(profesor_reemplazo, horario, fecha_reemplazo):
+    # Crear un nuevo reemplazo
+    reemplazo = Reemplazos(
+        semana=calcular_semana(fecha_reemplazo),
+        fecha_reemplazo=fecha_reemplazo,
+        numero_modulos=horario.modulo_id_modulo.hora_modulo,  # O el número de módulos correspondiente
+        profesor_reemplazo=profesor_reemplazo.nombre,
+        horario=horario
+    )
+    reemplazo.save()
+
+def calcular_semana(fecha):
+    # Devuelve el número de semana de la fecha
+    return fecha.isocalendar()[1]

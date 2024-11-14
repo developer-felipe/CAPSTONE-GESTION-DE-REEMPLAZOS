@@ -37,71 +37,44 @@
                             <thead>
                                 <tr>
                                     <th>Semana</th>
+                                    <th>Docente</th>
+                                    <th>Asignatura</th>
                                     <th>Sección</th>
-                                    <th>Jornada</th>
                                     <th>Hora Inicio</th>
                                     <th>Hora Término</th>
                                     <th>Número Módulos</th>
                                     <th>Sala</th>
                                     <th>Fecha de Clase</th>
+                                    <th>Docente Reemplazante</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                     <td>
+                                        <select name="semana" class="form-control">
+                                            {% for clase in clases_a_reemplazar %}
+                                            <option value="{{ clase.semana }}">{{ clase.semana }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
                                         <select name="docente" class="form-control">
-                                            <option value="">Semana</option>
-                                            <option value="Docente 1">1</option>
-                                            <option value="Docente 2">2</option>
+                                            {% for clase in clases_a_reemplazar %}
+                                            <option value="{{ clase.profesor_id_profesor }}">{{
+                                                clase.profesor_id_profesor }}</option>
+                                            {% endfor %}
                                         </select>
                                     </td>
+                                    <td>{{ clase.asignatura_id_asignatura.nombre_asignatura }}</td>
+                                    <td>{{ clase.seccion }}</td>
+                                    <td>{{ clase.modulo_id_modulo.hora_modulo }}</td>
+                                    <td>{{ clase.sala_id_sala.numero_sala }}</td>
+                                    <td>{{ clase.fecha_clase }}</td>
                                     <td>
-                                        <select name="seccion" class="form-control">
-                                            <option value="">Sección</option>
-                                            <option value="Sección A">Sección A</option>
-                                            <option value="Sección B">Sección B</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="jornada" class="form-control">
-                                            <option value="">Jornada</option>
-                                            <option value="Mañana">Mañana</option>
-                                            <option value="Tarde">Tarde</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="hora_inicio" class="form-control">
-                                            <option value="">Hora Inicio</option>
-                                            <option value="08:00">08:00</option>
-                                            <option value="10:00">10:00</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="hora_termino" class="form-control">
-                                            <option value="">Hora Término</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="12:00">12:00</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="numero_modulos" class="form-control">
-                                            <option value="">Número de Módulos</option>
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="fecha" class="form-control">
-                                            <option value="">Sala</option>
-                                            <option value="2024-01-01">H304</option>
-                                            <option value="2024-01-02">H308</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="fecha_recuperacion" class="form-control">
-                                            <option value="">Fecha de Clase</option>
-                                            <option value="2024-01-10">2024-01-10</option>
-                                            <option value="2024-01-11">2024-01-11</option>
+                                        <select name="docente_remp" class="form-control">
+                                            {% for profesor in profesores_disponibles %}
+                                            <option value="{{ profesor.id }}">{{ profesor.nombre }}</option>
+                                            {% endfor %}
                                         </select>
                                     </td>
                                 </tr>
@@ -150,11 +123,11 @@
             {% endfor %}
         </tbody>
     </table>
-    {% endblock %}
-    {% block head %}
-    {% endblock %}
+
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
         $('#extraLargeModal').modal('show');
     });</script>
+{% endblock %}

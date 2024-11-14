@@ -102,7 +102,7 @@ class Recuperacion(models.Model):
     class Meta:
         managed = False
         db_table = 'recuperacion'
-        unique_together = (('id_recuperacion', 'horario'),)  # Ajusta según sea necesario
+        unique_together = (('id_recuperacion', 'horario'),)
 
 
 class Reemplazos(models.Model):
@@ -116,8 +116,7 @@ class Reemplazos(models.Model):
     class Meta:
         managed = False
         db_table = 'reemplazos'
-        unique_together = (('id_reemplazo', 'horario'),)  # Ajusta según sea necesario
-
+        unique_together = (('id_reemplazo', 'horario'),)
 
 class UsuarioManager(BaseUserManager):
     def create_user(self, usuario, password=None, **extra_fields):

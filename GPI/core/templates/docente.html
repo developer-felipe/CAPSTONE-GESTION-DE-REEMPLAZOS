@@ -31,8 +31,8 @@
 
     <!-- Botón para ir a la pagina para Agregar Profesor -->
     <div class="d-flex justify-content-end mb-3">
-        <button type="button" class="btn btn-dark btn" >
-                <a class="nav-link" href="{% url 'crear_docente' %}">Agregar Profesor</a>
+        <button type="button" class="btn btn-dark btn">
+            <a class="nav-link" href="{% url 'crear_docente' %}">Agregar Profesor</a>
         </button>
     </div>
 
@@ -48,9 +48,10 @@
 
             <!-- Botones alineados a la derecha con mayor separación -->
             <div class="d-flex" style="gap: 20px;">
-                <button type="button" class="btn btn-primary" id="agregarLicenciaBtn" data-id="{{ profesor.id_profesor }}">
+                <button type="button" class="btn btn-primary" id="agregarLicenciaBtn"
+                    data-id="{{ profesor.id_profesor }}">
                     Agregar Licencia
-                </button>                
+                </button>
                 <button type="button" class="btn btn-success">Modificar</button>
                 <form method="POST" style="display:inline;"
                     onsubmit="return confirm('¿Estás seguro de que deseas eliminar este docente?');">
@@ -78,13 +79,16 @@
                 <!-- Contenedor de Tabs -->
                 <ul class="nav nav-tabs" id="tabContent">
                     <li class="nav-item">
-                        <button class="nav-link active" id="docente-tab" data-bs-toggle="tab" data-bs-target="#docente" type="button">Docente</button>
+                        <button class="nav-link active" id="docente-tab" data-bs-toggle="tab" data-bs-target="#docente"
+                            type="button">Docente</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" id="horario-tab" data-bs-toggle="tab" data-bs-target="#horario" type="button" disabled>Horario</button>
+                        <button class="nav-link" id="horario-tab" data-bs-toggle="tab" data-bs-target="#horario"
+                            type="button" disabled>Horario</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" id="asignar-tab" data-bs-toggle="tab" data-bs-target="#asignar" type="button" disabled>Asignar Horario</button>
+                        <button class="nav-link" id="asignar-tab" data-bs-toggle="tab" data-bs-target="#asignar"
+                            type="button" disabled>Asignar Horario</button>
                     </li>
                 </ul>
 
@@ -117,8 +121,8 @@
                                 </tbody>
                             </table>
                             <div class="text-right">
-                                <button type="button" id="siguienteButton" class="btn btn-primary" 
-                                        data-bs-toggle="tab" data-bs-target="#horario" disabled>Ir a Horario</button>
+                                <button type="button" id="siguienteButton" class="btn btn-primary" data-bs-toggle="tab"
+                                    data-bs-target="#horario" disabled>Ir a Horario</button>
                             </div>
                         </form>
                     </div>
@@ -141,7 +145,9 @@
                                     <th scope="row" id="{{modulo.id_modulo}}">{{ modulo.hora_modulo }}</th>
                                     {% for dia in dias %}
                                     <td>
-                                        <button type="button" class="btn btn-primary" data-bs-toggle="tab" data-bs-target="#asignar" data-modulo-id="{{ modulo.id_modulo }}" data-dia-id="{{ dia.id_dia }}">
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="tab"
+                                            data-bs-target="#asignar" data-modulo-id="{{ modulo.id_modulo }}"
+                                            data-dia-id="{{ dia.id_dia }}">
                                             <span class="material-icons me-2">add</span>
                                         </button>
                                     </td>
@@ -161,7 +167,8 @@
                         <form id="bloque">
                             <div class="mb-3">
                                 <label for="asignatura" class="col-form-label">Asignatura</label>
-                                <select class="form-control" id="asignatura" onchange="checkOption(this, 'agregarModal')">
+                                <select class="form-control" id="asignatura"
+                                    onchange="checkOption(this, 'agregarModal')">
                                     <!-- Opciones de asignatura se deben llenar aquí -->
                                 </select>
                             </div>
@@ -209,10 +216,10 @@
             <div class="modal-body">
                 <form method="POST" action="{% url 'guardar_licencia' %}" id="licenciaForm">
                     {% csrf_token %}
-                    
+
                     <!-- Campo oculto para el id del profesor -->
                     <input type="hidden" id="idProfesor" name="profesor_id_profesor">
-    
+
                     <!-- Campos del formulario para agregar licencia -->
                     <div class="mb-3">
                         <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
@@ -228,10 +235,12 @@
                     </div>
                     <div class="mb-3">
                         <label for="observaciones" class="form-label">Observaciones</label>
-                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3" required></textarea>
+                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3"
+                            required></textarea>
                     </div>
                     <div class="text-right">
-                        <button type="button" class="btn btn-primary" onclick="guardarLicencia()">Guardar Licencia</button>
+                        <button type="button" class="btn btn-primary" onclick="guardarLicencia()">Guardar
+                            Licencia</button>
                     </div>
                 </form>
             </div>
@@ -316,165 +325,169 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+    integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+    crossorigin="anonymous"></script>
 
 <script>
 
-document.addEventListener('DOMContentLoaded', function () {
-    // Obtener los campos de fecha de inicio y fecha de término
-    const fechaInicioInput = document.getElementById('fechaInicio');
-    const fechaFinInput = document.getElementById('fechaFin');
+    document.addEventListener('DOMContentLoaded', function () {
+        // Obtener los campos de fecha de inicio y fecha de término
+        const fechaInicioInput = document.getElementById('fechaInicio');
+        const fechaFinInput = document.getElementById('fechaFin');
 
-    // Función para validar las fechas
-    function validarFechas() {
-        const fechaInicio = new Date(fechaInicioInput.value);
-        const fechaFin = new Date(fechaFinInput.value);
+        // Función para validar las fechas
+        function validarFechas() {
+            const fechaInicio = new Date(fechaInicioInput.value);
+            const fechaFin = new Date(fechaFinInput.value);
 
-        // Verificar si la fecha de término es anterior a la de inicio
+            // Verificar si la fecha de término es anterior a la de inicio
+            if (fechaFin < fechaInicio) {
+                fechaFinInput.setCustomValidity("La fecha de término no puede ser anterior a la de inicio.");
+                // Opcional: Puedes mostrar un mensaje de error
+                fechaFinInput.reportValidity();
+            } else {
+                fechaFinInput.setCustomValidity("");  // Resetea el mensaje de error
+            }
+        }
+
+        // Asignar eventos de cambio para validar las fechas
+        fechaInicioInput.addEventListener('input', validarFechas);
+        fechaFinInput.addEventListener('input', validarFechas);
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const botonesAbrirModal = document.querySelectorAll('.btn-primary[data-id]');
+
+        const licenciaModal = new bootstrap.Modal(document.getElementById('licenciaModal'));
+
+        botonesAbrirModal.forEach(function (btn) {
+            btn.addEventListener('click', function (event) {
+                const profesorId = event.target.getAttribute('data-id');
+
+                document.getElementById('idProfesor').value = profesorId;
+
+                licenciaModal.show();
+            });
+        });
+    });
+
+
+    function guardarLicencia() {
+        const form = document.getElementById('licenciaForm');
+
+        const fechaInicio = new Date(document.getElementById('fechaInicio').value);
+        const fechaFin = new Date(document.getElementById('fechaFin').value);
+
         if (fechaFin < fechaInicio) {
-            fechaFinInput.setCustomValidity("La fecha de término no puede ser anterior a la de inicio.");
-            // Opcional: Puedes mostrar un mensaje de error
-            fechaFinInput.reportValidity();
-        } else {
-            fechaFinInput.setCustomValidity("");  // Resetea el mensaje de error
+            alert("La fecha de término no puede ser anterior a la de inicio.");
+            return;
         }
+
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrftoken
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert("Licencia guardada con éxito.");
+
+                    $('#licenciaModal').modal('hide');
+
+                    document.getElementById('fechaInicio').value = '';
+                    document.getElementById('fechaFin').value = '';
+                    document.getElementById('motivo').value = '';
+                    document.getElementById('observaciones').value = '';
+
+                } else {
+                    alert("Hubo un error al guardar la licencia.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Ocurrió un problema al intentar guardar la licencia.");
+            });
     }
 
-    // Asignar eventos de cambio para validar las fechas
-    fechaInicioInput.addEventListener('input', validarFechas);
-    fechaFinInput.addEventListener('input', validarFechas);
-});
 
 
-document.addEventListener('DOMContentLoaded', function () {
-    const botonesAbrirModal = document.querySelectorAll('.btn-primary[data-id]');
-    
-    const licenciaModal = new bootstrap.Modal(document.getElementById('licenciaModal'));
-
-    botonesAbrirModal.forEach(function(btn) {
-        btn.addEventListener('click', function (event) {
-            const profesorId = event.target.getAttribute('data-id');
-            
-            document.getElementById('idProfesor').value = profesorId;
-            
-            licenciaModal.show();
+    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            const modalId = this.getAttribute('data-bs-target');
+            const modalElement = document.querySelector(modalId);
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } else {
+                console.error(`No se encontró el modal con id: ${modalId}`);
+            }
         });
     });
-});
 
-
-function guardarLicencia() {
-    const form = document.getElementById('licenciaForm');
-    
-    const fechaInicio = new Date(document.getElementById('fechaInicio').value);
-    const fechaFin = new Date(document.getElementById('fechaFin').value);
-    
-    if (fechaFin < fechaInicio) {
-        alert("La fecha de término no puede ser anterior a la de inicio.");
-        return;  
-    }
-
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const formData = new FormData(form); 
-
-    fetch(form.action, {
-        method: 'POST',
-        body: formData, 
-        headers: {
-            'X-CSRFToken': csrftoken
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            alert("Licencia guardada con éxito.");
-
-            $('#licenciaModal').modal('hide'); 
-
-            document.getElementById('fechaInicio').value = '';
-            document.getElementById('fechaFin').value = '';
-            document.getElementById('motivo').value = '';
-            document.getElementById('observaciones').value = '';
-
-        } else {
-            alert("Hubo un error al guardar la licencia.");
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        alert("Ocurrió un problema al intentar guardar la licencia.");
-    });
-}
-
-
-
-    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(function(button) {
-        button.addEventListener('click', function(event) {
-          const modalId = this.getAttribute('data-bs-target');
-          const modalElement = document.querySelector(modalId);
-          if (modalElement) {
-            const modal = new bootstrap.Modal(modalElement);
-            modal.show();
-          } else {
-            console.error(`No se encontró el modal con id: ${modalId}`);
-          }
-        });
-      });
-      
-      document.addEventListener('hidden.bs.modal', function(event) {
+    document.addEventListener('hidden.bs.modal', function (event) {
         const openModals = document.querySelectorAll('.modal.show');
         if (openModals.length === 0) {
-          const backdrop = document.querySelector('.modal-backdrop');
-          if (backdrop) {
-            backdrop.remove();
-          }
-          document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            document.body.classList.remove('modal-open');
         }
-      });
-
-
-      // Función para habilitar el botón "Siguiente" y los tabs
-// Función para habilitar el botón "Siguiente" y los tabs
-function toggleSiguienteButton() {
-    const primerNombre = document.querySelector('[name="primer_nombre"]').value;
-    const primerApellido = document.querySelector('[name="primer_apellido"]').value;
-    const siguienteButton = document.getElementById('siguienteButton');
-    const horarioTabButton = document.getElementById('horario-tab');
-    const asignarTabButton = document.getElementById('asignar-tab');
-
-    // Habilitar botón "Ir a Horario" y tabs de "Horario" y "Asignar Horario"
-    if (primerNombre && primerApellido) {
-        siguienteButton.disabled = false;
-        horarioTabButton.disabled = false; // Habilitar el tab de Horario
-        asignarTabButton.disabled = false; // Habilitar el tab de Asignar Horario
-    } else {
-        siguienteButton.disabled = true;
-        horarioTabButton.disabled = true; // Deshabilitar el tab de Horario
-        asignarTabButton.disabled = true; // Deshabilitar el tab de Asignar Horario
-    }
-}
-
-// Asegúrate de que la pestaña se active cuando se hace clic en el botón "Siguiente"
-document.getElementById('siguienteButton').addEventListener('click', function() {
-    // Activar la pestaña de Horario
-    const tabHorarios = new bootstrap.Tab(document.getElementById('horario-tab'));
-    tabHorarios.show(); // Cambia a la pestaña de Horario
-});
-
-// Función para cambiar a la pestaña de "Asignar Horario" después de hacer clic en el botón "add" dentro de Horario
-document.querySelectorAll('[data-bs-toggle="tab"][data-bs-target="#asignar"]').forEach(function(button) {
-    button.addEventListener('click', function() {
-        // Cambiar automáticamente a la pestaña de "Asignar Horario"
-        const tabAsignar = new bootstrap.Tab(document.getElementById('asignar-tab'));
-        tabAsignar.show(); // Cambia a la pestaña de Asignar Horario
     });
-});
+
+
+    // Función para habilitar el botón "Siguiente" y los tabs
+    // Función para habilitar el botón "Siguiente" y los tabs
+    function toggleSiguienteButton() {
+        const primerNombre = document.querySelector('[name="primer_nombre"]').value;
+        const primerApellido = document.querySelector('[name="primer_apellido"]').value;
+        const siguienteButton = document.getElementById('siguienteButton');
+        const horarioTabButton = document.getElementById('horario-tab');
+        const asignarTabButton = document.getElementById('asignar-tab');
+
+        // Habilitar botón "Ir a Horario" y tabs de "Horario" y "Asignar Horario"
+        if (primerNombre && primerApellido) {
+            siguienteButton.disabled = false;
+            horarioTabButton.disabled = false; // Habilitar el tab de Horario
+            asignarTabButton.disabled = false; // Habilitar el tab de Asignar Horario
+        } else {
+            siguienteButton.disabled = true;
+            horarioTabButton.disabled = true; // Deshabilitar el tab de Horario
+            asignarTabButton.disabled = true; // Deshabilitar el tab de Asignar Horario
+        }
+    }
+
+    // Asegúrate de que la pestaña se active cuando se hace clic en el botón "Siguiente"
+    document.getElementById('siguienteButton').addEventListener('click', function () {
+        // Activar la pestaña de Horario
+        const tabHorarios = new bootstrap.Tab(document.getElementById('horario-tab'));
+        tabHorarios.show(); // Cambia a la pestaña de Horario
+    });
+
+    // Función para cambiar a la pestaña de "Asignar Horario" después de hacer clic en el botón "add" dentro de Horario
+    document.querySelectorAll('[data-bs-toggle="tab"][data-bs-target="#asignar"]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            // Cambiar automáticamente a la pestaña de "Asignar Horario"
+            const tabAsignar = new bootstrap.Tab(document.getElementById('asignar-tab'));
+            tabAsignar.show(); // Cambia a la pestaña de Asignar Horario
+        });
+    });
 
     function getCookie(name) {
         let cookieValue = null;
@@ -596,7 +609,7 @@ document.querySelectorAll('[data-bs-toggle="tab"][data-bs-target="#asignar"]').f
             let formattedValue = String(value).padStart(3, '0');
             this.value = formattedValue;
         }
-    });      
+    });
 
     function addBloque() {
         const asignatura = document.getElementById('asignatura').value;
