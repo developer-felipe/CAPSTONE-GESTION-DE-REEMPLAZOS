@@ -7,7 +7,7 @@ from django.http import JsonResponse, HttpResponse
 from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Semestre, Licencia, Reemplazos,Recuperacion
 from django.core.exceptions import ObjectDoesNotExist
 import json
-from datetime import timedelta
+from datetime import timedelta, date
 
 def login_view(request):
     if request.method == 'POST':
@@ -293,68 +293,66 @@ def crear_docente_view(request):
             messages.success(request, "Profesor agregado exitosamente.")
     return render(request, 'templates/crear_docente.html',context)
 
+def docentes_con_licencia(request):
+    # Obtener la fecha actual
+    today = date.today()
 
+    # Filtrar los docentes que tienen una licencia activa
+    docentes = Profesor.objects.filter(
+        licencia__fecha_inicio__lte=today,
+        licencia__fecha_termino__gte=today
+    ).distinct()
 
-def obtener_clases_a_reemplazar(profesor_id):
-    # Obtener todas las licencias del profesor
-    licencias = Licencia.objects.filter(profesor_id_profesor=profesor_id)
-
-    clases_a_reemplazar = []
-
-    for licencia in licencias:
-        # Filtrar los días de la semana que el profesor está en licencia
-        dias_licencia = obtener_dias_licencia(licencia.fecha_inicio, licencia.fecha_termino)
-        
-        for dia in dias_licencia:
-            # Obtener los horarios donde el docente tiene clases en esos días
-            horarios = Horario.objects.filter(
-                profesor_id_profesor=profesor_id,
-                dia_semana_id_dia__nombre_dia=dia
-            )
-
-            for horario in horarios:
-                clases_a_reemplazar.append(horario)
+    # Devolver los docentes con licencia activa
+    docentes_list = [
+        {"id": docente.id_profesor, "nombre": f"{docente.nombre} {docente.apellido}"}
+        for docente in docentes
+    ]
     
-    return clases_a_reemplazar
+    return JsonResponse(docentes_list, safe=False)
 
-def obtener_dias_licencia(fecha_inicio, fecha_termino):
-    # Función que retorna los días de la semana dentro del rango de fechas
-    dias = []
-    fecha_actual = fecha_inicio
-    while fecha_actual <= fecha_termino:
-        dia_semana = fecha_actual.strftime('%A')  # Obtener el nombre del día de la semana
-        dias.append(dia_semana)
-        fecha_actual += timedelta(days=1)
-    return dias
+def asignaturas_por_docente(request, docente_id):
+    asignaturas = Horario.objects.filter(profesor_id_profesor=docente_id).values('asignatura_id_asignatura__id_asignatura', 'asignatura_id_asignatura__nombre_asignatura')
+    asignaturas_list = [{"id": asignatura["asignatura_id_asignatura__id_asignatura"], "nombre": asignatura["asignatura_id_asignatura__nombre_asignatura"]} for asignatura in asignaturas]
 
-def obtener_profesor_disponible(horario):
-    profesores_disponibles = Profesor.objects.all()
-    profesores_libres = []
+    return JsonResponse(asignaturas_list, safe=False)
 
-    for profesor in profesores_disponibles:
-        # Buscar horarios del profesor que choquen con el horario de la clase a reemplazar
-        horarios_conflictivos = Horario.objects.filter(
-            profesor_id_profesor=profesor.id,
-            dia_semana_id_dia=horario.dia_semana_id_dia,
-            modulo_id_modulo=horario.modulo_id_modulo
-        )
-        
-        if not horarios_conflictivos.exists():
-            profesores_libres.append(profesor)
+def secciones_por_asignatura(request, asignatura_id):
+    #aquí pasa un problema
+    secciones = Horario.objects.filter(asignatura_id_asignatura_id=asignatura_id).values('seccion')
+    secciones_list = [{"id": seccion["seccion"], "numero_seccion": seccion["seccion"]} for seccion in secciones.distinct()]
     
-    return profesores_libres
+    return JsonResponse(secciones_list, safe=False)
 
-def crear_reemplazo(profesor_reemplazo, horario, fecha_reemplazo):
-    # Crear un nuevo reemplazo
-    reemplazo = Reemplazos(
-        semana=calcular_semana(fecha_reemplazo),
-        fecha_reemplazo=fecha_reemplazo,
-        numero_modulos=horario.modulo_id_modulo.hora_modulo,  # O el número de módulos correspondiente
-        profesor_reemplazo=profesor_reemplazo.nombre,
-        horario=horario
-    )
-    reemplazo.save()
+def modulos(request, asignatura_id):
+    modulos = Modulo.objects.all().values('id_modulo', 'hora_modulo')
+    
+    """
+    aquí pasa un problema ya que el filtro debe tener más parametros, o va a devolver modulos correspondiente de TODAS las asignaturas donde el ID de la asignatura sea igual al que recibe
+    el filtro debe contener:  
+    
+    
+    la wea de arriba no tiene nada que ver
+    solución: el html no debería ser un formulario, debe ser una tabla precargada con todas las asignaturas donde no podrá asistir
+    si tiene licencia de lunes a miercoles, debe extraer el día lunes, martes y miercoles con todas las clases que tiene que realizar
+    los datos ya están precargados según la asignatura, sección, hora, y módulo. solo deberá elegirse al profesor reemplazante.
+    problematica: qué pasa con las licencias indefinidas? solución: deberá cargarse la semana completa pero tiene otro problema, si lleva más de dos semanas hay que agregar
+    una nueva instancia para que se registre un nuevo registro de esa semana y no sé como hacerlo de momento.
+    problematica, cómo se genera una nueva instancia de reemplazo? que tire todas las licencias con fecha de inicio y fin para poder identificar con qué licencia se está trabajando
+    se deberá establecer un nuevo atributo en licencias que tenga un estado para: licencia sin asignacion de reemplazo - licencia en progreso - licencia y reemplazo finalizado.
+    """
+    modulo = Horario.objects.filter(asignatura_id_asignatura_id=asignatura_id).values('modulo_id_modulo')
+    modulos_list = [{"id": modulo["id_modulo"], "hora_modulo": modulo["hora_modulo"]} for modulo in modulos]
+    
+    return JsonResponse(modulos_list, safe=False)
 
-def calcular_semana(fecha):
-    # Devuelve el número de semana de la fecha
-    return fecha.isocalendar()[1]
+def salas(request):
+    salas = Sala.objects.all().values('id_sala', 'numero_sala')
+    salas_list = [{"id": sala["id_sala"], "numero_sala": sala["numero_sala"]} for sala in salas]
+    
+    return JsonResponse(salas_list, safe=False)
+
+def profesores_reemplazantes(request):
+    profesores = Profesor.objects.all().values('id_profesor', 'nombre', 'apellido')
+    profesores_list = [{"id": profesor["id_profesor"], "nombre": profesor["nombre"], "apellido": profesor["apellido"]} for profesor in profesores]
+    return JsonResponse(profesores_list, safe=False)

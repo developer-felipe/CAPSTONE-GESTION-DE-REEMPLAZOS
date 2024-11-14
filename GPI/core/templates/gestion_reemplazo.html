@@ -31,58 +31,90 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form method="POST" action="">
-                        {% csrf_token %}
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Semana</th>
-                                    <th>Docente</th>
-                                    <th>Asignatura</th>
-                                    <th>Sección</th>
-                                    <th>Hora Inicio</th>
-                                    <th>Hora Término</th>
-                                    <th>Número Módulos</th>
-                                    <th>Sala</th>
-                                    <th>Fecha de Clase</th>
-                                    <th>Docente Reemplazante</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <select name="semana" class="form-control">
-                                            {% for clase in clases_a_reemplazar %}
-                                            <option value="{{ clase.semana }}">{{ clase.semana }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="docente" class="form-control">
-                                            {% for clase in clases_a_reemplazar %}
-                                            <option value="{{ clase.profesor_id_profesor }}">{{
-                                                clase.profesor_id_profesor }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </td>
-                                    <td>{{ clase.asignatura_id_asignatura.nombre_asignatura }}</td>
-                                    <td>{{ clase.seccion }}</td>
-                                    <td>{{ clase.modulo_id_modulo.hora_modulo }}</td>
-                                    <td>{{ clase.sala_id_sala.numero_sala }}</td>
-                                    <td>{{ clase.fecha_clase }}</td>
-                                    <td>
-                                        <select name="docente_remp" class="form-control">
-                                            {% for profesor in profesores_disponibles %}
-                                            <option value="{{ profesor.id }}">{{ profesor.nombre }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="text-right">
-                            <button type="submit" class="btn btn-primary">Agregar Clase</button>
+                    <form id="reemplazo-form">
+                        <!-- Semana -->
+                        <div class="mb-3">
+                            <label for="semana" class="form-label">Semana:</label>
+                            <select id="semana" name="semana" class="form-select" required>
+                                <option value="">Selecciona una semana</option>
+                                <!-- Las opciones irán del 1 al 18 -->
+                                <script>
+                                    for (let i = 1; i <= 18; i++) {
+                                        document.write(`<option value="${i}">Semana ${i}</option>`);
+                                    }
+                                </script>
+                            </select>
                         </div>
+
+                        <!-- Docente con licencia -->
+                        <div class="mb-3">
+                            <label for="docente" class="form-label">Docente:</label>
+                            <select id="docente" name="docente" class="form-select" required>
+                                <option value="">Selecciona un docente</option>
+                                <!-- Las opciones se llenarán dinámicamente -->
+                            </select>
+                        </div>
+
+                        <!-- Asignatura -->
+                        <div class="mb-3">
+                            <label for="asignatura" class="form-label">Asignatura:</label>
+                            <select id="asignatura" name="asignatura" class="form-select" required>
+                                <option value="">Selecciona una asignatura</option>
+                                <!-- Las opciones se llenarán dinámicamente -->
+                            </select>
+                        </div>
+
+                        <!-- Sección -->
+                        <div class="mb-3">
+                            <label for="seccion" class="form-label">Sección:</label>
+                            <select id="seccion" name="seccion" class="form-select" required>
+                                <option value="">Selecciona una sección</option>
+                                <!-- Las opciones se llenarán dinámicamente -->
+                            </select>
+                        </div>
+
+                        <!-- Modulo -->
+                        <div class="mb-3">
+                            <label for="modulo" class="form-label">Módulo:</label>
+                            <select id="modulo" name="modulo" class="form-select" required>
+                                <option value="">Selecciona un módulo</option>
+                                <!-- Las opciones se llenarán dinámicamente -->
+                            </select>
+                        </div>
+
+                        <!-- Sala -->
+                        <div class="mb-3">
+                            <label for="sala" class="form-label">Sala:</label>
+                            <select id="sala" name="sala" class="form-select" required>
+                                <option value="">Selecciona una sala</option>
+                                <!-- Las opciones se llenarán dinámicamente -->
+                            </select>
+                        </div>
+
+                        <!-- Fecha de clase -->
+                        <div class="mb-3">
+                            <label for="fecha_clase" class="form-label">Fecha de clase:</label>
+                            <input type="date" id="fecha_clase" name="fecha_clase" class="form-control" required>
+                        </div>
+
+                        <!-- Profesor reemplazante -->
+                        <div class="mb-3">
+                            <label for="profesor_reemplazo" class="form-label">Profesor Reemplazante:</label>
+                            <select id="profesor_reemplazo" name="profesor_reemplazo" class="form-select" required>
+                                <option value="">Selecciona un profesor reemplazante</option>
+                                <!-- Las opciones se llenarán dinámicamente -->
+                            </select>
+                        </div>
+
+                        <!-- Número de módulos -->
+                        <div class="mb-3">
+                            <label for="numero_modulos" class="form-label">Número de Módulos:</label>
+                            <input type="number" id="numero_modulos" name="numero_modulos" class="form-control" min="1"
+                                required>
+                        </div>
+
+                        <!-- Botón de Enviar -->
+                        <button type="submit" class="btn btn-primary w-100">Registrar Reemplazo</button>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -129,5 +161,119 @@
 <script>
     $(document).ready(function () {
         $('#extraLargeModal').modal('show');
-    });</script>
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Cargar los docentes con licencia
+        fetch('/api/docentes_con_licencia/')
+            .then(response => response.json())
+            .then(data => {
+                const docenteSelect = document.getElementById('docente');
+                data.forEach(docente => {
+                    const option = document.createElement('option');
+                    option.value = docente.id;
+                    option.textContent = `${docente.nombre} ${docente.apellido}`;
+                    docenteSelect.appendChild(option);
+                });
+            });
+    })
+
+    // Cargar las asignaturas dependiendo del docente seleccionado
+    document.getElementById('docente').addEventListener('change', function () {
+        const docenteId = this.value;
+        console.log('ID del docente:', docenteId);
+
+        if (docenteId) {
+            fetch(`/api/asignaturas_por_docente/${docenteId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const asignaturaSelect = document.getElementById('asignatura');
+                    asignaturaSelect.innerHTML = '<option value="">Selecciona una asignatura</option>';
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(asignatura => {
+                            // Crear la opción
+                            const option = document.createElement('option');
+                            option.value = asignatura.id;   // Establecer el valor del option
+                            option.textContent = asignatura.nombre;  // Establecer el texto del option
+
+                            // Asegurarse de que el textContent se establezca correctamente
+                            console.log('Opción:', option);
+
+                            // Agregar la opción al select
+                            asignaturaSelect.appendChild(option);
+                        });
+                    } else {
+                        console.error('No se han encontrado asignaturas.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar las asignaturas:', error);
+                });
+        }
+    });
+
+    // Cargar las secciones dependiendo de la asignatura seleccionada
+    document.getElementById('asignatura').addEventListener('change', function () {
+        const asignaturaId = this.value;
+        if (asignaturaId) {
+            fetch(`/api/secciones_por_asignatura/${asignaturaId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const seccionSelect = document.getElementById('seccion');
+                    seccionSelect.innerHTML = '<option value="">Selecciona una sección</option>';
+                    data.forEach(seccion => {
+                        const option = document.createElement('option');
+                        option.value = seccion.id;
+                        option.textContent = `Sección ${seccion.numero_seccion}`;
+                        seccionSelect.appendChild(option);
+                    });
+                });
+        }
+    });
+
+    // Cargar los módulos
+    document.getElementById('asignatura').addEventListener('change', function () {
+        const asignaturaId = this.value;
+        if (asignaturaId) {
+            fetch(`{/api/modulos/${asignaturaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const moduloSelect = document.getElementById('modulo');
+                    data.forEach(modulo => {
+                        const option = document.createElement('option');
+                        option.value = modulo.id;
+                        option.textContent = modulo.hora_modulo;
+                        moduloSelect.appendChild(option);
+                    });
+                });
+        }
+
+        // Cargar las salas
+        fetch('/api/salas/')
+            .then(response => response.json())
+            .then(data => {
+                const salaSelect = document.getElementById('sala');
+                data.forEach(sala => {
+                    const option = document.createElement('option');
+                    option.value = sala.id;
+                    option.textContent = `Sala ${sala.numero_sala}`;
+                    salaSelect.appendChild(option);
+                });
+            });
+
+        // Cargar los profesores reemplazantes
+        fetch('/api/profesores_reemplazantes/')
+            .then(response => response.json())
+            .then(data => {
+                const profesorReemplazoSelect = document.getElementById('profesor_reemplazo');
+                data.forEach(profesor => {
+                    const option = document.createElement('option');
+                    option.value = profesor.id;
+                    option.textContent = `${profesor.nombre} ${profesor.apellido}`;
+                    profesorReemplazoSelect.appendChild(option);
+                });
+            });
+    });
+
+</script>
 {% endblock %}
