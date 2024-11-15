@@ -237,6 +237,54 @@ def crear_docente_view(request):
     return render(request, 'templates/crear_docente.html',context)
 
 
+
+def gestion_recuperacion(request):
+    # Recuperaciones existentes para mostrar en el HTML
+    recuperaciones = Recuperacion.objects.all()
+
+    if request.method == 'POST':
+        # Obtener los datos del formulario
+        numero_modulos = request.POST.get('numero_modulos')
+        fecha_clase = request.POST.get('fecha_clase')
+        fecha_recuperacion = request.POST.get('fecha_recuperacion')
+        hora_recuperacion = request.POST.get('hora_recuperacion')
+        sala = request.POST.get('sala')
+        horario_id = request.POST.get('horario_id_horario')
+
+        # Verificar que el ID del horario sea válido
+        try:
+            horario = Horario.objects.get(id_horario=horario_id)
+        except Horario.DoesNotExist:
+            return render(request, 'gestion_recuperacion.html', {
+                'recuperaciones': recuperaciones,
+                'error': 'El horario no existe. Por favor verifica los datos.',
+            })
+
+        # Obtener el profesor relacionado al horario
+        profesor = horario.profesor_id_profesor  # Acceder correctamente al campo de la relación
+
+        # Guardar los datos de recuperación en la base de datos
+        nueva_recuperacion = Recuperacion(
+            numero_modulos=numero_modulos,
+            fecha_clase=fecha_clase,
+            fecha_recuperacion=fecha_recuperacion,
+            hora_recuperacion=hora_recuperacion,
+            sala=sala,
+            horario=horario
+        )
+        nueva_recuperacion.save()
+
+        # Mostrar el mensaje de éxito con el nombre del profesor
+        messages.success(request, f'La recuperación para el profesor {profesor.nombre} {profesor.apellido} se ha guardado correctamente.')
+
+        # Redirigir a la misma página para que el mensaje se muestre
+        return redirect('gestion_recuperacion')
+
+    return render(request, 'templates/gestion_recuperacion.html', {
+        'recuperaciones': recuperaciones,
+    })
+#---------------------------------------------------------------------------
+
 def asignaturas_por_docente(request, docente_id):
     asignaturas = Horario.objects.filter(profesor_id_profesor=docente_id).values('asignatura_id_asignatura__id_asignatura', 'asignatura_id_asignatura__nombre_asignatura')
     asignaturas_list = [{"id": asignatura["asignatura_id_asignatura__id_asignatura"], "nombre": asignatura["asignatura_id_asignatura__nombre_asignatura"]} for asignatura in asignaturas]
