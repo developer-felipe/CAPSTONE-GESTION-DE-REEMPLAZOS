@@ -70,32 +70,29 @@
     </div>
 {% endif %}
     <!-- Tabla de recuperaciones -->
-    <table class="table table-bordered table-striped">
+    <table class="table">
         <thead>
             <tr>
-                <th>Profesor</th>
-                <th>Horario ID</th>
-                <th>Número de Módulos</th>
+                <th>#</th>
                 <th>Fecha de Clase</th>
                 <th>Fecha de Recuperación</th>
                 <th>Hora de Recuperación</th>
                 <th>Sala</th>
+                <th>Profesor</th>
+                <th>Asignatura</th>
             </tr>
         </thead>
         <tbody>
-            {% for recuperacion in recuperaciones %}
+            {% for rec in recuperaciones %}
             <tr>
-                <td>{{ recuperacion.horario.profesor.nombre }} {{ recuperacion.horario.profesor.apellido }}</td>
-                <td>{{ recuperacion.horario.id_horario }}</td>
-                <td>{{ recuperacion.numero_modulos }}</td>
-                <td>{{ recuperacion.fecha_clase }}</td>
-                <td>{{ recuperacion.fecha_recuperacion }}</td>
-                <td>{{ recuperacion.hora_recuperacion }}</td>
-                <td>{{ recuperacion.sala }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7">No hay datos disponibles.</td>
+                <td>{{ forloop.counter }}</td>
+                {% load l10n %}
+                <td>{% localize on %}{{ rec.fecha_clase }}{% endlocalize %}</td>
+                <td>{% localize on %}{{ rec.fecha_recuperacion }}{% endlocalize %}</td>
+                <td>{{ rec.hora_recuperacion }}</td>
+                <td>{{ rec.sala }}</td>
+                <td>{{ rec.horario.profesor_id_profesor.nombre }} {{ rec.horario.profesor_id_profesor.apellido }}</td>
+                <td>{{ rec.horario.asignatura_id_asignatura.nombre_asignatura }}</td>
             </tr>
             {% endfor %}
         </tbody>

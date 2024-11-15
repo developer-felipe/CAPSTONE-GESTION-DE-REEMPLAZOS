@@ -239,9 +239,13 @@ def crear_docente_view(request):
 
 
 def gestion_recuperacion(request):
-    # Recuperaciones existentes para mostrar en el HTML
-    recuperaciones = Recuperacion.objects.all()
+    # Recuperaciones existentes para mostrar en el HTML con las relaciones necesarias
+    recuperaciones = Recuperacion.objects.select_related(
+        'horario__profesor_id_profesor', 
+        'horario__asignatura_id_asignatura'
+    ).all()  # Aquí usamos select_related para traer tanto al profesor como la asignatura
 
+    mensaje_profesor = None
     if request.method == 'POST':
         # Obtener los datos del formulario
         numero_modulos = request.POST.get('numero_modulos')
@@ -261,7 +265,8 @@ def gestion_recuperacion(request):
             })
 
         # Obtener el profesor relacionado al horario
-        profesor = horario.profesor_id_profesor  # Acceder correctamente al campo de la relación
+        profesor = horario.profesor_id_profesor
+        mensaje_profesor = f'La recuperación corresponde al profesor {profesor.nombre} {profesor.apellido}'
 
         # Guardar los datos de recuperación en la base de datos
         nueva_recuperacion = Recuperacion(
@@ -274,14 +279,15 @@ def gestion_recuperacion(request):
         )
         nueva_recuperacion.save()
 
-        # Mostrar el mensaje de éxito con el nombre del profesor
-        messages.success(request, f'La recuperación para el profesor {profesor.nombre} {profesor.apellido} se ha guardado correctamente.')
-
-        # Redirigir a la misma página para que el mensaje se muestre
-        return redirect('gestion_recuperacion')
+        # Recargar recuperaciones actualizadas
+        recuperaciones = Recuperacion.objects.select_related(
+            'horario__profesor_id_profesor',
+            'horario__asignatura_id_asignatura'
+        ).all()
 
     return render(request, 'templates/gestion_recuperacion.html', {
         'recuperaciones': recuperaciones,
+        'mensaje_profesor': mensaje_profesor,
     })
 #---------------------------------------------------------------------------
 
