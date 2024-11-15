@@ -3,11 +3,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.contrib import messages
+from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Semestre, Licencia, Reemplazos,Recuperacion
 from django.core.exceptions import ObjectDoesNotExist
 import json
-from datetime import timedelta, date
+import logging
+import locale
+from datetime import timedelta, datetime
+from collections import defaultdict
+
+locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
 
 def login_view(request):
     if request.method == 'POST':
@@ -85,80 +91,17 @@ def guardar_licencia(request):
                 fecha_inicio=fecha_inicio,
                 fecha_termino=fecha_termino,
                 motivo=motivo,
-                observaciones=observaciones
+                observaciones=observaciones,
+                estado="sin_asignar"
             )
-            # Responder con éxito
             return JsonResponse({'success': True, 'message': 'Licencia guardada exitosamente.'})
         except Exception as e:
-            # Manejar error en el proceso
             return JsonResponse({'success': False, 'error': f'Ocurrió un error: {str(e)}'})
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
-
-def reemplazos_view(request):
-
-    return render(request, 'templates/gestion_reemplazo.html')
-
-
 def recuperacion_view(request):
     return render(request, 'templates/gestion_recuperacion.html')
-
-
-
-def gestionar_recuperacion(request):
-    # Obtener todos los horarios y recuperaciones
-    horarios = Horario.objects.all()
-    recuperaciones = Recuperacion.objects.all()
-
-    if request.method == 'POST':
-        # Obtener los datos del formulario
-        numero_modulos = request.POST.get('numero_modulos')
-        fecha_clase = request.POST.get('fecha_clase')
-        fecha_recuperacion = request.POST.get('fecha_recuperacion')
-        hora_recuperacion = request.POST.get('hora_recuperacion')
-        sala = request.POST.get('sala')
-        horario_id = request.POST.get('horario_id_horario')
-        
-        print(f"horario_id recibido: {horario_id}")  # Esto imprimirá el valor recibido de `horario_id_horario`
-
-        # Validar que el ID del horario sea correcto
-        try:
-            # Intenta convertir el ID a entero y buscar el horario
-            horario_id = int(horario_id)
-            horario = Horario.objects.get(id_horario=horario_id)
-        except (ValueError, ObjectDoesNotExist):
-            # Si no se encuentra el horario o el ID no es válido, muestra un mensaje de error
-            return render(request, 'gestion_recuperacion.html', {
-                'horarios': horarios,
-                'recuperaciones': recuperaciones,
-                'error': 'El ID del horario no es válido o no existe.'
-            })
-
-        # Crear la nueva recuperación
-        nueva_recuperacion = Recuperacion(
-            numero_modulos=numero_modulos,
-            fecha_clase=fecha_clase,
-            fecha_recuperacion=fecha_recuperacion,
-            hora_recuperacion=hora_recuperacion,
-            sala=sala,
-            horario=horario
-        )
-        nueva_recuperacion.save()
-
-        # Volver a cargar la página con la lista actualizada de horarios y recuperaciones
-        return render(request, 'gestion_recuperacion.html', {
-            'horarios': horarios,
-            'recuperaciones': Recuperacion.objects.all(),  # Aseguramos que las recuperaciones se recarguen
-            'success': 'Recuperación agregada exitosamente'
-        })
-
-    # Si no es POST, simplemente mostrar los horarios y recuperaciones
-    return render(request, 'gestion_recuperacion.html', {
-        'horarios': horarios,
-        'recuperaciones': recuperaciones
-    })
-
 
 
 def reportes_view(request):
@@ -293,23 +236,6 @@ def crear_docente_view(request):
             messages.success(request, "Profesor agregado exitosamente.")
     return render(request, 'templates/crear_docente.html',context)
 
-def docentes_con_licencia(request):
-    # Obtener la fecha actual
-    today = date.today()
-
-    # Filtrar los docentes que tienen una licencia activa
-    docentes = Profesor.objects.filter(
-        licencia__fecha_inicio__lte=today,
-        licencia__fecha_termino__gte=today
-    ).distinct()
-
-    # Devolver los docentes con licencia activa
-    docentes_list = [
-        {"id": docente.id_profesor, "nombre": f"{docente.nombre} {docente.apellido}"}
-        for docente in docentes
-    ]
-    
-    return JsonResponse(docentes_list, safe=False)
 
 def asignaturas_por_docente(request, docente_id):
     asignaturas = Horario.objects.filter(profesor_id_profesor=docente_id).values('asignatura_id_asignatura__id_asignatura', 'asignatura_id_asignatura__nombre_asignatura')
@@ -349,10 +275,199 @@ def modulos(request, asignatura_id):
 def salas(request):
     salas = Sala.objects.all().values('id_sala', 'numero_sala')
     salas_list = [{"id": sala["id_sala"], "numero_sala": sala["numero_sala"]} for sala in salas]
-    
     return JsonResponse(salas_list, safe=False)
 
-def profesores_reemplazantes(request):
-    profesores = Profesor.objects.all().values('id_profesor', 'nombre', 'apellido')
-    profesores_list = [{"id": profesor["id_profesor"], "nombre": profesor["nombre"], "apellido": profesor["apellido"]} for profesor in profesores]
-    return JsonResponse(profesores_list, safe=False)
+#-----------------------------------------
+
+def reemplazos_view(request):
+    docentes_con_licencia = Profesor.objects.filter(licencia__isnull=False).distinct()
+    reemplazos = Reemplazos.objects.all().select_related(
+        'horario__asignatura_id_asignatura',
+        'horario__sala_id_sala',
+        'horario__modulo_id_modulo',
+        'horario__dia_semana_id_dia',
+        'horario__profesor_id_profesor'
+    )
+    grupos_reemplazos = defaultdict(list)
+    for reemplazo in reemplazos:
+        clave = (
+            reemplazo.horario.asignatura_id_asignatura.nombre_asignatura,
+            reemplazo.horario.seccion,
+            reemplazo.horario.sala_id_sala.numero_sala,
+            reemplazo.horario.profesor_id_profesor.nombre,
+            reemplazo.horario.profesor_id_profesor.apellido,
+        )
+        grupos_reemplazos[clave].append(reemplazo)
+    reemplazos_agrupados = []
+    for clave, reemplazos_grupo in grupos_reemplazos.items():
+        nombre_asignatura, seccion, numero_sala, nombre_profesor, apellido_profesor = clave
+        horarios = sorted([reemplazo.horario.modulo_id_modulo.hora_modulo for reemplazo in reemplazos_grupo])
+        hora_inicio = horarios[0]
+        hora_fin = horarios[-1]
+        nombre_completo_profesor = nombre_profesor
+        if reemplazos_grupo[0].horario.profesor_id_profesor.segundo_nombre:
+            nombre_completo_profesor += f" {reemplazos_grupo[0].horario.profesor_id_profesor.segundo_nombre}"
+        nombre_completo_profesor += f" {apellido_profesor}"
+        if reemplazos_grupo[0].horario.profesor_id_profesor.segundo_apellido:
+            nombre_completo_profesor += f" {reemplazos_grupo[0].horario.profesor_id_profesor.segundo_apellido}"
+        
+        fecha_reemplazo = reemplazos_grupo[0].fecha_reemplazo.strftime('%d de %B de %Y')
+        mes = fecha_reemplazo.split(' ')[2]
+        fecha_reemplazo = fecha_reemplazo.replace(mes, mes.capitalize())
+
+        reemplazo_agrupado = {
+            'nombre_asignatura': nombre_asignatura,
+            'seccion': seccion,
+            'numero_sala': numero_sala,
+            'hora_modulo': f"{hora_inicio}-{hora_fin}",
+            'numero_modulos': len(horarios),
+            'nombre_profesor': nombre_completo_profesor,
+            'fecha_reemplazo': fecha_reemplazo,
+            'dia_semana': reemplazos_grupo[0].horario.dia_semana_id_dia.nombre_dia,
+            'semana': reemplazos_grupo[0].semana,
+        }
+        reemplazos_agrupados.append(reemplazo_agrupado)
+
+    return render(request, 'templates/gestion_reemplazo.html', {
+        'docentes_con_licencia': docentes_con_licencia,
+        'reemplazos': reemplazos_agrupados
+    })
+
+def profesores_con_licencia_no_asignada(request):
+    profesores = Profesor.objects.filter(
+        licencia__estado='sin_asignar'
+    ).distinct()
+    profesores_data = []
+    for profesor in profesores:
+        licencia = Licencia.objects.filter(profesor_id_profesor=profesor, estado='sin_asignar').first()
+        if licencia:
+            profesores_data.append({
+                'id_profesor': profesor.id_profesor,
+                'nombre': profesor.nombre,
+                'segundo_nombre': profesor.segundo_nombre,
+                'apellido': profesor.apellido,
+                'segundo_apellido': profesor.segundo_apellido,
+                'fecha_inicio': licencia.fecha_inicio.strftime('%Y-%m-%d'),
+                'fecha_termino': licencia.fecha_termino.strftime('%Y-%m-%d')
+            })
+
+    return JsonResponse({'profesores': profesores_data}, safe=False)
+
+#-----------------------------------------
+
+logger = logging.getLogger(__name__)
+def obtener_clases_por_docente(request):
+    docente_id = request.GET.get('docente_id')
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_termino = request.GET.get('fecha_termino')
+
+    if not docente_id or not fecha_inicio or not fecha_termino:
+        logger.error("Faltan parámetros en la solicitud.")
+        return JsonResponse({'error': 'Faltan parámetros'}, status=400)
+
+    try:
+        fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+        fecha_termino = datetime.strptime(fecha_termino, '%Y-%m-%d').date()
+        if fecha_termino < fecha_inicio:
+            logger.warning("La fecha de término no puede ser antes de la fecha de inicio.")
+            return JsonResponse({'error': 'La fecha de término no puede ser antes de la fecha de inicio'}, status=400)
+        try:
+            profesor = Profesor.objects.get(id_profesor=docente_id)
+            logger.debug(f"Profesor encontrado: {profesor.nombre} {profesor.apellido}")
+        except Profesor.DoesNotExist:
+            logger.error(f"Profesor con id {docente_id} no encontrado.")
+            return JsonResponse({'error': 'Profesor no encontrado'}, status=404)
+        
+        horarios = Horario.objects.filter(
+            profesor_id_profesor=profesor
+        ).filter(Q(dia_semana_id_dia__gte=1) & Q(dia_semana_id_dia__lte=6))
+
+        logger.debug(f"Horarios obtenidos: {horarios.count()} horarios")
+
+        clases = []
+        current_date = fecha_inicio
+        while current_date <= fecha_termino:
+            dia_semana = current_date.weekday() + 1
+            logger.debug(f"Procesando fecha: {current_date} (Día de la semana: {dia_semana})")
+            for horario in horarios.filter(dia_semana_id_dia=dia_semana):
+                dia = current_date.strftime('%A').capitalize()
+                clases.append({
+                    'asignatura': horario.asignatura_id_asignatura.nombre_asignatura,
+                    'seccion': horario.seccion,
+                    'sala': horario.sala_id_sala.numero_sala,
+                    'modulo': horario.modulo_id_modulo.hora_modulo,
+                    'dia': dia,
+                    'fecha_clase': current_date.strftime('%d-%m-%Y'),
+                    'modulo_id': horario.modulo_id_modulo.id_modulo,
+                    'dia_semana_id': horario.dia_semana_id_dia.id_dia,
+                    'id_horario': horario.id_horario
+                })
+            current_date += timedelta(days=1)
+
+        if not clases:
+            logger.info(f"No hay clases para el profesor {profesor.nombre} {profesor.apellido} durante el rango de fechas.")
+        
+        logger.debug(f"Clases encontradas: {len(clases)}")
+        return JsonResponse({'clases': clases})
+
+    except Exception as e:
+        logger.error(f"Error inesperado: {str(e)}")
+        return JsonResponse({'error': f'Error: {str(e)}'}, status=500)
+    
+def obtener_profesores_disponibles(request):
+    dia_semana = request.GET.get('dia_semana')
+    modulo_id = request.GET.get('modulo_id')
+    if not dia_semana or not modulo_id:
+        return JsonResponse({'error': 'Faltan parámetros'}, status=400)
+    try:
+        dia_semana = int(dia_semana)
+        modulo_id = int(modulo_id)
+    except ValueError:
+        return JsonResponse({'error': 'Los parámetros deben ser números enteros'}, status=400)
+    profesores_disponibles = Profesor.objects.exclude(
+        horario__dia_semana_id_dia=dia_semana,
+        horario__modulo_id_modulo_id=modulo_id
+    ).distinct()
+    profesores_data = list(profesores_disponibles.values('id_profesor', 'nombre', 'apellido', 'segundo_nombre', 'segundo_apellido'))
+    return JsonResponse({'profesores': profesores_data}, safe=False)
+
+
+
+def registrar_reemplazo(request):
+    if request.method == 'POST':
+        try:
+            logger.info('Recibida solicitud POST para registrar reemplazos.')
+            data = json.loads(request.body)
+            reemplazos = data.get('reemplazos', [])
+            if not reemplazos:
+                logger.warning('No se proporcionaron reemplazos en la solicitud.')
+                return JsonResponse({'error': 'No se proporcionaron reemplazos'}, status=400)
+            logger.info(f'Número de reemplazos recibidos: {len(reemplazos)}')
+            for reemplazo in reemplazos:
+                semana = reemplazo.get('semana')
+                fecha_reemplazo = reemplazo.get('fecha_reemplazo')
+                profesor_reemplazo = reemplazo.get('profesor_reemplazo')
+                horario_id = reemplazo.get('horario_id')
+                logger.info(f'Procesando reemplazo: Semana={semana}, Fecha={fecha_reemplazo}, Profesor={profesor_reemplazo}, Horario ID={horario_id}')
+                try:
+                    horario = Horario.objects.get(id_horario=horario_id)
+                    logger.info(f'Horario encontrado: {horario}')
+                except Horario.DoesNotExist:
+                    logger.error(f'Horario no encontrado para ID: {horario_id}')
+                    return JsonResponse({'error': f'Horario no encontrado para ID {horario_id}'}, status=400)
+                reemplazo_obj = Reemplazos.objects.create(
+                    semana=semana,
+                    fecha_reemplazo=fecha_reemplazo,
+                    profesor_reemplazo=profesor_reemplazo,
+                    horario=horario,
+                )
+                logger.info(f'Reemplazo creado: {reemplazo_obj}')
+            return JsonResponse({'success': True}, status=200)
+        except json.JSONDecodeError:
+            logger.error('Error al decodificar el JSON recibido.')
+            return JsonResponse({'error': 'Error al procesar la solicitud. JSON mal formado.'}, status=400)
+        except Exception as e:
+            logger.error(f'Error inesperado: {str(e)}')
+            return JsonResponse({'error': f'Error inesperado: {str(e)}'}, status=500)
+    logger.warning('Método no permitido. Solo se acepta POST.')
+    return JsonResponse({'error': 'Método no permitido'}, status=405)

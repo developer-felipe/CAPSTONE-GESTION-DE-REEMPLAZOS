@@ -83,6 +83,7 @@ class Licencia(models.Model):
     observaciones = models.CharField(max_length=128)
     fecha_inicio = models.DateField()
     fecha_termino = models.DateField()
+    estado = models.CharField(max_length=11)
     profesor_id_profesor = models.ForeignKey(Profesor, models.DO_NOTHING, db_column='profesor_id_profesor')
 
     class Meta:
@@ -109,7 +110,6 @@ class Reemplazos(models.Model):
     id_reemplazo = models.AutoField(primary_key=True)
     semana = models.IntegerField()
     fecha_reemplazo = models.DateField()
-    numero_modulos = models.IntegerField()
     profesor_reemplazo = models.CharField(max_length=255)
     horario = models.ForeignKey(Horario, models.DO_NOTHING, db_column='horario_id_horario')
 
