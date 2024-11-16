@@ -335,6 +335,7 @@ def salas(request):
 
 def reemplazos_view(request):
     docentes_con_licencia = Profesor.objects.filter(licencia__isnull=False).distinct()
+
     reemplazos = Reemplazos.objects.all().select_related(
         'horario__asignatura_id_asignatura',
         'horario__sala_id_sala',
@@ -342,6 +343,7 @@ def reemplazos_view(request):
         'horario__dia_semana_id_dia',
         'horario__profesor_id_profesor'
     )
+
     grupos_reemplazos = defaultdict(list)
     for reemplazo in reemplazos:
         clave = (
@@ -352,19 +354,24 @@ def reemplazos_view(request):
             reemplazo.horario.profesor_id_profesor.apellido,
         )
         grupos_reemplazos[clave].append(reemplazo)
+        
     reemplazos_agrupados = []
     for clave, reemplazos_grupo in grupos_reemplazos.items():
         nombre_asignatura, seccion, numero_sala, nombre_profesor, apellido_profesor = clave
+
+
         horarios = sorted([reemplazo.horario.modulo_id_modulo.hora_modulo for reemplazo in reemplazos_grupo])
-        hora_inicio = horarios[0]
+        hora_inicio = horarios[0] 
         hora_fin = horarios[-1]
+        hora_inicio_corta = hora_inicio[:5]
+        hora_fin_corta = hora_fin[-5:]
+        hora_modulo = hora_inicio_corta + "-" + hora_fin_corta
         nombre_completo_profesor = nombre_profesor
         if reemplazos_grupo[0].horario.profesor_id_profesor.segundo_nombre:
             nombre_completo_profesor += f" {reemplazos_grupo[0].horario.profesor_id_profesor.segundo_nombre}"
         nombre_completo_profesor += f" {apellido_profesor}"
         if reemplazos_grupo[0].horario.profesor_id_profesor.segundo_apellido:
             nombre_completo_profesor += f" {reemplazos_grupo[0].horario.profesor_id_profesor.segundo_apellido}"
-        
         fecha_reemplazo = reemplazos_grupo[0].fecha_reemplazo.strftime('%d de %B de %Y')
         mes = fecha_reemplazo.split(' ')[2]
         fecha_reemplazo = fecha_reemplazo.replace(mes, mes.capitalize())
@@ -373,7 +380,7 @@ def reemplazos_view(request):
             'nombre_asignatura': nombre_asignatura,
             'seccion': seccion,
             'numero_sala': numero_sala,
-            'hora_modulo': f"{hora_inicio}-{hora_fin}",
+            'hora_modulo': hora_modulo,
             'numero_modulos': len(horarios),
             'nombre_profesor': nombre_completo_profesor,
             'fecha_reemplazo': fecha_reemplazo,
@@ -401,6 +408,7 @@ def profesores_con_licencia_no_asignada(request):
                 'segundo_nombre': profesor.segundo_nombre,
                 'apellido': profesor.apellido,
                 'segundo_apellido': profesor.segundo_apellido,
+                'id_licencia': licencia.id_licencia,
                 'fecha_inicio': licencia.fecha_inicio.strftime('%Y-%m-%d'),
                 'fecha_termino': licencia.fecha_termino.strftime('%Y-%m-%d')
             })
@@ -485,17 +493,28 @@ def obtener_profesores_disponibles(request):
     profesores_data = list(profesores_disponibles.values('id_profesor', 'nombre', 'apellido', 'segundo_nombre', 'segundo_apellido'))
     return JsonResponse({'profesores': profesores_data}, safe=False)
 
-
-
 def registrar_reemplazo(request):
     if request.method == 'POST':
         try:
             logger.info('Recibida solicitud POST para registrar reemplazos.')
             data = json.loads(request.body)
             reemplazos = data.get('reemplazos', [])
+            id_licencia = data.get('id_licencia')
+
             if not reemplazos:
                 logger.warning('No se proporcionaron reemplazos en la solicitud.')
                 return JsonResponse({'error': 'No se proporcionaron reemplazos'}, status=400)
+
+            if not id_licencia:
+                logger.warning('No se proporcionó id_licencia en la solicitud.')
+                return JsonResponse({'error': 'No se proporcionó id_licencia'}, status=400)
+
+            # Buscar la licencia y cambiar su estado
+            licencia = get_object_or_404(Licencia, id_licencia=id_licencia)
+            licencia.estado = 'asignado'
+            licencia.save()
+            logger.info(f'Licencia {id_licencia} actualizada a estado "asignado".')
+
             logger.info(f'Número de reemplazos recibidos: {len(reemplazos)}')
             for reemplazo in reemplazos:
                 semana = reemplazo.get('semana')
@@ -509,6 +528,8 @@ def registrar_reemplazo(request):
                 except Horario.DoesNotExist:
                     logger.error(f'Horario no encontrado para ID: {horario_id}')
                     return JsonResponse({'error': f'Horario no encontrado para ID {horario_id}'}, status=400)
+                
+                # Crear el objeto de reemplazo
                 reemplazo_obj = Reemplazos.objects.create(
                     semana=semana,
                     fecha_reemplazo=fecha_reemplazo,
@@ -516,6 +537,7 @@ def registrar_reemplazo(request):
                     horario=horario,
                 )
                 logger.info(f'Reemplazo creado: {reemplazo_obj}')
+
             return JsonResponse({'success': True}, status=200)
         except json.JSONDecodeError:
             logger.error('Error al decodificar el JSON recibido.')
@@ -523,5 +545,6 @@ def registrar_reemplazo(request):
         except Exception as e:
             logger.error(f'Error inesperado: {str(e)}')
             return JsonResponse({'error': f'Error inesperado: {str(e)}'}, status=500)
+    
     logger.warning('Método no permitido. Solo se acepta POST.')
     return JsonResponse({'error': 'Método no permitido'}, status=405)

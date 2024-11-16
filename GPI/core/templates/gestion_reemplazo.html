@@ -37,7 +37,7 @@
                                 <option value="">Selecciona un docente con licencia</option>
                             </select>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="clases" class="form-label">Clases a Reemplazar:</label>
                             <table id="tabla-clases" class="table">
@@ -135,6 +135,7 @@
                         const option = document.createElement('option');
                         option.value = profesor.id_profesor;
                         option.textContent = nombreCompleto.trim();
+                        option.setAttribute('data-bs-id-licencia', profesor.id_licencia);
                         option.setAttribute('data-bs-fecha-inicio', profesor.fecha_inicio);
                         option.setAttribute('data-bs-fecha-termino', profesor.fecha_termino);
                         docentesSelect.appendChild(option);
@@ -157,14 +158,9 @@
         const selectedOption = this.options[this.selectedIndex];
         const fechaInicio = selectedOption.getAttribute('data-bs-fecha-inicio');
         const fechaTermino = selectedOption.getAttribute('data-bs-fecha-termino');
-        console.log("Docente seleccionado:", docenteId);
-        console.log("Fecha de inicio:", fechaInicio);
-        console.log("Fecha de término:", fechaTermino);
 
         if (docenteId && fechaInicio && fechaTermino) {
             const url = `/obtener_clases_por_docente/?docente_id=${encodeURIComponent(docenteId)}&fecha_inicio=${encodeURIComponent(fechaInicio)}&fecha_termino=${encodeURIComponent(fechaTermino)}`;
-            console.log("URL para obtener clases:", url);
-
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
@@ -176,8 +172,6 @@
                         tablaClases.innerHTML = `<tr><td colspan="7" class="text-center">No hay clases programadas para este docente durante el rango de fechas.</td></tr>`;
                     } else {
                         clases.forEach(clase => {
-                            console.log("Procesando clase:", clase);
-
                             const row = tablaClases.insertRow();
                             row.innerHTML = `
                                 <td><select class="form-select" name="semana_${clase.id}" required>
@@ -192,12 +186,9 @@
                                 <td><select id="profesor_reemplazo_${clase.id}" name="profesor_reemplazo" class="form-select" required>
                                 <option value="">Selecciona un profesor reemplazante</option></select></td>`;
                             const selectReemplazo = row.querySelector(`#profesor_reemplazo_${clase.id}`);
-                            console.log(`ID de la clase: ${clase.dia_semana_id}, ID del módulo: ${clase.modulo_id}`);
                             fetch(`/obtener_profesores_disponibles/?dia_semana=${clase.dia_semana_id}&modulo_id=${clase.modulo_id}`)
                                 .then(response => response.json())
                                 .then(data => {
-                                    console.log("Datos de profesores disponibles:", data);
-
                                     if (data.profesores && data.profesores.length > 0) {
                                         data.profesores.forEach(profesor => {
                                             const option = document.createElement('option');
@@ -230,7 +221,14 @@
         const formulario = document.querySelector('form');
         const reemplazosData = [];
         const rows = document.querySelectorAll('#tabla-clases tbody tr');
+        const selectedOption = document.querySelector('option:checked');
+        const idLicencia = selectedOption ? selectedOption.getAttribute('data-bs-id-licencia') : null;
 
+        if (!idLicencia) {
+            console.error('No se ha seleccionado una opción válida para id_licencia');
+            alert('Por favor, selecciona una opción de licencia.');
+            return;
+        }
         rows.forEach(row => {
             const semanaSelect = row.querySelector('select[name^="semana_"]');
             const profesorSelect = row.querySelector('select[name="profesor_reemplazo"]');
@@ -239,9 +237,8 @@
             const semana = semanaSelect ? semanaSelect.value : null;
             const profesor_reemplazo = profesorSelect ? profesorSelect.value : null;
             const fecha_clase = row.querySelector('td:nth-child(7)').textContent.trim();
-            const [day, month, year] = fecha_clase.split('-'); // Separar la fecha en día, mes y año
-            const fechaFormateada = `${year}-${month}-${day}`; // Formato "YYYY-MM-DD"
-            console.log("semana:" + semana, "idprofe:", profesor_reemplazo, "fecha:", fecha_clase, "id-horario:", idAsignatura)
+            const [day, month, year] = fecha_clase.split('-');
+            const fechaFormateada = `${year}-${month}-${day}`;
             if (semana && profesor_reemplazo) {
                 reemplazosData.push({
                     semana,
@@ -251,6 +248,7 @@
                 });
             }
         });
+
         if (reemplazosData.length > 0) {
             fetch('/registrar_reemplazo/', {
                 method: 'POST',
@@ -260,6 +258,7 @@
                 },
                 body: JSON.stringify({
                     reemplazos: reemplazosData,
+                    id_licencia: idLicencia
                 })
             })
                 .then(response => response.json())
