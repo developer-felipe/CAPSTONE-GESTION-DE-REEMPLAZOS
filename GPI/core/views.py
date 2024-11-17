@@ -40,9 +40,11 @@ def docente_view(request):
             try:
                 profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
 
+                # Eliminar dependencias relacionadas
+                Recuperacion.objects.filter(horario__profesor_id_profesor=profesor_a_eliminar).delete()
+                Horario.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
                 Licencia.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
 
-                Horario.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
 
                 profesor_a_eliminar.delete()
 
@@ -239,51 +241,73 @@ def crear_docente_view(request):
 
 
 def gestion_recuperacion(request):
-    # Recuperaciones existentes para mostrar en el HTML con las relaciones necesarias
-    recuperaciones = Recuperacion.objects.select_related(
-        'horario__profesor_id_profesor', 
-        'horario__asignatura_id_asignatura'
-    ).all()  # Aquí usamos select_related para traer tanto al profesor como la asignatura
-
     mensaje_profesor = None
+    # Obtener todas las recuperaciones para mostrar al cargar la página
+    recuperaciones = Recuperacion.objects.select_related(
+        'horario__profesor_id_profesor',
+        'horario__asignatura_id_asignatura'
+    ).all()
+
     if request.method == 'POST':
-        # Obtener los datos del formulario
-        numero_modulos = request.POST.get('numero_modulos')
-        fecha_clase = request.POST.get('fecha_clase')
-        fecha_recuperacion = request.POST.get('fecha_recuperacion')
-        hora_recuperacion = request.POST.get('hora_recuperacion')
-        sala = request.POST.get('sala')
-        horario_id = request.POST.get('horario_id_horario')
+        # Crear una nueva recuperación
+        if 'numero_modulos' in request.POST:
+            numero_modulos = request.POST.get('numero_modulos')
+            fecha_clase = request.POST.get('fecha_clase')
+            fecha_recuperacion = request.POST.get('fecha_recuperacion')
+            hora_recuperacion = request.POST.get('hora_recuperacion')
+            sala = request.POST.get('sala')
+            horario_id = request.POST.get('horario_id_horario')
 
-        # Verificar que el ID del horario sea válido
-        try:
-            horario = Horario.objects.get(id_horario=horario_id)
-        except Horario.DoesNotExist:
-            return render(request, 'gestion_recuperacion.html', {
-                'recuperaciones': recuperaciones,
-                'error': 'El horario no existe. Por favor verifica los datos.',
-            })
+            try:
+                # Verificar si el horario existe
+                horario = Horario.objects.get(id_horario=horario_id)
+            except Horario.DoesNotExist:
+                return render(request, 'templates/gestion_recuperacion.html', {
+                    'recuperaciones': recuperaciones,
+                    'error': 'El horario no existe. Por favor verifica los datos.',
+                })
 
-        # Obtener el profesor relacionado al horario
-        profesor = horario.profesor_id_profesor
-        mensaje_profesor = f'La recuperación corresponde al profesor {profesor.nombre} {profesor.apellido}'
+            # Crear la nueva recuperación
+            Recuperacion.objects.create(
+                numero_modulos=numero_modulos,
+                fecha_clase=fecha_clase,
+                fecha_recuperacion=fecha_recuperacion,
+                hora_recuperacion=hora_recuperacion,
+                sala=sala,
+                horario=horario
+            )
+            # Recargar las recuperaciones después de agregar una nueva
+            recuperaciones = Recuperacion.objects.select_related(
+                'horario__profesor_id_profesor',
+                'horario__asignatura_id_asignatura'
+            ).all()
 
-        # Guardar los datos de recuperación en la base de datos
-        nueva_recuperacion = Recuperacion(
-            numero_modulos=numero_modulos,
-            fecha_clase=fecha_clase,
-            fecha_recuperacion=fecha_recuperacion,
-            hora_recuperacion=hora_recuperacion,
-            sala=sala,
-            horario=horario
-        )
-        nueva_recuperacion.save()
+        # Editar una recuperación existente
+        elif 'edit_id' in request.POST:
+            edit_id = request.POST.get('edit_id')
+            recuperacion = get_object_or_404(Recuperacion, id=edit_id)
 
-        # Recargar recuperaciones actualizadas
-        recuperaciones = Recuperacion.objects.select_related(
-            'horario__profesor_id_profesor',
-            'horario__asignatura_id_asignatura'
-        ).all()
+            recuperacion.numero_modulos = request.POST.get('numero_modulos')
+            recuperacion.fecha_clase = request.POST.get('fecha_clase')
+            recuperacion.fecha_recuperacion = request.POST.get('fecha_recuperacion')
+            recuperacion.hora_recuperacion = request.POST.get('hora_recuperacion')
+            recuperacion.sala = request.POST.get('sala')
+            recuperacion.save()
+
+            recuperaciones = Recuperacion.objects.select_related(
+                'horario__profesor_id_profesor',
+                'horario__asignatura_id_asignatura'
+            ).all()
+
+        # Eliminar una recuperación existente
+        elif 'delete_id' in request.POST:
+            delete_id = request.POST.get('delete_id')
+            recuperacion = get_object_or_404(Recuperacion, id=delete_id)
+            recuperacion.delete()
+            recuperaciones = Recuperacion.objects.select_related(
+                'horario__profesor_id_profesor',
+                'horario__asignatura_id_asignatura'
+            ).all()
 
     return render(request, 'templates/gestion_recuperacion.html', {
         'recuperaciones': recuperaciones,

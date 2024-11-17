@@ -21,6 +21,7 @@
     </div>
 
     <!-- Modal para agregar recuperación -->
+    <!-- Modal para agregar recuperación -->
     <div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -28,39 +29,43 @@
                     <h5 class="modal-title" id="extraLargeModalLabel">Agregar Recuperación</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form method="POST" action="{% url 'gestion_recuperacion' %}" id="recuperacion-form">
-                        {% csrf_token %}
+                <form id="recuperacion-form" method="POST" action="{% url 'gestion_recuperacion' %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
                         <div class="mb-3">
                             <label for="horario_id_horario" class="form-label">ID del Horario</label>
-                            <input type="text" name="horario_id_horario" id="horario_id_horario" class="form-control" placeholder="Ingrese el ID del horario" required>
+                            <input type="text" name="horario_id_horario" id="horario_id_horario" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label for="numero_modulos" class="form-label">Número de módulos</label>
+                            <label for="numero_modulos" class="form-label">Número de Módulos</label>
                             <input type="number" name="numero_modulos" id="numero_modulos" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label for="fecha_clase" class="form-label">Fecha de clase</label>
+                            <label for="fecha_clase" class="form-label">Fecha de Clase</label>
                             <input type="date" name="fecha_clase" id="fecha_clase" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label for="fecha_recuperacion" class="form-label">Fecha de recuperación</label>
+                            <label for="fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
                             <input type="date" name="fecha_recuperacion" id="fecha_recuperacion" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label for="hora_recuperacion" class="form-label">Hora de recuperación</label>
+                            <label for="hora_recuperacion" class="form-label">Hora de Recuperación</label>
                             <input type="time" name="hora_recuperacion" id="hora_recuperacion" class="form-control" required>
                         </div>
                         <div class="mb-3">
                             <label for="sala" class="form-label">Sala</label>
                             <input type="text" name="sala" id="sala" class="form-control" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Guardar recuperación</button>
-                    </form>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Recuperación</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+
 
     {% if messages %}
     <div class="alert alert-success">
@@ -80,23 +85,85 @@
                 <th>Sala</th>
                 <th>Profesor</th>
                 <th>Asignatura</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             {% for rec in recuperaciones %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                {% load l10n %}
-                <td>{% localize on %}{{ rec.fecha_clase }}{% endlocalize %}</td>
-                <td>{% localize on %}{{ rec.fecha_recuperacion }}{% endlocalize %}</td>
+                <td>{{ rec.fecha_clase }}</td>
+                <td>{{ rec.fecha_recuperacion }}</td>
                 <td>{{ rec.hora_recuperacion }}</td>
                 <td>{{ rec.sala }}</td>
                 <td>{{ rec.horario.profesor_id_profesor.nombre }} {{ rec.horario.profesor_id_profesor.apellido }}</td>
                 <td>{{ rec.horario.asignatura_id_asignatura.nombre_asignatura }}</td>
+                <td>
+                    <!-- Botón de Editar -->
+                    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" 
+                            data-id="{{ rec.id }}" 
+                            data-numero_modulos="{{ rec.numero_modulos }}" 
+                            data-fecha_clase="{{ rec.fecha_clase }}" 
+                            data-fecha_recuperacion="{{ rec.fecha_recuperacion }}" 
+                            data-hora_recuperacion="{{ rec.hora_recuperacion }}" 
+                            data-sala="{{ rec.sala }}">
+                        Editar
+                    </button>
+                    <!-- Botón de Eliminar -->
+                    <form action="{% url 'gestion_recuperacion' %}" method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" name="delete_id" value="{{ rec.id }}">
+                            Eliminar
+                        </button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+</div>
+
+
+<!-- Modal para editar recuperación -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Editar Recuperación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="edit-recuperacion-form" method="POST" action="{% url 'gestion_recuperacion' %}">
+                {% csrf_token %}
+                <input type="hidden" name="edit_id" id="edit_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="numero_modulos" class="form-label">Número de Módulos</label>
+                        <input type="number" name="numero_modulos" id="numero_modulos" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fecha_clase" class="form-label">Fecha de Clase</label>
+                        <input type="date" name="fecha_clase" id="fecha_clase" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
+                        <input type="date" name="fecha_recuperacion" id="fecha_recuperacion" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="hora_recuperacion" class="form-label">Hora de Recuperación</label>
+                        <input type="time" name="hora_recuperacion" id="hora_recuperacion" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sala" class="form-label">Sala</label>
+                        <input type="text" name="sala" id="sala" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <!-- Script para manejar el formulario -->
