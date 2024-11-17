@@ -183,9 +183,9 @@
                                 <td>${clase.modulo}</td>
                                 <td>${clase.dia}</td>
                                 <td>${clase.fecha_clase}</td>
-                                <td><select id="profesor_reemplazo_${clase.id}" name="profesor_reemplazo" class="form-select" required>
+                                <td><select id="profesor_reemplazo_${clase.id_horario}" name="profesor_reemplazo" class="form-select" required>
                                 <option value="">Selecciona un profesor reemplazante</option></select></td>`;
-                            const selectReemplazo = row.querySelector(`#profesor_reemplazo_${clase.id}`);
+                            const selectReemplazo = row.querySelector(`#profesor_reemplazo_${clase.id_horario}`);
                             fetch(`/obtener_profesores_disponibles/?dia_semana=${clase.dia_semana_id}&modulo_id=${clase.modulo_id}`)
                                 .then(response => response.json())
                                 .then(data => {
@@ -232,10 +232,16 @@
         rows.forEach(row => {
             const semanaSelect = row.querySelector('select[name^="semana_"]');
             const profesorSelect = row.querySelector('select[name="profesor_reemplazo"]');
+            const selectedOption = profesorSelect.options[profesorSelect.selectedIndex];
+
+            // Obtenemos el texto de la opción seleccionada (contenido visible)
+            const profesor_reemplazo = selectedOption ? selectedOption.textContent.trim() : null;
+
+            // Si quieres ver el resultado
+            console.log(profesor_reemplazo);
             let tdAsignatura = row.querySelector('td[data-bs-id-asignatura]');
             let idAsignatura = tdAsignatura.dataset.bsIdAsignatura;
             const semana = semanaSelect ? semanaSelect.value : null;
-            const profesor_reemplazo = profesorSelect ? profesorSelect.value : null;
             const fecha_clase = row.querySelector('td:nth-child(7)').textContent.trim();
             const [day, month, year] = fecha_clase.split('-');
             const fechaFormateada = `${year}-${month}-${day}`;
@@ -248,7 +254,6 @@
                 });
             }
         });
-
         if (reemplazosData.length > 0) {
             fetch('/registrar_reemplazo/', {
                 method: 'POST',

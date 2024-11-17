@@ -374,14 +374,13 @@ def reemplazos_view(request):
             reemplazo.horario.asignatura_id_asignatura.nombre_asignatura,
             reemplazo.horario.seccion,
             reemplazo.horario.sala_id_sala.numero_sala,
-            reemplazo.horario.profesor_id_profesor.nombre,
-            reemplazo.horario.profesor_id_profesor.apellido,
+            reemplazo.profesor_reemplazo
         )
         grupos_reemplazos[clave].append(reemplazo)
         
     reemplazos_agrupados = []
     for clave, reemplazos_grupo in grupos_reemplazos.items():
-        nombre_asignatura, seccion, numero_sala, nombre_profesor, apellido_profesor = clave
+        nombre_asignatura, seccion, numero_sala, profesor_reemplazo = clave
 
 
         horarios = sorted([reemplazo.horario.modulo_id_modulo.hora_modulo for reemplazo in reemplazos_grupo])
@@ -390,12 +389,6 @@ def reemplazos_view(request):
         hora_inicio_corta = hora_inicio[:5]
         hora_fin_corta = hora_fin[-5:]
         hora_modulo = hora_inicio_corta + "-" + hora_fin_corta
-        nombre_completo_profesor = nombre_profesor
-        if reemplazos_grupo[0].horario.profesor_id_profesor.segundo_nombre:
-            nombre_completo_profesor += f" {reemplazos_grupo[0].horario.profesor_id_profesor.segundo_nombre}"
-        nombre_completo_profesor += f" {apellido_profesor}"
-        if reemplazos_grupo[0].horario.profesor_id_profesor.segundo_apellido:
-            nombre_completo_profesor += f" {reemplazos_grupo[0].horario.profesor_id_profesor.segundo_apellido}"
         fecha_reemplazo = reemplazos_grupo[0].fecha_reemplazo.strftime('%d de %B de %Y')
         mes = fecha_reemplazo.split(' ')[2]
         fecha_reemplazo = fecha_reemplazo.replace(mes, mes.capitalize())
@@ -406,7 +399,7 @@ def reemplazos_view(request):
             'numero_sala': numero_sala,
             'hora_modulo': hora_modulo,
             'numero_modulos': len(horarios),
-            'nombre_profesor': nombre_completo_profesor,
+            'nombre_profesor': profesor_reemplazo,
             'fecha_reemplazo': fecha_reemplazo,
             'dia_semana': reemplazos_grupo[0].horario.dia_semana_id_dia.nombre_dia,
             'semana': reemplazos_grupo[0].semana,
@@ -486,7 +479,8 @@ def obtener_clases_por_docente(request):
                     'fecha_clase': current_date.strftime('%d-%m-%Y'),
                     'modulo_id': horario.modulo_id_modulo.id_modulo,
                     'dia_semana_id': horario.dia_semana_id_dia.id_dia,
-                    'id_horario': horario.id_horario
+                    'id_horario': horario.id_horario,
+                    'profesor_id': horario.profesor_id_profesor.id_profesor
                 })
             current_date += timedelta(days=1)
 
@@ -535,8 +529,6 @@ def registrar_reemplazo(request):
 
             # Buscar la licencia y cambiar su estado
             licencia = get_object_or_404(Licencia, id_licencia=id_licencia)
-            licencia.estado = 'asignado'
-            licencia.save()
             logger.info(f'Licencia {id_licencia} actualizada a estado "asignado".')
 
             logger.info(f'Número de reemplazos recibidos: {len(reemplazos)}')
@@ -549,11 +541,12 @@ def registrar_reemplazo(request):
                 try:
                     horario = Horario.objects.get(id_horario=horario_id)
                     logger.info(f'Horario encontrado: {horario}')
+                    licencia.estado = 'asignado'
+                    licencia.save()
                 except Horario.DoesNotExist:
                     logger.error(f'Horario no encontrado para ID: {horario_id}')
                     return JsonResponse({'error': f'Horario no encontrado para ID {horario_id}'}, status=400)
                 
-                # Crear el objeto de reemplazo
                 reemplazo_obj = Reemplazos.objects.create(
                     semana=semana,
                     fecha_reemplazo=fecha_reemplazo,
