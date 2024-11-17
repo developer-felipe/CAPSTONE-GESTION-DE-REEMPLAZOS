@@ -276,7 +276,6 @@ def gestion_recuperacion(request):
                 sala=sala,
                 horario=horario
             )
-            # Recargar las recuperaciones después de agregar una nueva
             recuperaciones = Recuperacion.objects.select_related(
                 'horario__profesor_id_profesor',
                 'horario__asignatura_id_asignatura'
@@ -285,29 +284,53 @@ def gestion_recuperacion(request):
         # Editar una recuperación existente
         elif 'edit_id' in request.POST:
             edit_id = request.POST.get('edit_id')
-            recuperacion = get_object_or_404(Recuperacion, id=edit_id)
+            numero_modulos = request.POST.get('numero_modulos')
+            fecha_clase = request.POST.get('fecha_clase')
+            fecha_recuperacion = request.POST.get('fecha_recuperacion')
+            hora_recuperacion = request.POST.get('hora_recuperacion')
+            sala = request.POST.get('sala')
 
-            recuperacion.numero_modulos = request.POST.get('numero_modulos')
-            recuperacion.fecha_clase = request.POST.get('fecha_clase')
-            recuperacion.fecha_recuperacion = request.POST.get('fecha_recuperacion')
-            recuperacion.hora_recuperacion = request.POST.get('hora_recuperacion')
-            recuperacion.sala = request.POST.get('sala')
-            recuperacion.save()
+            try:
+                # Obtener la instancia de la recuperación a editar
+                recuperacion = Recuperacion.objects.get(id=edit_id)
+                # Actualizar los campos de la recuperación
+                recuperacion.numero_modulos = numero_modulos
+                recuperacion.fecha_clase = fecha_clase
+                recuperacion.fecha_recuperacion = fecha_recuperacion
+                recuperacion.hora_recuperacion = hora_recuperacion
+                recuperacion.sala = sala
+                recuperacion.save()  # Guardar los cambios
 
-            recuperaciones = Recuperacion.objects.select_related(
-                'horario__profesor_id_profesor',
-                'horario__asignatura_id_asignatura'
-            ).all()
+                # Volver a cargar las recuperaciones después de editar
+                recuperaciones = Recuperacion.objects.select_related(
+                    'horario__profesor_id_profesor',
+                    'horario__asignatura_id_asignatura'
+                ).all()
 
-        # Eliminar una recuperación existente
+                return JsonResponse({'status': 'success', 'message': 'Recuperación actualizada correctamente'})
+
+            except Recuperacion.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Recuperación no encontrada'})
+
+        # Eliminar una recuperación
         elif 'delete_id' in request.POST:
             delete_id = request.POST.get('delete_id')
-            recuperacion = get_object_or_404(Recuperacion, id=delete_id)
-            recuperacion.delete()
-            recuperaciones = Recuperacion.objects.select_related(
-                'horario__profesor_id_profesor',
-                'horario__asignatura_id_asignatura'
-            ).all()
+
+            if delete_id:  # Verifica que delete_id no sea vacío
+                try:
+                    recuperacion = get_object_or_404(Recuperacion, id_recuperacion=delete_id)
+                    recuperacion.delete()  # Eliminar el registro de la base de datos
+                    # Después de la eliminación, redirige al usuario para recargar la página
+                    recuperaciones = Recuperacion.objects.select_related(
+                        'horario__profesor_id_profesor',
+                        'horario__asignatura_id_asignatura'
+                    ).all()  # Actualiza la lista de recuperaciones
+                    return redirect('gestion_recuperacion')  # Redirecciona a la misma página
+                except Recuperacion.DoesNotExist:
+                    return render(request, 'templates/gestion_recuperacion.html', {
+                        'recuperaciones': recuperaciones,
+                        'error': 'No se pudo eliminar la recuperación. Intentelo de nuevo.',
+                    })
 
     return render(request, 'templates/gestion_recuperacion.html', {
         'recuperaciones': recuperaciones,
