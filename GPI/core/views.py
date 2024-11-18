@@ -40,14 +40,10 @@ def docente_view(request):
             try:
                 profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
 
-                # Eliminar dependencias relacionadas
                 Recuperacion.objects.filter(horario__profesor_id_profesor=profesor_a_eliminar).delete()
                 Horario.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
                 Licencia.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
-
-
                 profesor_a_eliminar.delete()
-
                 messages.success(request, "Profesor y sus licencias eliminadas exitosamente.")
                 return redirect('docente')
             except Profesor.DoesNotExist:
@@ -148,13 +144,16 @@ def sala_view(request):
         data = json.loads(request.body)
         numero_sala = data.get('numero_sala')
         
-        if numero_sala:
-            nueva_sala = Sala(numero_sala=numero_sala)
-            nueva_sala.save()
-            return JsonResponse({'message' : 'Sala agregada'}, status=201)
-        else:
-            return JsonResponse({'message' : 'Número de la sala no proporcionado'})
+        if not numero_sala:
+            return JsonResponse({'message': 'Número de la sala no proporcionado'}, status=400)
         
+        nueva_sala = Sala(numero_sala=numero_sala)
+        nueva_sala.save()
+        return JsonResponse({
+            'message': 'Sala agregada',
+            'id_sala': nueva_sala.id_sala,
+            'numero_sala': nueva_sala.numero_sala
+        }, status=201)
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 def crear_profesor_y_horarios(request):
@@ -276,7 +275,7 @@ def gestion_recuperacion(request):
                 'horario__profesor_id_profesor',
                 'horario__asignatura_id_asignatura'
             ).all()
-
+            return redirect('gestion_recuperacion')
         elif 'edit_id' in request.POST:
             edit_id = request.POST.get('edit_id')
             numero_modulos = request.POST.get('numero_modulos')
@@ -548,11 +547,9 @@ def modificar_docente_view(request):
         'profesores': profesores,
     }
 
-    if request.method == 'PUT':  # Usamos PUT para actualizar datos de un docente
+    if request.method == 'PUT':
         data = json.loads(request.body)
         profesor_id = data.get('id_profesor')
-
-        # Si tenemos el ID del profesor, intentamos actualizarlo
         if profesor_id:
             try:
                 profesor = Profesor.objects.get(id_profesor=profesor_id)
@@ -622,3 +619,23 @@ def modificar_profesor_y_horarios(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+def docente_recuperación(request):
+    profesores = Profesor.objects.filter(horario__isnull=False).distinct()
+    profesores_data = list(profesores.values(
+            'id_profesor', 
+            'nombre', 
+            'apellido', 
+            'segundo_nombre', 
+            'segundo_apellido'            
+        ))
+    return JsonResponse({'profesores': profesores_data})
+
+def docente_asignatura(request,profesorId):
+    asignaturas = Asignatura.objects.filter(horario__profesor_id_profesor=profesorId).distinct()
+    asignatura_data = list(asignaturas.values(
+        'id_asignatura',
+        'nombre_asignatura'
+    ))
+    
+    return JsonResponse({'asignaturas': asignatura_data })

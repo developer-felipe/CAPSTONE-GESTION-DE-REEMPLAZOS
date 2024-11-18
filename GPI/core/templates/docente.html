@@ -65,7 +65,7 @@
                     data-id="{{ profesor.id_profesor }}">
                     Agregar Licencia
                 </button>
-                <button type="button" class="btn btn-success">Modificar</button>
+                <button type="button" id=`${{ profesor.id }}` class="btn btn-success">Modificar</button>
                 <form method="POST" style="display:inline;"
                     onsubmit="return confirm('¿Estás seguro de que deseas eliminar este docente?');">
                     {% csrf_token %}

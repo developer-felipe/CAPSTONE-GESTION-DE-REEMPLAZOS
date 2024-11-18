@@ -17,11 +17,13 @@
     </form>
 
     <div class="mb-3">
-        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#extraLargeModal">Agregar Recuperación</button>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#extraLargeModal">Agregar
+            Recuperación</button>
     </div>
 
     <!-- Modal para agregar recuperación -->
-    <div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel" aria-hidden="true">
+    <div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -32,12 +34,20 @@
                     {% csrf_token %}
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="horario_id_horario" class="form-label">ID del Horario</label>
-                            <input type="text" name="horario_id_horario" id="horario_id_horario" class="form-control" required>
+                            <select id="profesor" name="profesor" class="form-select" required>
+                                <option value="">Selecciona un profesor</option>
+                            </select>
                         </div>
                         <div class="mb-3">
+                            <select id="profesor-asignatura" name="profesor-asignatura" class="form-select" required>
+                                <option value="">Seleccione una asignatura</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="numero_modulos" class="form-label">Número de Módulos</label>
-                            <input type="number" name="numero_modulos" id="numero_modulos" class="form-control" required>
+                            <input type="number" name="numero_modulos" id="numero_modulos" class="form-control"
+                                required>
                         </div>
                         <div class="mb-3">
                             <label for="fecha_clase" class="form-label">Fecha de Clase</label>
@@ -45,15 +55,19 @@
                         </div>
                         <div class="mb-3">
                             <label for="fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
-                            <input type="date" name="fecha_recuperacion" id="fecha_recuperacion" class="form-control" required>
+                            <input type="date" name="fecha_recuperacion" id="fecha_recuperacion" class="form-control"
+                                required>
                         </div>
                         <div class="mb-3">
                             <label for="hora_recuperacion" class="form-label">Hora de Recuperación</label>
-                            <input type="time" name="hora_recuperacion" id="hora_recuperacion" class="form-control" required>
+                            <input type="time" name="hora_recuperacion" id="hora_recuperacion" class="form-control"
+                                required>
                         </div>
                         <div class="mb-3">
                             <label for="sala" class="form-label">Sala</label>
-                            <input type="text" name="sala" id="sala" class="form-control" required>
+                            <select name="sala" id="sala" class="form-control" required>
+                                <option value="">Selecciona una sala</option>
+                            </select>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -69,10 +83,10 @@
     {% if messages %}
     <div class="alert alert-success">
         {% for message in messages %}
-            <p>{{ message }}</p>
+        <p>{{ message }}</p>
         {% endfor %}
     </div>
-{% endif %}
+    {% endif %}
     <!-- Tabla de recuperaciones -->
     <table class="table">
         <thead>
@@ -99,9 +113,9 @@
                 <td>{{ rec.horario.asignatura_id_asignatura.nombre_asignatura }}</td>
                 <td>
                     <!-- Botón de Editar -->
-                    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" 
+                    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal"
                         data-id="{{ rec.id_recuperacion }}">
-                    Editar
+                        Editar
                     </button>
                     <!-- Botón de Eliminar -->
                     <form action="{% url 'gestion_recuperacion' %}" method="POST" style="display:inline;">
@@ -155,25 +169,204 @@
     </div>
 </div>
 
-<!-- Script para manejar el formulario -->
-<script>
-$('#editModal').on('show.bs.modal', function(event) {
-    var button = $(event.relatedTarget); // Botón que activó el modal
-    var editId = button.data('id'); // ID de la recuperación
-    var numeroModulos = button.data('numero_modulos');
-    var fechaClase = button.data('fecha_clase');
-    var fechaRecuperacion = button.data('fecha_recuperacion');
-    var horaRecuperacion = button.data('hora_recuperacion');
-    var sala = button.data('sala');
+<div class="modal fade" id="agregarSalaModal" tabindex="-1" aria-labelledby="agregarSalaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="agregarSalaModalLabel">Agregar Nueva Sala</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="nueva-sala" class="col-form-label">Nombre de Sala</label>
+                        <input type="text" class="form-control" id="nueva-sala">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn btn-warning" onclick="addSala()">Agregar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    // Asignar los valores a los campos del modal
-    $('#edit_id').val(editId);
-    $('#numero_modulos').val(numeroModulos);
-    $('#fecha_clase').val(fechaClase);
-    $('#fecha_recuperacion').val(fechaRecuperacion);
-    $('#hora_recuperacion').val(horaRecuperacion);
-    $('#sala').val(sala);
-});
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        obtenerSalas()
+        fetch('/docente_recuperación/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Red error: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const profesorSelect = document.getElementById('profesor');
+                const profesores = data.profesores;
+                if (profesores.length > 0) {
+                    profesores.forEach(profesor => {
+                        let nombreCompleto = `${profesor.nombre} ${profesor.apellido}`;
+                        if (profesor.segundo_nombre) {
+                            nombreCompleto = `${profesor.nombre} ${profesor.segundo_nombre} ${profesor.apellido}`;
+                        }
+                        if (profesor.segundo_apellido) {
+                            nombreCompleto = `${profesor.nombre} ${profesor.segundo_nombre || ''} ${profesor.apellido} ${profesor.segundo_apellido}`;
+                        }
+                        const option = document.createElement('option');
+                        option.value = profesor.id_profesor;
+                        option.textContent = nombreCompleto.trim();
+                        profesorSelect.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No hay docentes.';
+                    profesorSelect.appendChild(option);
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener los datos:', error);
+            });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    function obtenerSalas() {
+        fetch('/salas/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la red: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const select = document.getElementById('sala');
+                select.innerHTML = '';
+                select.innerHTML = '<option value="">Selecciona una sala</option>';
+                data.forEach(function (sala) {
+                    select.innerHTML += `<option value="${sala.id_sala}">${sala.numero_sala}</option>`;
+                });
+                select.innerHTML += '<option value="agregar">Agregar sala</option>';
+            })
+            .catch(error => {
+                console.log('Error al obtener salas:', error);
+            });
+    }
+
+    function addSala() {
+        let nuevaSala = document.getElementById('nueva-sala').value;
+        if (nuevaSala.trim() === '') {
+            alert('Por favor, ingrese un número para la sala.');
+            return;
+        }
+        nuevaSala = nuevaSala.charAt(0).toUpperCase() + nuevaSala.slice(1);
+        fetch('/salas/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ numero_sala: nuevaSala })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al agregar sala: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(response => {
+                alert('Sala agregada: ' + nuevaSala);
+                $('#agregarSalaModal').modal('hide');
+                obtenerSalas();
+            })
+            .catch(error => {
+                console.log('Error al agregar sala:', error);
+                alert('Hubo un error al agregar la sala.');
+            });
+    }
+
+    document.getElementById('sala').addEventListener('change', function () {
+        const selectedValue = this.value;
+
+        if (selectedValue === 'agregar') {
+            const myModal = new bootstrap.Modal(document.getElementById('agregarSalaModal'));
+            myModal.show();
+        }
+    });
+
+
+    document.getElementById('profesor').addEventListener('change', function () {
+        const profesorSelect = document.getElementById('profesor');
+        const profesorId = profesorSelect.value;
+        console.log(profesorId)
+        if (!profesorId) {
+            return;
+        }
+        fetch(`/docente_asignatura/${profesorId}/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Red error: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const asignaturaSelect = document.getElementById('profesor-asignatura');
+                const asignaturas = data.asignaturas;
+                asignaturaSelect.innerHTML = '';
+                if (asignaturas.length > 0) {
+                    asignaturas.forEach(asignatura => {
+                        const option = document.createElement('option');
+                        option.value = asignatura.id_asignatura;
+                        option.textContent = asignatura.nombre_asignatura;
+                        asignaturaSelect.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No hay asignaturas asociadas al profesor.';
+                    asignaturaSelect.appendChild(option);
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener los datos:', error);
+            });
+    });
+
+    $('#editModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var editId = button.data('id');
+        var numeroModulos = button.data('numero_modulos');
+        var fechaClase = button.data('fecha_clase');
+        var fechaRecuperacion = button.data('fecha_recuperacion');
+        var horaRecuperacion = button.data('hora_recuperacion');
+        var sala = button.data('sala');
+        $('#edit_id').val(editId);
+        $('#numero_modulos').val(numeroModulos);
+        $('#fecha_clase').val(fechaClase);
+        $('#fecha_recuperacion').val(fechaRecuperacion);
+        $('#hora_recuperacion').val(horaRecuperacion);
+        $('#sala').val(sala);
+    });
+
+
 </script>
 
 {% endblock %}
