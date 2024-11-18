@@ -5,6 +5,7 @@ from django.db import models
 class Asignatura(models.Model):
     id_asignatura = models.AutoField(primary_key=True)
     nombre_asignatura = models.CharField(max_length=24)
+    sigla_asignatura = models.CharField(max_length=24)
 
     class Meta:
         managed = False
@@ -50,10 +51,10 @@ class Semestre(models.Model):
 
 class Profesor(models.Model):
     id_profesor = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=16)
-    segundo_nombre = models.CharField(max_length=16, blank=True, null=True)
-    apellido = models.CharField(max_length=16)
-    segundo_apellido = models.CharField(max_length=16, blank=True, null=True)
+    nombre = models.CharField(max_length=24)
+    segundo_nombre = models.CharField(max_length=24, blank=True, null=True)
+    apellido = models.CharField(max_length=24)
+    segundo_apellido = models.CharField(max_length=24, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -93,17 +94,17 @@ class Licencia(models.Model):
 
 class Recuperacion(models.Model):
     id_recuperacion = models.AutoField(primary_key=True)
+    profesor = models.CharField(max_length=100)
+    asignatura = models.CharField(max_length=24)
     numero_modulos = models.IntegerField()
     fecha_clase = models.DateField()
     fecha_recuperacion = models.DateField()
     hora_recuperacion = models.TimeField()
     sala = models.CharField(max_length=4)
-    horario = models.ForeignKey(Horario, models.DO_NOTHING, db_column='horario_id_horario')
 
     class Meta:
         managed = False
         db_table = 'recuperacion'
-        unique_together = (('id_recuperacion', 'horario'),)
 
 
 class Reemplazos(models.Model):
