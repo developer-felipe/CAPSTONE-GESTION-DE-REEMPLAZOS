@@ -242,14 +242,12 @@ def crear_docente_view(request):
 
 def gestion_recuperacion(request):
     mensaje_profesor = None
-    # Obtener todas las recuperaciones para mostrar al cargar la página
     recuperaciones = Recuperacion.objects.select_related(
         'horario__profesor_id_profesor',
         'horario__asignatura_id_asignatura'
     ).all()
 
     if request.method == 'POST':
-        # Crear una nueva recuperación
         if 'numero_modulos' in request.POST:
             numero_modulos = request.POST.get('numero_modulos')
             fecha_clase = request.POST.get('fecha_clase')
@@ -259,15 +257,13 @@ def gestion_recuperacion(request):
             horario_id = request.POST.get('horario_id_horario')
 
             try:
-                # Verificar si el horario existe
                 horario = Horario.objects.get(id_horario=horario_id)
             except Horario.DoesNotExist:
                 return render(request, 'templates/gestion_recuperacion.html', {
                     'recuperaciones': recuperaciones,
                     'error': 'El horario no existe. Por favor verifica los datos.',
                 })
-
-            # Crear la nueva recuperación
+                
             Recuperacion.objects.create(
                 numero_modulos=numero_modulos,
                 fecha_clase=fecha_clase,
@@ -281,7 +277,6 @@ def gestion_recuperacion(request):
                 'horario__asignatura_id_asignatura'
             ).all()
 
-        # Editar una recuperación existente
         elif 'edit_id' in request.POST:
             edit_id = request.POST.get('edit_id')
             numero_modulos = request.POST.get('numero_modulos')
@@ -291,17 +286,13 @@ def gestion_recuperacion(request):
             sala = request.POST.get('sala')
 
             try:
-                # Obtener la instancia de la recuperación a editar
                 recuperacion = Recuperacion.objects.get(id=edit_id)
-                # Actualizar los campos de la recuperación
                 recuperacion.numero_modulos = numero_modulos
                 recuperacion.fecha_clase = fecha_clase
                 recuperacion.fecha_recuperacion = fecha_recuperacion
                 recuperacion.hora_recuperacion = hora_recuperacion
                 recuperacion.sala = sala
-                recuperacion.save()  # Guardar los cambios
-
-                # Volver a cargar las recuperaciones después de editar
+                recuperacion.save()
                 recuperaciones = Recuperacion.objects.select_related(
                     'horario__profesor_id_profesor',
                     'horario__asignatura_id_asignatura'
@@ -312,20 +303,18 @@ def gestion_recuperacion(request):
             except Recuperacion.DoesNotExist:
                 return JsonResponse({'status': 'error', 'message': 'Recuperación no encontrada'})
 
-        # Eliminar una recuperación
         elif 'delete_id' in request.POST:
             delete_id = request.POST.get('delete_id')
 
-            if delete_id:  # Verifica que delete_id no sea vacío
+            if delete_id:
                 try:
                     recuperacion = get_object_or_404(Recuperacion, id_recuperacion=delete_id)
-                    recuperacion.delete()  # Eliminar el registro de la base de datos
-                    # Después de la eliminación, redirige al usuario para recargar la página
+                    recuperacion.delete()
                     recuperaciones = Recuperacion.objects.select_related(
                         'horario__profesor_id_profesor',
                         'horario__asignatura_id_asignatura'
-                    ).all()  # Actualiza la lista de recuperaciones
-                    return redirect('gestion_recuperacion')  # Redirecciona a la misma página
+                    ).all()
+                    return redirect('gestion_recuperacion')
                 except Recuperacion.DoesNotExist:
                     return render(request, 'templates/gestion_recuperacion.html', {
                         'recuperaciones': recuperaciones,
@@ -336,60 +325,17 @@ def gestion_recuperacion(request):
         'recuperaciones': recuperaciones,
         'mensaje_profesor': mensaje_profesor,
     })
-#---------------------------------------------------------------------------
 
-def asignaturas_por_docente(request, docente_id):
-    asignaturas = Horario.objects.filter(profesor_id_profesor=docente_id).values('asignatura_id_asignatura__id_asignatura', 'asignatura_id_asignatura__nombre_asignatura')
-    asignaturas_list = [{"id": asignatura["asignatura_id_asignatura__id_asignatura"], "nombre": asignatura["asignatura_id_asignatura__nombre_asignatura"]} for asignatura in asignaturas]
-
-    return JsonResponse(asignaturas_list, safe=False)
-
-def secciones_por_asignatura(request, asignatura_id):
-    #aquí pasa un problema
-    secciones = Horario.objects.filter(asignatura_id_asignatura_id=asignatura_id).values('seccion')
-    secciones_list = [{"id": seccion["seccion"], "numero_seccion": seccion["seccion"]} for seccion in secciones.distinct()]
-    
-    return JsonResponse(secciones_list, safe=False)
-
-def modulos(request, asignatura_id):
-    modulos = Modulo.objects.all().values('id_modulo', 'hora_modulo')
-    
-    """
-    aquí pasa un problema ya que el filtro debe tener más parametros, o va a devolver modulos correspondiente de TODAS las asignaturas donde el ID de la asignatura sea igual al que recibe
-    el filtro debe contener:  
-    
-    
-    la wea de arriba no tiene nada que ver
-    solución: el html no debería ser un formulario, debe ser una tabla precargada con todas las asignaturas donde no podrá asistir
-    si tiene licencia de lunes a miercoles, debe extraer el día lunes, martes y miercoles con todas las clases que tiene que realizar
-    los datos ya están precargados según la asignatura, sección, hora, y módulo. solo deberá elegirse al profesor reemplazante.
-    problematica: qué pasa con las licencias indefinidas? solución: deberá cargarse la semana completa pero tiene otro problema, si lleva más de dos semanas hay que agregar
-    una nueva instancia para que se registre un nuevo registro de esa semana y no sé como hacerlo de momento.
-    problematica, cómo se genera una nueva instancia de reemplazo? que tire todas las licencias con fecha de inicio y fin para poder identificar con qué licencia se está trabajando
-    se deberá establecer un nuevo atributo en licencias que tenga un estado para: licencia sin asignacion de reemplazo - licencia en progreso - licencia y reemplazo finalizado.
-    """
-    modulo = Horario.objects.filter(asignatura_id_asignatura_id=asignatura_id).values('modulo_id_modulo')
-    modulos_list = [{"id": modulo["id_modulo"], "hora_modulo": modulo["hora_modulo"]} for modulo in modulos]
-    
-    return JsonResponse(modulos_list, safe=False)
-
-def salas(request):
-    salas = Sala.objects.all().values('id_sala', 'numero_sala')
-    salas_list = [{"id": sala["id_sala"], "numero_sala": sala["numero_sala"]} for sala in salas]
-    return JsonResponse(salas_list, safe=False)
-
-#-----------------------------------------
 
 def reemplazos_view(request):
     docentes_con_licencia = Profesor.objects.filter(licencia__isnull=False).distinct()
-
     reemplazos = Reemplazos.objects.all().select_related(
         'horario__asignatura_id_asignatura',
         'horario__sala_id_sala',
         'horario__modulo_id_modulo',
         'horario__dia_semana_id_dia',
         'horario__profesor_id_profesor'
-    )
+    ).order_by('fecha_reemplazo')
 
     grupos_reemplazos = defaultdict(list)
     for reemplazo in reemplazos:
@@ -400,11 +346,10 @@ def reemplazos_view(request):
             reemplazo.profesor_reemplazo
         )
         grupos_reemplazos[clave].append(reemplazo)
-        
+
     reemplazos_agrupados = []
     for clave, reemplazos_grupo in grupos_reemplazos.items():
         nombre_asignatura, seccion, numero_sala, profesor_reemplazo = clave
-
 
         horarios = sorted([reemplazo.horario.modulo_id_modulo.hora_modulo for reemplazo in reemplazos_grupo])
         hora_inicio = horarios[0] 
@@ -587,4 +532,93 @@ def registrar_reemplazo(request):
             return JsonResponse({'error': f'Error inesperado: {str(e)}'}, status=500)
     
     logger.warning('Método no permitido. Solo se acepta POST.')
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
+
+#-----------------
+def modificar_docente_view(request):
+    # Datos necesarios para el formulario de modificación
+    modulos = Modulo.objects.all()
+    dias = DiaSemana.objects.all()
+    profesores = Profesor.objects.all()
+    context = {
+        'modulos': modulos,
+        'dias': dias,
+        'profesores': profesores,
+    }
+
+    if request.method == 'PUT':  # Usamos PUT para actualizar datos de un docente
+        data = json.loads(request.body)
+        profesor_id = data.get('id_profesor')
+
+        # Si tenemos el ID del profesor, intentamos actualizarlo
+        if profesor_id:
+            try:
+                profesor = Profesor.objects.get(id_profesor=profesor_id)
+                profesor.nombre = data.get('primer_nombre', profesor.nombre).strip().capitalize()
+                profesor.segundo_nombre = data.get('segundo_nombre', profesor.segundo_nombre).strip().capitalize()
+                profesor.apellido = data.get('primer_apellido', profesor.apellido).strip().capitalize()
+                profesor.segundo_apellido = data.get('segundo_apellido', profesor.segundo_apellido).strip().capitalize()
+                profesor.save()
+
+                return JsonResponse({"message": "Profesor actualizado exitosamente!"}, status=200)
+            except Profesor.DoesNotExist:
+                return JsonResponse({"error": "Profesor no encontrado."}, status=404)
+
+        else:
+            return JsonResponse({"error": "ID de profesor no proporcionado."}, status=400)
+
+    return render(request, 'templates/modificar_docente.html', context)
+
+def modificar_profesor_y_horarios(request):
+    if request.method == 'PUT':  # Usamos PUT para actualizar los datos del profesor y sus horarios
+        try:
+            data = json.loads(request.body)
+            profesor_data = data.get('profesor')
+            profesor_id = profesor_data.get('id_profesor')
+
+            # Primero intentamos obtener el profesor por el ID
+            if not profesor_id:
+                return JsonResponse({"error": "ID del profesor no proporcionado."}, status=400)
+
+            profesor = get_object_or_404(Profesor, id_profesor=profesor_id)
+
+            # Actualizamos los datos del profesor
+            profesor.nombre = profesor_data['nombre']
+            profesor.apellido = profesor_data['apellido']
+            profesor.segundo_nombre = profesor_data.get('segundo_nombre', '')
+            profesor.segundo_apellido = profesor_data.get('segundo_apellido', '')
+            profesor.save()
+
+            # Ahora actualizamos los horarios asociados al profesor
+            for horario_data in data.get('horarios_asignados', []):
+                try:
+                    asignatura = Asignatura.objects.get(id_asignatura=horario_data['asignaturaID'])
+                    sala = Sala.objects.get(id_sala=horario_data['salaID'])
+                    modulo = Modulo.objects.get(id_modulo=horario_data['moduloID'])
+                    dia = DiaSemana.objects.get(id_dia=horario_data['diaID'])
+                    semestre = Semestre.objects.get(id_semestre=horario_data['semestreID'])
+                except Exception as e:
+                    return JsonResponse({"error": f"Error al obtener los objetos relacionados: {str(e)}"}, status=500)
+
+                # Actualizamos o creamos el horario
+                horario, created = Horario.objects.update_or_create(
+                    profesor_id_profesor=profesor,
+                    asignatura_id_asignatura=asignatura,
+                    sala_id_sala=sala,
+                    dia_semana_id_dia=dia,
+                    modulo_id_modulo=modulo,
+                    semestre_id_semestre=semestre,
+                    defaults={
+                        'seccion': horario_data['seccion'],
+                        'jornada': horario_data['jornada']
+                    }
+                )
+
+            return JsonResponse({"message": "Profesor y horarios actualizados exitosamente!"}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
     return JsonResponse({'error': 'Método no permitido'}, status=405)

@@ -167,7 +167,6 @@
                     const clases = data.clases || []
                     const tablaClases = document.getElementById('tabla-clases').getElementsByTagName('tbody')[0];
                     tablaClases.innerHTML = '';
-
                     if (clases.length === 0) {
                         tablaClases.innerHTML = `<tr><td colspan="7" class="text-center">No hay clases programadas para este docente durante el rango de fechas.</td></tr>`;
                     } else {
@@ -233,19 +232,15 @@
             const semanaSelect = row.querySelector('select[name^="semana_"]');
             const profesorSelect = row.querySelector('select[name="profesor_reemplazo"]');
             const selectedOption = profesorSelect.options[profesorSelect.selectedIndex];
-
-            // Obtenemos el texto de la opción seleccionada (contenido visible)
             const profesor_reemplazo = selectedOption ? selectedOption.textContent.trim() : null;
-
-            // Si quieres ver el resultado
-            console.log(profesor_reemplazo);
+            const profesor_reemplazo_select = profesorSelect ? profesorSelect.value : null;
             let tdAsignatura = row.querySelector('td[data-bs-id-asignatura]');
             let idAsignatura = tdAsignatura.dataset.bsIdAsignatura;
             const semana = semanaSelect ? semanaSelect.value : null;
             const fecha_clase = row.querySelector('td:nth-child(7)').textContent.trim();
             const [day, month, year] = fecha_clase.split('-');
             const fechaFormateada = `${year}-${month}-${day}`;
-            if (semana && profesor_reemplazo) {
+            if (semana && profesor_reemplazo && profesor_reemplazo_select) {
                 reemplazosData.push({
                     semana,
                     fecha_reemplazo: fechaFormateada,

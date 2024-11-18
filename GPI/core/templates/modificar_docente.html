@@ -1,0 +1,243 @@
+{% extends 'templates/base.html' %}
+
+{% block title %}Modificar Profesor{% endblock %}
+
+{% block content %}
+<div class="container pt-5">
+    <h3>Modificar Profesor</h3>
+
+    <!-- Formulario para modificar el docente -->
+    <form id="form-modificar-docente">
+        <div class="form-nombre pt-2">
+            <label for="primer_nombre">Primer Nombre</label>
+            <input type="text" id="primer_nombre" name="primer_nombre" class="form-control" required>
+        </div>
+        <div class="form-group pt-3">
+            <label for="segundo_nombre">Segundo Nombre</label>
+            <input type="text" id="segundo_nombre" name="segundo_nombre" class="form-control">
+        </div>
+        <div class="form-group pt-3">
+            <label for="primer_apellido">Primer Apellido</label>
+            <input type="text" id="primer_apellido" name="primer_apellido" class="form-control" required>
+        </div>
+        <div class="form-group pt-3">
+            <label for="segundo_apellido">Segundo Apellido</label>
+            <input type="text" id="segundo_apellido" name="segundo_apellido" class="form-control">
+        </div>
+
+        <!-- Botón para enviar los datos -->
+        <div class="button pt-3">
+            <button type="submit" id="guardarButton" class="btn btn-warning">Guardar Cambios</button>
+        </div>
+    </form>
+</div>
+
+<div id="div-horario" class="container pt-5">
+    <h3>Asignar Horarios</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col" class="text-center">#</th>
+                {% for dia in dias %}
+                <th class="text-center" id="{{ dia.id_dia }}">{{ dia.nombre_dia }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for modulo in modulos %}
+            <tr>
+                <th class="text-center" scope="row" id="{{ modulo.id_modulo }}">{{ modulo.hora_modulo }}</th>
+                {% for dia in dias %}
+                <td>
+                    <div class="d-flex align-items-center justify-content-center">
+                        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#asignar"
+                            data-modulo-id="{{ modulo.id_modulo }}" data-dia-id="{{ dia.id_dia }}"
+                            onclick="obtenerDiaModulo(this)">
+                            <span class="material-icons me-2" style="font-size: 16px;">add</span>
+                        </button>
+                    </div>
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="d-grid gap-2 col-3 mx-auto">
+        <button class="btn btn-secondary" type="button">Atrás</button>
+        <button id="btn-horario" class="btn btn-warning" type="button">Establecer horario</button>
+    </div>
+</div>
+
+<!-- Modal para Asignar Horario -->
+<div class="modal fade" id="asignar" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Asignar horario</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="asignatura" class="col-form-label">Asignatura</label>
+                        <select class="form-control" id="asignatura" onchange="checkOption(this, 'agregarAsignatura')">
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="jornada" class="col-form-label">Jornada</label>
+                        <select class="form-control" id="jornada">
+                            <option value="">Selecciona una jornada</option>
+                            <option value="D">Diurno</option>
+                            <option value="V">Vespertino</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="seccion" class="col-form-label">Sección</label>
+                        <input type="number" class="form-control" id="seccion" placeholder="Sección"
+                            aria-label="seccion" min="1" max="999" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sala" class="col-form-label">Sala</label>
+                        <select class="form-control" id="sala" onchange="checkOption(this, 'agregarSalaModal')">
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button id="btn-bloque" type="button" class="btn btn-warning">Establecer bloque</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Agregar Nueva Asignatura -->
+<div class="modal fade" id="agregarAsignatura" tabindex="-1" aria-labelledby="agregarAsignaturaLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="agregarAsignaturaLabel">Agregar Nueva Asignatura</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="nueva-asignatura" class="col-form-label">Nombre de Asignatura</label>
+                        <input type="text" class="form-control" id="nueva-asignatura">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn btn-warning" onclick="addAsignatura()">Agregar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Agregar Nueva Sala -->
+<div class="modal fade" id="agregarSalaModal" tabindex="-1" aria-labelledby="agregarSalaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="agregarSalaModalLabel">Agregar Nueva Sala</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="nueva-sala" class="col-form-label">Nombre de Sala</label>
+                        <input type="text" class="form-control" id="nueva-sala">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn btn-warning" onclick="addSala()">Agregar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    async function obtenerDocente() {
+        const response = await fetch(`/docentes/${docenteId}/`);
+        
+        if (response.ok) {
+            const docente = await response.json();
+            document.getElementById('primer_nombre').value = docente.primer_nombre;
+            document.getElementById('segundo_nombre').value = docente.segundo_nombre;
+            document.getElementById('primer_apellido').value = docente.primer_apellido;
+            document.getElementById('segundo_apellido').value = docente.segundo_apellido;
+        } else {
+            toastr.error('No se pudo obtener los datos del docente');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', obtenerDocente);
+
+    document.getElementById('form-modificar-docente').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = new FormData(e.target);
+
+        const response = await fetch(`/docentes/modificar/${docenteId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            body: data
+        });
+
+        if (response.ok) {
+            toastr.success('Los cambios fueron guardados exitosamente');
+        } else {
+            toastr.error('Hubo un error al guardar los cambios');
+        }
+    });
+
+    async function addAsignatura() {
+        const nuevaAsignatura = document.getElementById('nueva-asignatura').value;
+        const response = await fetch('/asignaturas/agregar/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ nombre: nuevaAsignatura })
+        });
+
+        if (response.ok) {
+            toastr.success('Asignatura agregada correctamente');
+        } else {
+            toastr.error('Error al agregar la asignatura');
+        }
+    }
+
+    async function addSala() {
+        const nuevaSala = document.getElementById('nueva-sala').value;
+        const response = await fetch('/salas/agregar/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ nombre: nuevaSala })
+        });
+
+        if (response.ok) {
+            toastr.success('Sala agregada correctamente');
+        } else {
+            toastr.error('Error al agregar la sala');
+        }
+    }
+
+    document.getElementById('btn-agregar-asignatura').addEventListener('click', addAsignatura);
+    document.getElementById('btn-agregar-sala').addEventListener('click', addSala);
+</script>
+
+{% endblock %}

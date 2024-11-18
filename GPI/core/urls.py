@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from .views import (    login_view, reemplazos_view,guardar_licencia ,recuperacion_view,base_view, docente_view, reportes_view, CustomLogoutView,asignatura_view, sala_view, crear_docente_view, crear_profesor_y_horarios,
-secciones_por_asignatura, gestion_recuperacion ,asignaturas_por_docente, modulos,salas,profesores_con_licencia_no_asignada,obtener_clases_por_docente,obtener_profesores_disponibles,registrar_reemplazo )
+ gestion_recuperacion,profesores_con_licencia_no_asignada,obtener_clases_por_docente,obtener_profesores_disponibles,registrar_reemplazo, modificar_docente_view, modificar_profesor_y_horarios)
 
 
 urlpatterns = [
@@ -19,15 +19,12 @@ urlpatterns = [
     path('profesor/<int:profesor_id>/guardar_licencia/', guardar_licencia, name='guardar_licencia'),
     path('crear_docente/', crear_docente_view, name='crear_docente'),
     path('crear_profesor_y_horarios/',crear_profesor_y_horarios, name='crear_docente_horario'),
-    
     path('profesores_con_licencia_no_asignada/', profesores_con_licencia_no_asignada, name='profesores_con_licencia_no_asignada'),
     path('obtener_clases_por_docente/', obtener_clases_por_docente, name='obtener_clases_por_docente'),
     path('obtener_profesores_disponibles/', obtener_profesores_disponibles, name='obtener_profesores_disponibles'),
     path('registrar_reemplazo/', registrar_reemplazo, name='registrar_reemplazo'),
     path('gestion_recuperacion/', gestion_recuperacion, name='gestion_recuperacion'),
-
-    path('api/asignaturas_por_docente/<int:docente_id>/', asignaturas_por_docente, name='asignaturas_por_docente'),
-    path('api/secciones_por_asignatura/<int:asignatura_id>/', secciones_por_asignatura, name='secciones_por_asignatura'),
-    path('api/modulos/', modulos, name='modulos'),
-    path('api/salas/', salas, name='salas'),
+    
+    path('modificar_docente/', modificar_docente_view, name='modificar_docente'),
+    path('modificar_profesor_y_horarios/', modificar_profesor_y_horarios, name='modificar_profesor_y_horarios'),
 ]
