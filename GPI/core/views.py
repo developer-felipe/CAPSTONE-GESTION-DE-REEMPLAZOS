@@ -41,7 +41,11 @@ def docente_view(request):
             try:
                 profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
 
-                Horario.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
+                horarios_asociados = Horario.objects.filter(profesor_id_profesor=profesor_a_eliminar)
+                for horario in horarios_asociados:
+                    Reemplazos.objects.filter(horario=horario).delete()
+
+                horarios_asociados.delete()
                 Licencia.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
                 profesor_a_eliminar.delete()
                 messages.success(request, "Profesor y sus licencias eliminadas exitosamente.")
