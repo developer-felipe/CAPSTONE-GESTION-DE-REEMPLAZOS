@@ -4,18 +4,20 @@
 
 
 {% if messages %}
-    <div id="toast-container" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; max-width: 350px; width: 100%;">
-        {% for message in messages %}
-            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: #007bff; color: white; border-radius: 10px; margin-bottom: 10px;">
-                <div class="toast-header" style="background-color: #0056b3; color: white; border-radius: 10px 10px 0 0;">
-                    
-                </div>
-                <div class="toast-body">
-                    {{ message }}
-                </div>
-            </div>
-        {% endfor %}
+<div id="toast-container"
+    style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; max-width: 350px; width: 100%;">
+    {% for message in messages %}
+    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true"
+        style="background-color: #007bff; color: white; border-radius: 10px; margin-bottom: 10px;">
+        <div class="toast-header" style="background-color: #0056b3; color: white; border-radius: 10px 10px 0 0;">
+
+        </div>
+        <div class="toast-body">
+            {{ message }}
+        </div>
     </div>
+    {% endfor %}
+</div>
 {% endif %}
 
 <div id="div-docente" class="container pt-5">
@@ -228,7 +230,7 @@
             actualizarBloque(moduloID, diaID, asignaturaSelect.options[asignaturaSelect.selectedIndex].text, jornadaSelect, salaSelect.options[salaSelect.selectedIndex].text, seccionSelect);
             $('#asignar').modal('hide');
         } else {
-            toastr.error('Por favor, completa todos los campos.');
+            alert('Por favor, completa todos los campos.');
         }
     });
 
@@ -269,41 +271,46 @@
 
 
     $(document).ready(function () {
-    const ultimoId = $('label[for="primer_nombre"]').data('last');
-    $('#btn-horario').on('click', function () {
-        if ($('#primer_nombre').val().trim() === '' || $('#primer_apellido').val().trim() === '') {
-    toastr.error('El primer nombre y el primer apellido son obligatorios.');
-    return;
-    }
-        const datosFormulario = {
-            profesor: {
-                id: ultimoId,
-                nombre: $('#primer_nombre').val().trim(),
-                apellido: $('#primer_apellido').val().trim(),
-                segundo_nombre: $('#segundo_nombre').val() || '',
-                segundo_apellido: $('#segundo_apellido').val() || ''
-            },
-            horarios_asignados: horariosAsignados
-        };
-            $.ajax({
-                url: '/crear_profesor_y_horarios/',
+        const ultimoId = $('label[for="primer_nombre"]').data('last');
+        $('#btn-horario').on('click', function () {
+            const primerNombre = $('#primer_nombre').val().trim();
+            const primerApellido = $('#primer_apellido').val().trim();
+
+            if (primerNombre === '' || primerApellido === '') {
+                alert('El primer nombre y el primer apellido son obligatorios.');
+                return;
+            }
+            const datosFormulario = {
+                profesor: {
+                    id: ultimoId,
+                    nombre: primerNombre.toUpperCase(),
+                    apellido: primerApellido.toUpperCase(),
+                    segundo_nombre: $('#segundo_nombre').val().toUpperCase() || '',
+                    segundo_apellido: $('#segundo_apellido').val().toUpperCase() || ''
+                },
+                horarios_asignados: horariosAsignados
+            };
+            fetch('/crear_profesor_y_horarios/', {
                 method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(datosFormulario),
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-CSRFToken': csrftoken
                 },
-                success: function (data) {
-                    toastr.success('Profesor y horarios creados exitosamente!');
+                body: JSON.stringify(datosFormulario)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Profesor y horarios creados exitosamente!');
                     console.log(data);
-                },
-                error: function (xhr, status, error) {
+                    window.location.href = '{% url "docente" %}';
+                })
+                .catch(error => {
                     console.error('Error:', error);
-                    toastr.error('Hubo un error al crear el profesor y los horarios.');
-                }
-            });
+                    alert('Hubo un error al crear el profesor y los horarios.');
+                });
         });
     });
+
 
 
     function obtenerSalas() {
@@ -324,6 +331,7 @@
             }
         });
     }
+
     function obtenerAsignaturas() {
         $.ajax({
             url: '/asignaturas/',
@@ -348,59 +356,86 @@
     });
 
     function addAsignatura() {
-    const nuevaAsignatura = document.getElementById('nueva-asignatura').value;
-    
-    if (nuevaAsignatura.trim() === '') {
-        toastr.error('Por favor, ingrese un nombre para la asignatura.');
-        return;
-    }
-    
-    $.ajax({
-        url: '/asignaturas/', 
-        method: 'POST',
-        headers: { 'X-CSRFToken': csrftoken },
-        contentType: 'application/json',
-        data: JSON.stringify({ nombre: nuevaAsignatura }),
-        success: function (response) {
-            toastr.success('Asignatura agregada: ' + nuevaAsignatura);
-            
-            const newOption = new Option(nuevaAsignatura, response.id);  
-            $('#asignatura').append(newOption); 
-            
-            document.getElementById('nueva-asignatura').value = '';
-            
-            $('#agregarAsignatura').modal('hide');
-        },
-        error: function (error) {
-            console.log('Error al agregar asignatura:', error);
-            toastr.error('Hubo un error al agregar la asignatura.');
-        }
-    });
-}
-
-    function addSala() {
-        let nuevaSala = document.getElementById('nueva-sala').value;
-        if (nuevaSala.trim() === '') {
-            toastr.error('Por favor, ingrese un número para la sala.');
+        const nuevaAsignatura = document.getElementById('nueva-asignatura').value.trim();
+        if (nuevaAsignatura === '') {
+            alert('Por favor, ingrese un nombre válido para la asignatura');
             return;
         }
-        nuevaSala = nuevaSala.charAt(0).toUpperCase() + nuevaSala.slice(1);
-        $.ajax({
-            url: '/salas/',
+        const asignaturaCapitalizada = nuevaAsignatura.toUpperCase();
+        fetch('/asignaturas/', {
             method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
-            contentType: 'application/json',
-            data: JSON.stringify({ numero_sala: nuevaSala }),
-            success: function (response) {
-                toastr.success('Sala agregada: ' + nuevaSala);
-                $('#agregarAsignatura').modal('hide');
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
             },
-            error: function (error) {
-                console.log('Error al agregar sala:', error);
-                toastr.error('Hubo un error al agregar la sala.');
-            }
-        });
+            body: JSON.stringify({ nombre: asignaturaCapitalizada })
+        })
+            .then(response => response.json())
+            .then(data => {
+                const newOption = new Option(asignaturaCapitalizada, data.id);
+                console.log(newOption)
+                const select = document.getElementById('asignatura');
+                const options = select.children;
+                if (options.length > 1) {
+                    select.insertBefore(newOption, options[options.length - 1]);
+                } else {
+                    select.appendChild(newOption);
+                }
+                document.getElementById('nueva-asignatura').value = '';
+                select.value = data.id;
+                $('#agregarAsignatura').modal('hide');
+            })
+            .catch(error => {
+                console.log('Error al agregar asignatura:', error);
+                alert('Hubo un error al agregar la asignatura.');
+            });
     }
+
+
+    function addSala() {
+        let nuevaSala = document.getElementById('nueva-sala').value.trim();
+
+        if (nuevaSala === '') {
+            alert('Por favor, ingrese un nombre para la sala.');
+            return;
+        }
+        if (nuevaSala.length !== 4) {
+            alert('El nombre de la sala debe tener exactamente 4 caracteres.');
+            return;
+        }
+        nuevaSala = nuevaSala.toUpperCase();
+
+        fetch('/salas/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ numero_sala: nuevaSala })
+        })
+            .then(response => response.json())
+            .then(data => {
+                const newOption = new Option(nuevaSala, data.id);
+                newOption.value = data.id_sala;
+
+                const select = document.getElementById('sala');
+                const options = select.children;
+                if (options.length > 1) {
+                    select.insertBefore(newOption, options[options.length - 1]);
+                } else {
+                    select.appendChild(newOption);
+                }
+
+                document.getElementById('nueva-sala').value = '';
+                $('#agregarSalaModal').modal('hide');
+            })
+            .catch(error => {
+                console.log('Error al agregar sala:', error);
+                alert('Hubo un error al agregar la sala.');
+            });
+    }
+
+
 
     document.getElementById('seccion').addEventListener('blur', function () {
         let value = this.value;

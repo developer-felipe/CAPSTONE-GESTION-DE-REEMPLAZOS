@@ -8,8 +8,7 @@
     <h1>Gestión de Recuperación</h1>
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
     </div>
-    <form method="POST" action="{% url 'gestion_recuperacion' %}" id="search-form">
-        {% csrf_token %}
+    <form method="POST" id="search-form">
         <div class="input-group mb-3">
             <input type="text" name="filter" class="form-control" placeholder="Buscar por nombre docente...">
             <button type="submit" class="btn btn-primary">Buscar</button>
@@ -30,8 +29,7 @@
                     <h5 class="modal-title" id="extraLargeModalLabel">Agregar Recuperación</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="recuperacion-form" method="POST" action="{% url 'gestion_recuperacion' %}">
-                    {% csrf_token %}
+                <form id="recuperacion-form">
                     <div class="modal-body">
                         <div class="mb-3">
                             <select id="profesor" name="profesor" class="form-select" required>
@@ -87,7 +85,6 @@
         {% endfor %}
     </div>
     {% endif %}
-    <!-- Tabla de recuperaciones -->
     <table class="table">
         <thead>
             <tr>
@@ -112,18 +109,13 @@
                 <td>{{ rec.horario.profesor_id_profesor.nombre }} {{ rec.horario.profesor_id_profesor.apellido }}</td>
                 <td>{{ rec.horario.asignatura_id_asignatura.nombre_asignatura }}</td>
                 <td>
-                    <!-- Botón de Editar -->
                     <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal"
                         data-id="{{ rec.id_recuperacion }}">
                         Editar
                     </button>
-                    <!-- Botón de Eliminar -->
-                    <form action="{% url 'gestion_recuperacion' %}" method="POST" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger" name="delete_id" value="{{ rec.id_recuperacion }}">
-                            Eliminar
-                        </button>
-                    </form>
+                    <button type="submit" class="btn btn-danger" name="delete_id" value="{{ rec.id_recuperacion }}">
+                        Eliminar
+                    </button>
                 </td>
             </tr>
             {% endfor %}
@@ -140,8 +132,7 @@
                 <h5 class="modal-title" id="editModalLabel">Editar Recuperación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="edit-recuperacion-form" method="POST" action="{% url 'gestion_recuperacion' %}">
-                {% csrf_token %}
+            <form id="edit-recuperacion-form">
                 <input type="hidden" id="edit_id" name="edit_id">
                 <div class="mb-3">
                     <label for="numero_modulos" class="form-label">Número de Módulos</label>
@@ -316,7 +307,6 @@
     document.getElementById('profesor').addEventListener('change', function () {
         const profesorSelect = document.getElementById('profesor');
         const profesorId = profesorSelect.value;
-        console.log(profesorId)
         if (!profesorId) {
             return;
         }
@@ -349,6 +339,53 @@
                 console.error('Error al obtener los datos:', error);
             });
     });
+
+    document.getElementById('recuperacion-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+    
+        const formData = new FormData(event.target);
+        const data = {};
+    
+        formData.forEach((value, key) => {
+            data[key] = value;
+        });
+    
+        fetch('{% url "registrar_recuperacion" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(responseData => {
+            if (responseData.success) {
+                alert('Recuperación registrada correctamente.');
+            } else {
+                alert('Error al registrar la recuperación.');
+            }
+        })
+        .catch(error => {
+            console.error('Error al enviar los datos:', error);
+            alert('Hubo un error al procesar la solicitud.');
+        });
+    });
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 
     $('#editModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);

@@ -5,12 +5,10 @@ from django.db import models
 class Asignatura(models.Model):
     id_asignatura = models.AutoField(primary_key=True)
     nombre_asignatura = models.CharField(max_length=24)
-    sigla_asignatura = models.CharField(max_length=24)
 
     class Meta:
         managed = False
         db_table = 'asignatura'
-
 
 class DiaSemana(models.Model):
     id_dia = models.AutoField(primary_key=True)
@@ -39,14 +37,6 @@ class Sala(models.Model):
         db_table = 'sala'
 
 
-class Semestre(models.Model):
-    id_semestre = models.AutoField(primary_key=True)
-    year = models.IntegerField()
-    semestre = models.IntegerField()
-
-    class Meta:
-        managed = False
-        db_table = 'semestre'
 
 
 class Profesor(models.Model):
@@ -70,12 +60,11 @@ class Horario(models.Model):
     dia_semana_id_dia = models.ForeignKey(DiaSemana, models.DO_NOTHING, db_column='dia_semana_id_dia')
     modulo_id_modulo = models.ForeignKey(Modulo, models.DO_NOTHING, db_column='modulo_id_modulo')
     profesor_id_profesor = models.ForeignKey(Profesor, models.DO_NOTHING, db_column='profesor_id_profesor')
-    semestre_id_semestre = models.ForeignKey(Semestre, models.DO_NOTHING, db_column='semestre_id_semestre')
 
     class Meta:
         managed = False
         db_table = 'horario'
-        unique_together = (('seccion', 'asignatura_id_asignatura', 'sala_id_sala', 'dia_semana_id_dia', 'modulo_id_modulo', 'profesor_id_profesor', 'semestre_id_semestre'),)
+        unique_together = (('seccion', 'asignatura_id_asignatura', 'sala_id_sala', 'dia_semana_id_dia', 'modulo_id_modulo', 'profesor_id_profesor'))
 
 
 class Licencia(models.Model):

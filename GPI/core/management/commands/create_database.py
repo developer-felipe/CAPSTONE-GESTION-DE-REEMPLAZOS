@@ -8,11 +8,9 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         db_name = config('DATABASE_NAME')
         
-        # Crea la base de datos si no existe
         with connection.cursor() as cursor:
             cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}`;")
 
-        # Comprueba si la base de datos fue creada o ya existía
         with connection.cursor() as cursor:
             cursor.execute("SHOW DATABASES;")
             databases = [row[0] for row in cursor.fetchall()]
