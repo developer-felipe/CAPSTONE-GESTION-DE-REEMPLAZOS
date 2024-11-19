@@ -43,7 +43,6 @@ function guardarLicencia() {
     const fechaInicio = new Date(document.getElementById('fechaInicio').value);
     const fechaFin = new Date(document.getElementById('fechaFin').value);
     
-    // Validación de fechas
     if (fechaFin < fechaInicio) {
         alert("La fecha de término no puede ser anterior a la de inicio.");
         return;  
@@ -67,19 +66,15 @@ function guardarLicencia() {
     })
     .then(data => {
         if (data.success) {
-            // Mostrar un mensaje de éxito
-            alert(data.message); // Usar alert o el método de notificación que prefieras
+            alert(data.message); 
 
-            // Cerrar el modal
             $('#licenciaModal').modal('hide'); 
 
-            // Limpiar los campos del formulario
             document.getElementById('fechaInicio').value = '';
             document.getElementById('fechaFin').value = '';
             document.getElementById('motivo').value = '';
             document.getElementById('observaciones').value = '';
         } else {
-            // Mostrar mensaje de error
             alert(data.error || "Hubo un error al guardar la licencia.");
         }
     })
