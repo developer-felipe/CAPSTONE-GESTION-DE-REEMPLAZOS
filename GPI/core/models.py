@@ -36,9 +36,6 @@ class Sala(models.Model):
         managed = False
         db_table = 'sala'
 
-
-
-
 class Profesor(models.Model):
     id_profesor = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=24)
