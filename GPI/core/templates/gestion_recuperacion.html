@@ -306,7 +306,10 @@
 
     document.getElementById('profesor').addEventListener('change', function () {
         const profesorSelect = document.getElementById('profesor');
+        const selectedOption = profesorSelect.options[profesorSelect.selectedIndex];
+        const profesorNombre = selectedOption.innerHTML;
         const profesorId = profesorSelect.value;
+
         if (!profesorId) {
             return;
         }
@@ -342,14 +345,25 @@
 
     document.getElementById('recuperacion-form').addEventListener('submit', function (event) {
         event.preventDefault();
-    
+        const profesorSelect = document.getElementById('profesor');
+        const selectedOption = profesorSelect.options[profesorSelect.selectedIndex];
+        const profesorNombre = selectedOption.innerHTML;
+        const asignaturaSelect = document.getElementById('profesor-asignatura');
+        const selectedAsign = asignaturaSelect.options[asignaturaSelect.selectedIndex];
+        const asignaturaNombre = selectedAsign.innerHTML;
+        const profesorId = profesorSelect.value;
         const formData = new FormData(event.target);
+        const salaSelect = document.getElementById('sala');
+        const selectSala = salaSelect.options[salaSelect.selectedIndex];
+        const salaNombre = selectSala.innerHTML;
         const data = {};
-    
+        data.profesorNombre = profesorNombre
+        data.asignaturaNombre = asignaturaNombre
+        data.salaNombre = salaNombre
         formData.forEach((value, key) => {
             data[key] = value;
         });
-    
+
         fetch('{% url "registrar_recuperacion" %}', {
             method: 'POST',
             headers: {
@@ -358,20 +372,20 @@
             },
             body: JSON.stringify(data)
         })
-        .then(response => response.json())
-        .then(responseData => {
-            if (responseData.success) {
-                alert('Recuperación registrada correctamente.');
-            } else {
-                alert('Error al registrar la recuperación.');
-            }
-        })
-        .catch(error => {
-            console.error('Error al enviar los datos:', error);
-            alert('Hubo un error al procesar la solicitud.');
-        });
+            .then(response => response.json())
+            .then(responseData => {
+                if (responseData.success) {
+                    alert('Recuperación registrada correctamente.');
+                } else {
+                    alert('Error al registrar la recuperación.');
+                }
+            })
+            .catch(error => {
+                console.error('Error al enviar los datos:', error);
+                alert('Hubo un error al procesar la solicitud.');
+            });
     });
-    
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {

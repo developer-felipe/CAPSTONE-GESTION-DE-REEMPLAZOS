@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
@@ -26,7 +27,6 @@ def login_view(request):
         else:
             messages.error(request, 'Usuario o contraseña incorrectos.')
     return render(request, 'templates/login.html')
-
 
 def docente_view(request):
     profesores = Profesor.objects.all()
@@ -106,9 +106,9 @@ def reportes_view(request):
     return render(request, 'templates/reportes.html')
 
 
+@login_required(login_url='/login/')  # Establece la URL a donde se debe redirigir
 def base_view(request):
-    return render(request, 'templates/base.html')
-
+    return render(request, 'base.html')
 
 def CustomLogoutView(request):
     return render(request, 'templates/login.html')
@@ -207,7 +207,7 @@ def crear_profesor_y_horarios(request):
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-    
+   
 def crear_docente_view(request):
     modulos = Modulo.objects.all()
     dias = DiaSemana.objects.all()
@@ -254,21 +254,16 @@ def crear_docente_view(request):
 def registrar_recuperacion(request):
     if request.method == 'POST':
         try:
-            # Log de inicio de la función
             logger.info("Iniciando registro de recuperación.")
-            
-            # Cargar los datos del cuerpo de la solicitud
             data = json.loads(request.body)
             logger.debug(f"Datos recibidos: {data}")
-
-            # Extraer datos
-            profesor = data.get('profesor')
-            asignatura = data.get('profesor-asignatura')
+            profesor = data.get('profesorNombre')
+            asignatura = data.get('asignaturaNombre')
             numero_modulos = data.get('numero_modulos')
             fecha_clase = data.get('fecha_clase')
             fecha_recuperacion = data.get('fecha_recuperacion')
             hora_recuperacion = data.get('hora_recuperacion')
-            sala = data.get('sala')
+            sala = data.get('salaNombre')
             if not all([profesor, asignatura, numero_modulos, fecha_clase, fecha_recuperacion, hora_recuperacion, sala]):
                 logger.warning("Faltan datos en el formulario.")
                 return JsonResponse({'success': False, 'message': 'Faltan datos en el formulario.'}, status=400)
@@ -307,13 +302,23 @@ def reemplazos_view(request):
             reemplazo.horario.asignatura_id_asignatura.nombre_asignatura,
             reemplazo.horario.seccion,
             reemplazo.horario.sala_id_sala.numero_sala,
-            reemplazo.profesor_reemplazo
+            reemplazo.profesor_reemplazo,            
+            reemplazo.horario.profesor_id_profesor.nombre,
+            reemplazo.horario.profesor_id_profesor.segundo_nombre,
+            reemplazo.horario.profesor_id_profesor.apellido,
+            reemplazo.horario.profesor_id_profesor.segundo_apellido,
         )
         grupos_reemplazos[clave].append(reemplazo)
 
     reemplazos_agrupados = []
     for clave, reemplazos_grupo in grupos_reemplazos.items():
-        nombre_asignatura, seccion, numero_sala, profesor_reemplazo = clave
+        nombre_asignatura, seccion, numero_sala, profesor_reemplazo, nombre, segundo_nombre, apellido, segundo_apellido = clave
+        profesor_nombre = " ".join(filter(None, [
+            nombre,
+            segundo_nombre,
+            apellido,
+            segundo_apellido
+        ]))
 
         horarios = sorted([reemplazo.horario.modulo_id_modulo.hora_modulo for reemplazo in reemplazos_grupo])
         hora_inicio = horarios[0] 
@@ -335,6 +340,7 @@ def reemplazos_view(request):
             'fecha_reemplazo': fecha_reemplazo,
             'dia_semana': reemplazos_grupo[0].horario.dia_semana_id_dia.nombre_dia,
             'semana': reemplazos_grupo[0].semana,
+            'profesor_nombre': profesor_nombre
         }
         reemplazos_agrupados.append(reemplazo_agrupado)
 
@@ -458,11 +464,8 @@ def registrar_reemplazo(request):
             if not id_licencia:
                 logger.warning('No se proporcionó id_licencia en la solicitud.')
                 return JsonResponse({'error': 'No se proporcionó id_licencia'}, status=400)
-
-            # Buscar la licencia y cambiar su estado
             licencia = get_object_or_404(Licencia, id_licencia=id_licencia)
             logger.info(f'Licencia {id_licencia} actualizada a estado "asignado".')
-
             logger.info(f'Número de reemplazos recibidos: {len(reemplazos)}')
             for reemplazo in reemplazos:
                 semana = reemplazo.get('semana')

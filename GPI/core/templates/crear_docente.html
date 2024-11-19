@@ -200,7 +200,7 @@
         }
     }
 
-    let horariosAsignados = [];
+
     function obtenerDiaModulo(button) {
         const moduloID = button.getAttribute('data-modulo-id');
         const diaID = button.getAttribute('data-dia-id');
@@ -216,8 +216,8 @@
         const seccionSelect = document.getElementById('seccion').value;
         const salaSelect = document.getElementById('sala');
         const salaID = salaSelect.value;
-        const semestreID = 1;
         if (asignaturaID && jornadaSelect && seccionSelect && salaID) {
+            const array_pos = horariosAsignados.length
             horariosAsignados.push({
                 moduloID: moduloID,
                 diaID: diaID,
@@ -225,22 +225,23 @@
                 jornada: jornadaSelect,
                 seccion: seccionSelect,
                 salaID: salaID,
-                semestreID: semestreID
+                array_pos: array_pos
             });
-            actualizarBloque(moduloID, diaID, asignaturaSelect.options[asignaturaSelect.selectedIndex].text, jornadaSelect, salaSelect.options[salaSelect.selectedIndex].text, seccionSelect);
+            actualizarBloque(moduloID, diaID, asignaturaSelect.options[asignaturaSelect.selectedIndex].text, jornadaSelect, salaSelect.options[salaSelect.selectedIndex].text, seccionSelect, array_pos);
             $('#asignar').modal('hide');
         } else {
             alert('Por favor, completa todos los campos.');
         }
     });
 
-    function actualizarBloque(moduloID, diaID, asignatura, jornada, sala, seccion) {
+    let horariosAsignados = [];
+    function actualizarBloque(moduloID, diaID, asignatura, jornada, sala, seccion, array_pos) {
         const celda = document.querySelector(`#div-horario table tbody tr:nth-child(${parseInt(moduloID)}) td:nth-child(${parseInt(diaID) + 1})`);
         if (celda) {
             celda.innerHTML = `
                 <div class="d-flex flex-column p-2 bg-light border rounded shadow-sm position-relative text-center">
                     <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
-                            onclick="desasignarBloque(${moduloID}, ${diaID})">
+                            onclick="desasignarBloque(${moduloID}, ${diaID}, ${array_pos})">
                         <span class="material-icons" style="font-size: 16px;">close</span>
                     </button>
                     <div class="mb-2">
@@ -250,10 +251,12 @@
                     <div class="small text-muted">Sala: ${sala}</div>
                 </div>
             `;
+            console.log("Horarios asignados después de agregar:", horariosAsignados);
         }
     }
 
-    function desasignarBloque(moduloID, diaID) {
+    function desasignarBloque(moduloID, diaID, array_pos) {
+        console.log(array_pos)
         const celda = document.querySelector(`#div-horario table tbody tr:nth-child(${parseInt(moduloID)}) td:nth-child(${parseInt(diaID) + 1})`);
         if (celda) {
             celda.innerHTML = `
@@ -265,10 +268,10 @@
                 </div>
             `;
             celda.style.backgroundColor = "";
+            horariosAsignados.splice(array_pos,1)
+            console.log(horariosAsignados)
         }
-        horariosAsignados = horariosAsignados.filter(item => !(item.moduloID === moduloID && item.diaID === diaID));
     }
-
 
     $(document).ready(function () {
         const ultimoId = $('label[for="primer_nombre"]').data('last');

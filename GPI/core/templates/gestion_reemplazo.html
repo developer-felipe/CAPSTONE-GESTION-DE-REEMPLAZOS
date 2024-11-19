@@ -14,10 +14,11 @@
 
     <div class="w-50 p-1">
         {% if request.user.is_staff %}
-        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#extraLargeModal">Agregar
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#extraLargeModal">Agregar
             Reemplazo</button>
         {% endif %}
     </div>
+
     <div class="modal fade" id="extraLargeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-xl" role="document">
@@ -75,6 +76,7 @@
         <thead>
             <tr>
                 <th>Semana</th>
+                <th>Profesor</th>
                 <th>Asignatura</th>
                 <th>Sección</th>
                 <th>Sala</th>
@@ -89,6 +91,7 @@
             {% for reemplazo in reemplazos %}
             <tr>
                 <td>{{ reemplazo.semana }}</td>
+                <td>{{ reemplazo.profesor_nombre }}</td>
                 <td>{{ reemplazo.nombre_asignatura }}</td>
                 <td>{{ reemplazo.seccion }}</td>
                 <td>{{ reemplazo.numero_sala }}</td>
@@ -102,7 +105,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="9" class="text-center">No hay registros de clases de reemplazo.</td>
+                <td colspan="8" class="text-center">No hay registros de clases de reemplazo.</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -111,10 +114,6 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(document).ready(function () {
-        $('#extraLargeModal').modal('show');
-    });
-
     document.addEventListener('DOMContentLoaded', function () {
         fetch('/profesores_con_licencia_no_asignada/')
             .then(response => response.json())
@@ -168,7 +167,7 @@
                     const tablaClases = document.getElementById('tabla-clases').getElementsByTagName('tbody')[0];
                     tablaClases.innerHTML = '';
                     if (clases.length === 0) {
-                        tablaClases.innerHTML = `<tr><td colspan="7" class="text-center">No hay clases programadas para este docente durante el rango de fechas.</td></tr>`;
+                        tablaClases.innerHTML = `<tr><td colspan="8" class="text-center">No hay clases programadas para este docente durante el rango de fechas.</td></tr>`;
                     } else {
                         clases.forEach(clase => {
                             const row = tablaClases.insertRow();

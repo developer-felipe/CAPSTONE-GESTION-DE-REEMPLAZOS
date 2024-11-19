@@ -9,8 +9,8 @@ profesores_con_licencia_no_asignada,obtener_clases_por_docente,obtener_profesore
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', lambda request: redirect('login') if not request.user.is_authenticated else base_view, name='base'),
-    path('login/', login_view, name='login'),
+    path('base/', base_view, name='base'),
+    path('', login_view, name='login'),
     path('logout/', CustomLogoutView, name='logout'),
     path('reemplazos/', reemplazos_view, name='reemplazos'),
     path('recuperacion/', recuperacion_view, name='recuperacion'),
