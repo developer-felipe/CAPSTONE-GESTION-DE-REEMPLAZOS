@@ -89,12 +89,13 @@
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Profesor</th>
+                <th>Asignatura</th>
+                <th>Número de Módulos</th>
                 <th>Fecha de Clase</th>
                 <th>Fecha de Recuperación</th>
                 <th>Hora de Recuperación</th>
                 <th>Sala</th>
-                <th>Profesor</th>
-                <th>Asignatura</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -102,20 +103,15 @@
             {% for rec in recuperaciones %}
             <tr>
                 <td>{{ rec.id_recuperacion }}</td>
+                <td>{{ rec.profesor }}</td>
+                <td>{{ rec.asignatura }}</td>
+                <td>{{ rec.numero_modulos }}</td>
                 <td>{{ rec.fecha_clase }}</td>
                 <td>{{ rec.fecha_recuperacion }}</td>
                 <td>{{ rec.hora_recuperacion }}</td>
                 <td>{{ rec.sala }}</td>
-                <td>{{ rec.horario.profesor_id_profesor.nombre }} {{ rec.horario.profesor_id_profesor.apellido }}</td>
-                <td>{{ rec.horario.asignatura_id_asignatura.nombre_asignatura }}</td>
                 <td>
-                    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal"
-                        data-id="{{ rec.id_recuperacion }}">
-                        Editar
-                    </button>
-                    <button type="submit" class="btn btn-danger" name="delete_id" value="{{ rec.id_recuperacion }}">
-                        Eliminar
-                    </button>
+                    <button class="btn btn-danger" data-id="{{ rec.id_recuperacion }}" onclick="eliminarRecuperacion(this)">Eliminar</button>
                 </td>
             </tr>
             {% endfor %}
@@ -222,6 +218,33 @@
                 console.error('Error al obtener los datos:', error);
             });
     });
+
+    function eliminarRecuperacion(button) {
+    const idRecuperacion = button.getAttribute('data-id');
+    
+    if (confirm("¿Estás seguro de que deseas eliminar esta recuperación?")) {
+        fetch(`/eliminar-recuperacion/${idRecuperacion}/`, {
+            method: 'DELETE',  
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')  
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Recuperación eliminada correctamente');
+                window.location.reload(); 
+            } else {
+                alert(data.message || 'Hubo un error al eliminar la recuperación');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error al eliminar la recuperación');
+        });
+    }
+}
 
     function getCookie(name) {
         let cookieValue = null;

@@ -100,7 +100,23 @@ def guardar_licencia(request):
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
 def recuperacion_view(request):
-    return render(request, 'templates/gestion_recuperacion.html')
+    recuperaciones = Recuperacion.objects.all()
+
+    return render(request, 'templates/gestion_recuperacion.html', {
+        'recuperaciones': recuperaciones
+    })
+
+
+
+def eliminar_recuperacion(request, id_recuperacion):
+    try:
+        recuperacion = Recuperacion.objects.get(id_recuperacion=id_recuperacion)
+        recuperacion.delete()
+        return JsonResponse({'success': True, 'message': 'Recuperación eliminada correctamente'})
+    except Recuperacion.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Recuperación no encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
 def reportes_view(request):
