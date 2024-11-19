@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.db import connection
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
@@ -287,66 +288,92 @@ def registrar_recuperacion(request):
     return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
 
 def reemplazos_view(request):
-    docentes_con_licencia = Profesor.objects.filter(licencia__isnull=False).distinct()
-    reemplazos = Reemplazos.objects.all().select_related(
-        'horario__asignatura_id_asignatura',
-        'horario__sala_id_sala',
-        'horario__modulo_id_modulo',
-        'horario__dia_semana_id_dia',
-        'horario__profesor_id_profesor'
-    ).order_by('fecha_reemplazo')
+    sql_query = '''
+    SELECT
+        r.profesor_reemplazo AS profesor_reemplazo,
+        r.fecha_reemplazo AS fecha_reemplazo,
+        r.semana AS semana,
+        h.seccion AS seccion,
+        sm.nombre_dia AS nombre_dia,
+        m.hora_modulo AS hora_modulo,
+        s.numero_sala AS numero_sala,
+        a.nombre_asignatura AS nombre_asignatura,
+        p.nombre AS nombre,
+        p.segundo_nombre AS segundo_nombre,
+        p.apellido AS apellido,
+        p.segundo_apellido AS segundo_apellido
+    FROM
+        test.reemplazos r
+    INNER JOIN
+        test.horario h ON r.horario_id_horario = h.id_horario
+    INNER JOIN
+        test.dia_semana sm ON h.dia_semana_id_dia = sm.id_dia
+    INNER JOIN
+        test.modulo m ON h.modulo_id_modulo = m.id_modulo
+    INNER JOIN
+        test.sala s ON h.sala_id_sala = s.id_sala
+    INNER JOIN
+        test.asignatura a ON h.asignatura_id_asignatura = a.id_asignatura
+    INNER JOIN
+        test.profesor p ON h.profesor_id_profesor = p.id_profesor
+    ORDER BY
+        r.fecha_reemplazo;
+    '''
+    
+    with connection.cursor() as cursor:
+        cursor.execute(sql_query)
+        rows = cursor.fetchall()
 
-    grupos_reemplazos = defaultdict(list)
-    for reemplazo in reemplazos:
-        clave = (
-            reemplazo.horario.asignatura_id_asignatura.nombre_asignatura,
-            reemplazo.horario.seccion,
-            reemplazo.horario.sala_id_sala.numero_sala,
-            reemplazo.profesor_reemplazo,            
-            reemplazo.horario.profesor_id_profesor.nombre,
-            reemplazo.horario.profesor_id_profesor.segundo_nombre,
-            reemplazo.horario.profesor_id_profesor.apellido,
-            reemplazo.horario.profesor_id_profesor.segundo_apellido,
-        )
-        grupos_reemplazos[clave].append(reemplazo)
+    reemplazos_dict = defaultdict(list)
 
-    reemplazos_agrupados = []
-    for clave, reemplazos_grupo in grupos_reemplazos.items():
-        nombre_asignatura, seccion, numero_sala, profesor_reemplazo, nombre, segundo_nombre, apellido, segundo_apellido = clave
-        profesor_nombre = " ".join(filter(None, [
-            nombre,
-            segundo_nombre,
-            apellido,
-            segundo_apellido
-        ]))
+    # Agrupar los registros por los atributos relevantes
+    for row in rows:
+        profesor_reemplazo = row[0]
+        fecha_reemplazo = row[1].strftime('%d de %B de %Y')
+        semana = row[2]
+        seccion = row[3]
+        dia_semana = row[4]
+        hora_modulo = row[5]
+        numero_sala = row[6]
+        nombre_asignatura = row[7]
+        profesor_nombre = " ".join(filter(None, [row[8], row[9], row[10], row[11]]))
 
-        horarios = sorted([reemplazo.horario.modulo_id_modulo.hora_modulo for reemplazo in reemplazos_grupo])
-        hora_inicio = horarios[0] 
+        reemplazos_dict[(profesor_reemplazo, nombre_asignatura, seccion, numero_sala, fecha_reemplazo, dia_semana, semana)].append(hora_modulo)
+
+    reemplazos_listados = []
+
+    # Procesar las horas y unir los rangos de tiempo cuando sea necesario
+    for key, horarios in reemplazos_dict.items():
+        profesor_reemplazo, nombre_asignatura, seccion, numero_sala, fecha_reemplazo, dia_semana, semana = key
+
+        # Ordenamos las horas
+        horarios.sort()
+
+        # Usar la lógica que ya tienes para combinar los rangos de tiempo
+        hora_inicio = horarios[0]
         hora_fin = horarios[-1]
-        hora_inicio_corta = hora_inicio[:5]
-        hora_fin_corta = hora_fin[-5:]
-        hora_modulo = hora_inicio_corta + "-" + hora_fin_corta
-        fecha_reemplazo = reemplazos_grupo[0].fecha_reemplazo.strftime('%d de %B de %Y')
-        mes = fecha_reemplazo.split(' ')[2]
-        fecha_reemplazo = fecha_reemplazo.replace(mes, mes.capitalize())
+        hora_inicio_corta = hora_inicio[:5]  # Tomamos solo las primeras 5 posiciones (HH:MM)
+        hora_fin_corta = hora_fin[-5:]  # Tomamos las últimas 5 posiciones (HH:MM)
+        hora_modulo = hora_inicio_corta + "-" + hora_fin_corta  # Formamos el rango de tiempo
 
-        reemplazo_agrupado = {
+        # Agregar el número de módulos agrupados
+        numero_modulos = len(horarios)  # El número de módulos es simplemente la cantidad de horas
+
+        reemplazos_listados.append({
             'nombre_asignatura': nombre_asignatura,
             'seccion': seccion,
             'numero_sala': numero_sala,
             'hora_modulo': hora_modulo,
-            'numero_modulos': len(horarios),
-            'nombre_profesor': profesor_reemplazo,
             'fecha_reemplazo': fecha_reemplazo,
-            'dia_semana': reemplazos_grupo[0].horario.dia_semana_id_dia.nombre_dia,
-            'semana': reemplazos_grupo[0].semana,
-            'profesor_nombre': profesor_nombre
-        }
-        reemplazos_agrupados.append(reemplazo_agrupado)
-
+            'dia_semana': dia_semana,
+            'profesor_nombre': profesor_nombre,
+            'profesor_reemplazo': profesor_reemplazo,
+            'semana': semana,
+            'numero_modulos': numero_modulos  # Se añade la cantidad de módulos
+        })
+    
     return render(request, 'templates/gestion_reemplazo.html', {
-        'docentes_con_licencia': docentes_con_licencia,
-        'reemplazos': reemplazos_agrupados
+        'reemplazos': reemplazos_listados
     })
 
 def profesores_con_licencia_no_asignada(request):

@@ -68,7 +68,7 @@ function guardarLicencia() {
     .then(data => {
         if (data.success) {
             // Mostrar un mensaje de éxito
-            toastr.success(data.message); // Usar toastr o el método de notificación que prefieras
+            alert(data.message); // Usar alert o el método de notificación que prefieras
 
             // Cerrar el modal
             $('#licenciaModal').modal('hide'); 
@@ -80,11 +80,11 @@ function guardarLicencia() {
             document.getElementById('observaciones').value = '';
         } else {
             // Mostrar mensaje de error
-            toastr.error(data.error || "Hubo un error al guardar la licencia.");
+            alert(data.error || "Hubo un error al guardar la licencia.");
         }
     })
     .catch(error => {
         console.error("Error:", error);
-        toastr.error("Ocurrió un problema al intentar guardar la licencia.");
+        alert("Ocurrió un problema al intentar guardar la licencia.");
     });
 }
