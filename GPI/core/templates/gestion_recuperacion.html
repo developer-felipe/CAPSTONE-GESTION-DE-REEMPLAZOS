@@ -3,6 +3,7 @@
 {% block title %}Gestión de Recuperación{% endblock %}
 
 {% block content %}
+{% load static %}
 
 <div class="container">
     <h1>Gestión de Recuperación</h1>
@@ -111,6 +112,18 @@
                 <td>{{ rec.hora_recuperacion }}</td>
                 <td>{{ rec.sala }}</td>
                 <td>
+                    <button class="btn btn-warning btn-edit" data-bs-toggle="modal" data-bs-target="#editModal"
+                    data-id="{{ rec.id_recuperacion }}"
+                    data-profesor="{{ rec.profesor }}"
+                    data-asignatura="{{ rec.asignatura }}"
+                    data-numero_modulos="{{ rec.numero_modulos }}"
+                    data-fecha_clase="{{ rec.fecha_clase }}"
+                    data-fecha_recuperacion="{{ rec.fecha_recuperacion }}"
+                    data-hora_recuperacion="{{ rec.hora_recuperacion }}"
+                    data-sala="{{ rec.sala }}">
+                    Editar
+                    </button>
+                    </button>
                     <button class="btn btn-danger" data-id="{{ rec.id_recuperacion }}" onclick="eliminarRecuperacion(this)">Eliminar</button>
                 </td>
             </tr>
@@ -119,7 +132,6 @@
     </table>
 </div>
 
-
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -127,33 +139,56 @@
                 <h5 class="modal-title" id="editModalLabel">Editar Recuperación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="edit-recuperacion-form">
+            <form id="edit-recuperacion-form" method="PUT">
                 <input type="hidden" id="edit_id" name="edit_id">
-                <div class="mb-3">
-                    <label for="numero_modulos" class="form-label">Número de Módulos</label>
-                    <input type="text" class="form-control" id="numero_modulos" name="numero_modulos">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_profesor" class="form-label">Profesor</label>
+                        <select id="edit_profesor" name="profesor" class="form-select" required>
+                            <option value="">Selecciona un profesor</option>
+                            <!-- Opciones se llenan dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_asignatura" class="form-label">Asignatura</label>
+                        <select id="edit_asignatura" name="asignatura" class="form-select" required>
+                            <option value="">Selecciona una asignatura</option>
+                            <!-- Opciones se llenan dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_numero_modulos" class="form-label">Número de Módulos</label>
+                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_fecha_clase" class="form-label">Fecha de Clase</label>
+                        <input type="date" class="form-control" id="edit_fecha_clase" name="fecha_clase" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
+                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_hora_recuperacion" class="form-label">Hora de Recuperación</label>
+                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_sala" class="form-label">Sala</label>
+                        <select id="edit_sala" name="sala" class="form-select" required>
+                            <option value="">Selecciona una sala</option>
+                            <!-- Opciones se llenan dinámicamente -->
+                        </select>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="fecha_clase" class="form-label">Fecha de Clase</label>
-                    <input type="date" class="form-control" id="fecha_clase" name="fecha_clase">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar</button>
                 </div>
-                <div class="mb-3">
-                    <label for="fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
-                    <input type="date" class="form-control" id="fecha_recuperacion" name="fecha_recuperacion">
-                </div>
-                <div class="mb-3">
-                    <label for="hora_recuperacion" class="form-label">Hora de Recuperación</label>
-                    <input type="time" class="form-control" id="hora_recuperacion" name="hora_recuperacion">
-                </div>
-                <div class="mb-3">
-                    <label for="sala" class="form-label">Sala</label>
-                    <input type="text" class="form-control" id="sala" name="sala">
-                </div>
-                <button type="submit" class="btn btn-primary">Actualizar</button>
             </form>
         </div>
     </div>
 </div>
+
 
 <div class="modal fade" id="agregarSalaModal" tabindex="-1" aria-labelledby="agregarSalaModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -178,7 +213,9 @@
     </div>
 </div>
 
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/modificarclaserecu.js' %}"></script> 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         obtenerSalas()
@@ -217,6 +254,29 @@
                 console.error('Error al obtener los datos:', error);
             });
     });
+
+    function actualizarRecuperacion(idRecuperacion, data) {
+    fetch(`/ruta/actualizar-recuperacion/${idRecuperacion}/`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),  
+        },
+        body: JSON.stringify(data)  
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Recuperación actualizada correctamente.');
+        } else {
+            alert('Error al actualizar la recuperación: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Hubo un error al procesar la solicitud.');
+    });
+}
 
     function eliminarRecuperacion(button) {
     const idRecuperacion = button.getAttribute('data-id');

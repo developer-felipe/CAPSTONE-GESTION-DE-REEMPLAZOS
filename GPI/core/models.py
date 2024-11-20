@@ -93,6 +93,7 @@ class Recuperacion(models.Model):
         db_table = 'recuperacion'
 
 
+
 class Reemplazos(models.Model):
     id_reemplazo = models.AutoField(primary_key=True)
     semana = models.IntegerField()

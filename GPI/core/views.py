@@ -120,13 +120,53 @@ def eliminar_recuperacion(request, id_recuperacion):
         return JsonResponse({'success': False, 'message': 'Recuperación no encontrada'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+
+from django.views.decorators.csrf import csrf_protect
+from django.http import JsonResponse
+import json
+from .models import Recuperacion
+
+@csrf_protect  
+def actualizar_recuperacion(request, id_recuperacion):
+    if request.method == 'PUT': 
+        try:
+            data = json.loads(request.body)
+            
+            if not data.get('numero_modulos') or not data.get('fecha_clase') or not data.get('fecha_recuperacion') or not data.get('hora_recuperacion') or not data.get('sala'):
+                return JsonResponse({'success': False, 'message': 'Faltan datos requeridos.'})
+            
+            recuperacion = Recuperacion.objects.get(id=id_recuperacion)
+
+            recuperacion.numero_modulos = data.get('numero_modulos')
+            recuperacion.fecha_clase = data.get('fecha_clase')
+            recuperacion.fecha_recuperacion = data.get('fecha_recuperacion')
+            recuperacion.hora_recuperacion = data.get('hora_recuperacion')
+            recuperacion.sala = data.get('sala')
+
+            recuperacion.save()
+
+            return JsonResponse({'success': True, 'message': 'Recuperación actualizada correctamente.'})
+
+        except Recuperacion.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Recuperación no encontrada.'})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Error al procesar los datos JSON.'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error inesperado: {str(e)}'})
+    
+    else:
+        return JsonResponse({'success': False, 'message': 'Método no permitido. Solo se permite PUT.'})
+
 
 
 def reportes_view(request):
     return render(request, 'templates/reportes.html')
 
 
-@login_required(login_url='/login/')  # Establece la URL a donde se debe redirigir
+@login_required(login_url='/login/') 
 def base_view(request):
     return render(request, 'base.html')
 
@@ -646,3 +686,20 @@ def docente_asignatura(request,profesorId):
     ))
     
     return JsonResponse({'asignaturas': asignatura_data })
+
+def todas_asignaturas(request):
+    asignaturas = Asignatura.objects.all()  
+    asignaturas_data = list(asignaturas.values(
+        'id_asignatura',
+        'nombre_asignatura'
+    ))
+    return JsonResponse({'todas_asignaturas': asignaturas_data})
+
+
+def todas_salas(request):
+    salas = Sala.objects.all()  
+    salas_data = list(salas.values(
+        'id_sala', 
+        'numero_sala'
+    ))
+    return JsonResponse({'todas_salas': salas_data})
