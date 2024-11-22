@@ -52,7 +52,9 @@
                     data-id="{{ profesor.id_profesor }}">
                     Agregar Licencia
                 </button>
-                <button type="button" id=`${{ profesor.id }}` class="btn btn-success">Modificar</button>
+                <a href="{% url 'gestionar_licencias' profesor.id_profesor %}" class="btn btn-success">
+                    Modificar
+                </a>
                 <form method="POST" style="display:inline;"
                     onsubmit="return confirm('¿Estás seguro de que deseas eliminar este docente?');">
                     {% csrf_token %}

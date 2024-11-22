@@ -4,7 +4,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from .views import (    login_view, reemplazos_view,guardar_licencia ,recuperacion_view,base_view, docente_view, reportes_view, CustomLogoutView,asignatura_view, sala_view, crear_docente_view, crear_profesor_y_horarios,
 profesores_con_licencia_no_asignada,obtener_clases_por_docente,obtener_profesores_disponibles,registrar_reemplazo, modificar_docente_view, modificar_profesor_y_horarios, registrar_recuperacion,
- eliminar_recuperacion , todas_salas,todas_asignaturas,docente_recuperación, docente_asignatura)
+ eliminar_recuperacion , gestionar_licencias,editar_licencia ,eliminar_licencia ,todas_salas,todas_asignaturas,docente_recuperación, docente_asignatura)
 
 
 urlpatterns = [
@@ -37,4 +37,7 @@ urlpatterns = [
     path('docente_recuperación/', docente_recuperación, name='docente_recuperación'),
     path('docente_asignatura/<int:profesorId>/', docente_asignatura, name='docente_asignatura'),
     
+    path('profesor_licencias/<int:profesor_id>/', gestionar_licencias, name='gestionar_licencias'),
+    path('editar_licencia/<int:id_licencia>/', editar_licencia, name='editar_licencia'),
+    path('licencias/<int:id_licencia>/', eliminar_licencia, name='eliminar_licencia'),
 ]

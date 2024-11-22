@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_protect
 from django.db import connection
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -122,10 +123,7 @@ def eliminar_recuperacion(request, id_recuperacion):
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
     
 
-from django.views.decorators.csrf import csrf_protect
-from django.http import JsonResponse
-import json
-from .models import Recuperacion
+
 
 @csrf_protect  
 def actualizar_recuperacion(request, id_recuperacion):
@@ -703,3 +701,49 @@ def todas_salas(request):
         'numero_sala'
     ))
     return JsonResponse({'todas_salas': salas_data})
+
+
+#--------------------
+def gestionar_licencias(request, profesor_id):
+    profesor = get_object_or_404(Profesor, id_profesor=profesor_id)
+
+    licencias = Licencia.objects.filter(profesor_id_profesor=profesor_id)
+
+    return render(request, 'templates/gestionar_licencias.html', {
+        'profesor': profesor,
+        'licencias': licencias,
+    })
+
+
+def editar_licencia(request, id_licencia):
+    if request.method == 'POST':  
+        try:
+            licencia = Licencia.objects.get(id_licencia=id_licencia)
+
+            licencia.fecha_inicio = request.POST.get('fecha_inicio')
+            licencia.fecha_termino = request.POST.get('fecha_termino')
+            licencia.motivo = request.POST.get('motivo')
+            licencia.observaciones = request.POST.get('observaciones')
+
+            licencia.save()
+
+            return redirect('gestionar_licencias', profesor_id=licencia.profesor_id_profesor.id_profesor)
+
+        except Licencia.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Licencia no encontrada.'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error inesperado: {str(e)}'})
+
+    return JsonResponse({'success': False, 'message': 'Método no permitido.'})
+    
+
+def eliminar_licencia(request, id_licencia):
+    if request.method == 'DELETE':
+        try:
+            licencia = Licencia.objects.get(id_licencia=id_licencia)
+            licencia.delete()
+            return JsonResponse({'success': True, 'message': 'Licencia eliminada correctamente.'})
+        except Licencia.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Licencia no encontrada.'})
+    return JsonResponse({'success': False, 'message': 'Método no permitido.'})

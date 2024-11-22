@@ -1,0 +1,91 @@
+{% extends 'templates/base.html' %}
+
+{% block content %}
+{% load static %}
+
+
+<div class="container">
+     <h1>Gestión de Licencia: <h2>Licencias del Profesor: {{ profesor.nombre }} {{ profesor.apellido }}</h2></h1>
+     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+     </div>
+
+{% if messages %}
+<div class="alert alert-success">
+     {% for message in messages %}
+     <p>{{ message }}</p>
+     {% endfor %}
+</div>
+{% endif %}
+
+     <table class="table">
+     <thead>
+          <tr>
+               <th>Fecha Inicio</th>
+               <th>Fecha Fin</th>
+               <th>Motivo</th>
+               <th>Observaciones</th>
+               <th>Acciones</th>
+          </tr>
+     </thead>
+     <tbody>
+          {% for licencia in licencias %}
+          <tr>
+               <td>{{ licencia.fecha_inicio }}</td>
+               <td>{{ licencia.fecha_termino }}</td>
+               <td>{{ licencia.motivo }}</td>
+               <td>{{ licencia.observaciones }}</td>
+               <td>
+                    <button class="btn btn-warning" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#editarLicenciaModal"
+                    data-id="{{ licencia.id_licencia }}"
+                    data-url="{% url 'editar_licencia' licencia.id_licencia %}">
+                    Editar
+                    </button>
+                    <button class="btn btn-danger" data-id="{{ licencia.id_licencia }}">Eliminar</button>
+               </td>
+          </tr>
+          {% endfor %}
+     </tbody>
+     </table>
+</div>
+
+<!-- Modal para editar licencia -->
+<div class="modal fade" id="editarLicenciaModal" tabindex="-1" aria-labelledby="editarLicenciaModalLabel" aria-hidden="true">
+     <div class="modal-dialog">
+          <div class="modal-content">
+               <div class="modal-header">
+                    <h5 class="modal-title" id="editarLicenciaModalLabel">Editar Licencia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                    <form method="POST" action="" id="editarLicenciaForm">
+                         {% csrf_token %}
+                         <input type="hidden" id="idLicencia" name="id_licencia">
+                         <div class="mb-3">
+                              <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
+                              <input type="date" class="form-control" id="fechaInicio" name="fecha_inicio" required>
+                         </div>
+                         <div class="mb-3">
+                              <label for="fecha_termino" class="form-label">Fecha de Fin</label>
+                              <input type="date" class="form-control" id="fecha_termino" name="fecha_termino" required>
+                         </div>
+                         <div class="mb-3">
+                              <label for="motivo" class="form-label">Motivo</label>
+                              <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
+                         </div>
+                         <div class="mb-3">
+                              <label for="observaciones" class="form-label">Observaciones</label>
+                              <textarea class="form-control" id="observaciones" name="observaciones" rows="3" required></textarea>
+                         </div>
+                         <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    </form>
+               </div>
+          </div>
+     </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/editlicencia.js' %}"></script> 
+
+{% endblock %}
