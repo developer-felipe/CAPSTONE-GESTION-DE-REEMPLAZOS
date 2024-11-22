@@ -89,42 +89,40 @@
     <table class="table">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Profesor</th>
-                <th>Asignatura</th>
-                <th>Número de Módulos</th>
-                <th>Fecha de Clase</th>
-                <th>Fecha de Recuperación</th>
-                <th>Hora de Recuperación</th>
-                <th>Sala</th>
-                <th>Acciones</th>
+                <th class="text-center">Profesor</th>
+                <th class="text-center">Asignatura</th>
+                <th class="text-center">Número de Módulos</th>
+                <th class="text-center">Fecha de Clase</th>
+                <th class="text-center">Fecha de Recuperación</th>
+                <th class="text-center">Hora de Recuperación</th>
+                <th class="text-center">Sala</th>
+                <th class="text-center">Acciones</th>
             </tr>
         </thead>
         <tbody>
             {% for rec in recuperaciones %}
             <tr>
-                <td>{{ rec.id_recuperacion }}</td>
-                <td>{{ rec.profesor }}</td>
-                <td>{{ rec.asignatura }}</td>
-                <td>{{ rec.numero_modulos }}</td>
-                <td>{{ rec.fecha_clase }}</td>
-                <td>{{ rec.fecha_recuperacion }}</td>
-                <td>{{ rec.hora_recuperacion }}</td>
-                <td>{{ rec.sala }}</td>
+                <td class="text-center">{{ rec.profesor }}</td>
+                <td class="text-center">{{ rec.asignatura }}</td>
+                <td class="text-center">{{ rec.numero_modulos }}</td>
+                <td class="text-center">{{ rec.fecha_clase }}</td>
+                <td class="text-center">{{ rec.fecha_recuperacion }}</td>
+                <td class="text-center">{{ rec.hora_recuperacion }}</td>
+                <td class="text-center">{{ rec.sala }}</td>
                 <td>
-                    <button class="btn btn-warning btn-edit" data-bs-toggle="modal" data-bs-target="#editModal"
-                    data-id="{{ rec.id_recuperacion }}"
-                    data-profesor="{{ rec.profesor }}"
-                    data-asignatura="{{ rec.asignatura }}"
-                    data-numero_modulos="{{ rec.numero_modulos }}"
-                    data-fecha_clase="{{ rec.fecha_clase }}"
-                    data-fecha_recuperacion="{{ rec.fecha_recuperacion }}"
-                    data-hora_recuperacion="{{ rec.hora_recuperacion }}"
-                    data-sala="{{ rec.sala }}">
-                    Editar
-                    </button>
-                    </button>
-                    <button class="btn btn-danger" data-id="{{ rec.id_recuperacion }}" onclick="eliminarRecuperacion(this)">Eliminar</button>
+                    <div class="d-flex">
+                        <button class="btn btn-warning btn-edit me-2" data-bs-toggle="modal" data-bs-target="#editModal"
+                            data-id="{{ rec.id_recuperacion }}" data-profesor="{{ rec.profesor }}"
+                            data-asignatura="{{ rec.asignatura }}" data-numero_modulos="{{ rec.numero_modulos }}"
+                            data-fecha_clase="{{ rec.fecha_clase }}" data-fecha_recuperacion="{{ rec.fecha_recuperacion }}"
+                            data-hora_recuperacion="{{ rec.hora_recuperacion }}" data-sala="{{ rec.sala }}">
+                            <i class="material-icons me-2">logout</i>
+                        </button>
+                        <button class="btn btn-danger" data-id="{{ rec.id_recuperacion }}"
+                            onclick="eliminarRecuperacion(this)">
+                            <i class="material-icons me-2">person_remove</i>
+                        </button>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -158,7 +156,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="edit_numero_modulos" class="form-label">Número de Módulos</label>
-                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos" required>
+                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos"
+                            required>
                     </div>
                     <div class="mb-3">
                         <label for="edit_fecha_clase" class="form-label">Fecha de Clase</label>
@@ -166,11 +165,13 @@
                     </div>
                     <div class="mb-3">
                         <label for="edit_fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
-                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion" required>
+                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion"
+                            required>
                     </div>
                     <div class="mb-3">
                         <label for="edit_hora_recuperacion" class="form-label">Hora de Recuperación</label>
-                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion" required>
+                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion"
+                            required>
                     </div>
                     <div class="mb-3">
                         <label for="edit_sala" class="form-label">Sala</label>
@@ -215,7 +216,7 @@
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="{% static 'js/modificarclaserecu.js' %}"></script> 
+<script src="{% static 'js/modificarclaserecu.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         obtenerSalas()
@@ -256,54 +257,54 @@
     });
 
     function actualizarRecuperacion(idRecuperacion, data) {
-    fetch(`/ruta/actualizar-recuperacion/${idRecuperacion}/`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken'),  
-        },
-        body: JSON.stringify(data)  
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Recuperación actualizada correctamente.');
-        } else {
-            alert('Error al actualizar la recuperación: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Hubo un error al procesar la solicitud.');
-    });
-}
-
-    function eliminarRecuperacion(button) {
-    const idRecuperacion = button.getAttribute('data-id');
-    
-    if (confirm("¿Estás seguro de que deseas eliminar esta recuperación?")) {
-        fetch(`/eliminar-recuperacion/${idRecuperacion}/`, {
-            method: 'DELETE',  
+        fetch(`/ruta/actualizar-recuperacion/${idRecuperacion}/`, {
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')  
+                'X-CSRFToken': getCookie('csrftoken'),
             },
+            body: JSON.stringify(data)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Recuperación eliminada correctamente');
-                window.location.reload(); 
-            } else {
-                alert(data.message || 'Hubo un error al eliminar la recuperación');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Ocurrió un error al eliminar la recuperación');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Recuperación actualizada correctamente.');
+                } else {
+                    alert('Error al actualizar la recuperación: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Hubo un error al procesar la solicitud.');
+            });
     }
-}
+
+    function eliminarRecuperacion(button) {
+        const idRecuperacion = button.getAttribute('data-id');
+
+        if (confirm("¿Estás seguro de que deseas eliminar esta recuperación?")) {
+            fetch(`/eliminar-recuperacion/${idRecuperacion}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Recuperación eliminada correctamente');
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Hubo un error al eliminar la recuperación');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Ocurrió un error al eliminar la recuperación');
+                });
+        }
+    }
 
     function getCookie(name) {
         let cookieValue = null;
