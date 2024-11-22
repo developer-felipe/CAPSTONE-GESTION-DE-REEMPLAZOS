@@ -107,18 +107,14 @@
                     <div class="d-flex">
                         <button class="btn btn-warning btn-edit me-2" data-bs-toggle="modal" data-bs-target="#editModal"
                             data-id="{{ reemplazo.id_reemplazo }}">
-                            <i class="material-icons me-2">logout</i>
-                        </button>
-                        <button class="btn btn-danger" data-id="{{ rec.id_recuperacion }}"
-                            onclick="eliminarRecuperacion(this)">
-                            <i class="material-icons me-2">person_remove</i>
+                            <i class="material-icons me-2">edit</i>
                         </button>
                     </div>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8" class="text-center">No hay registros de clases de reemplazo.</td>
+                <td colspan="11" class="text-center">No hay registros de clases de reemplazo.</td>
             </tr>
             {% endfor %}
         </tbody>
