@@ -3,18 +3,20 @@
 {% block content %}
 
 {% if messages %}
-    <div id="toast-container" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; max-width: 350px; width: 100%;">
-        {% for message in messages %}
-            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: #007bff; color: white; border-radius: 10px; margin-bottom: 10px;">
-                <div class="toast-header" style="background-color: #0056b3; color: white; border-radius: 10px 10px 0 0;">
-                    
-                </div>
-                <div class="toast-body">
-                    {{ message }}
-                </div>
-            </div>
-        {% endfor %}
+<div id="toast-container"
+    style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050; max-width: 350px; width: 100%;">
+    {% for message in messages %}
+    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true"
+        style="background-color: #007bff; color: white; border-radius: 10px; margin-bottom: 10px;">
+        <div class="toast-header" style="background-color: #0056b3; color: white; border-radius: 10px 10px 0 0;">
+
+        </div>
+        <div class="toast-body">
+            {{ message }}
+        </div>
     </div>
+    {% endfor %}
+</div>
 {% endif %}
 {% load static %}
 
@@ -35,32 +37,51 @@
     </div>
 
     <div class="d-flex justify-content-end mb-3">
-        <button type="button" class="btn btn-dark btn">
-            <a class="nav-link" href="{% url 'crear_docente' %}">Agregar Profesor</a>
-        </button>
+        <a class="btn btn-warning btn-sm" href="{% url 'crear_docente' %} ">
+            <span class="fs-5">Agregar docente </span>
+            <i class="material-icons me-2">add</i></a>
     </div>
 
     {% for profesor in profesores %}
-    <div class="card mb-3" style="background-color: #f8f8d8; border-radius: 20px;">
+    <div class="card mb-3">
         <div class="d-flex align-items-center p-3">
             <div class="flex-grow-1">
-                <h5 class="mb-0">{{ profesor.nombre }} {{ profesor.segundo_nombre }} {{ profesor.apellido }} {{ profesor.segundo_apellido }}</h5>
+                <h5 class="mb-0">
+                    {{ profesor.nombre }}
+                    {% if profesor.segundo_nombre %}
+                    {{ profesor.segundo_nombre }}
+                    {% endif %}
+                    {{ profesor.apellido }}
+                    {% if profesor.segundo_apellido %}
+                    {{ profesor.segundo_apellido }}
+                    {% endif %}
+                </h5>
             </div>
-
-            <div class="d-flex" style="gap: 20px;">
-                <button type="button" class="btn btn-primary" id="agregarLicenciaBtn"
-                    data-id="{{ profesor.id_profesor }}">
-                    Agregar Licencia
-                </button>
-                <a href="{% url 'gestionar_licencias' profesor.id_profesor %}" class="btn btn-success">
-                    Modificar
-                </a>
-                <form method="POST" style="display:inline;"
-                    onsubmit="return confirm('¿Estás seguro de que deseas eliminar este docente?');">
-                    {% csrf_token %}
-                    <input type="hidden" name="id_profesor" value="{{ profesor.id_profesor }}">
-                    <button type="submit" name="eliminar" class="btn btn-danger">Eliminar</button>
-                </form>
+            <div class="d-flex" style="gap: 15px;">
+                <div>
+                    <button type="button" class="btn btn-primary btn-sm" id="agregarLicenciaBtn"
+                        data-id="{{ profesor.id_profesor }}">
+                        <span class="fs-5">Agregar licencia </span>
+                        <i class="material-icons me-2">description</i>
+                    </button>
+                </div>
+                <div>
+                    <a href="{% url 'gestionar_licencias' profesor.id_profesor %}" class="btn btn-success btn-sm">
+                        <span class="fs-5">Modificar |</span>
+                        <i class="material-icons me-2">manage_accounts</i>
+                    </a>
+                </div>
+                <div>
+                    <form method="POST" style="display:inline;"
+                        onsubmit="return confirm('¿Estás seguro de que deseas eliminar este docente?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="id_profesor" value="{{ profesor.id_profesor }}">
+                        <button type="submit" name="eliminar" class="btn btn-danger btn-sm">
+                            <span class="fs-5">Eliminar |</span>
+                            <i class="material-icons me-2">person_remove</i>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -109,9 +130,9 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="{% static 'js/toastfun.js' %}"></script> 
-<script src="{% static 'js/licenciafun.js' %}"></script> 
-<script src="{% static 'js/modalfun.js' %}"></script> 
+<script src="{% static 'js/toastfun.js' %}"></script>
+<script src="{% static 'js/licenciafun.js' %}"></script>
+<script src="{% static 'js/modalfun.js' %}"></script>
 <script>
     function getCookie(name) {
         let cookieValue = null;

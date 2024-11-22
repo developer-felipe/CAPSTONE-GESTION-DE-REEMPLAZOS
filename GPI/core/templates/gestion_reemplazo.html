@@ -75,32 +75,45 @@
     <table class="table">
         <thead>
             <tr>
-                <th>Semana</th>
-                <th>Profesor</th>
-                <th>Asignatura</th>
-                <th>Sección</th>
-                <th>Sala</th>
-                <th>Módulo</th>
-                <th>N° de Módulos</th>
-                <th>Día</th>
-                <th>Fecha de Clase</th>
-                <th>Profesor Reemplazante</th>
+                <th class="text-center">Semana</th>
+                <th class="text-center">Profesor</th>
+                <th class="text-center">Asignatura</th>
+                <th class="text-center">Sección</th>
+                <th class="text-center">Sala</th>
+                <th class="text-center">Módulo</th>
+                <th class="text-center">N° de Módulos</th>
+                <th class="text-center">Día</th>
+                <th class="text-center">Fecha de Clase</th>
+                <th class="text-center">Profesor Reemplazante</th>
+                <th class="text-center">Acciones</th>
             </tr>
         </thead>
         <tbody>
             {% for reemplazo in reemplazos %}
             <tr>
-                <td>{{ reemplazo.semana }}</td>
-                <td>{{ reemplazo.profesor_nombre }}</td>
-                <td>{{ reemplazo.nombre_asignatura }}</td>
-                <td>{{ reemplazo.seccion }}</td>
-                <td>{{ reemplazo.numero_sala }}</td>
-                <td>{{ reemplazo.hora_modulo }}</td>
-                <td>{{ reemplazo.registros }}</td>
-                <td>{{ reemplazo.nombre_dia }}</td>
-                <td>{{ reemplazo.fecha_reemplazo }}</td>
-                <td>
+                <td class="text-center">{{ reemplazo.semana }}</td>
+                <td class="text-center">{{ reemplazo.profesor_nombre }}</td>
+                <td class="text-center">{{ reemplazo.nombre_asignatura }}</td>
+                <td class="text-center">{{ reemplazo.seccion }}</td>
+                <td class="text-center">{{ reemplazo.numero_sala }}</td>
+                <td class="text-center">{{ reemplazo.hora_modulo }}</td>
+                <td class="text-center">{{ reemplazo.registros }}</td>
+                <td class="text-center">{{ reemplazo.nombre_dia }}</td>
+                <td class="text-center">{{ reemplazo.fecha_reemplazo }}</td>
+                <td class="text-center">
                     {{ reemplazo.profesor_reemplazo }}
+                </td>
+                <td>
+                    <div class="d-flex">
+                        <button class="btn btn-warning btn-edit me-2" data-bs-toggle="modal" data-bs-target="#editModal"
+                            data-id="{{ reemplazo.id_reemplazo }}">
+                            <i class="material-icons me-2">logout</i>
+                        </button>
+                        <button class="btn btn-danger" data-id="{{ rec.id_recuperacion }}"
+                            onclick="eliminarRecuperacion(this)">
+                            <i class="material-icons me-2">person_remove</i>
+                        </button>
+                    </div>
                 </td>
             </tr>
             {% empty %}

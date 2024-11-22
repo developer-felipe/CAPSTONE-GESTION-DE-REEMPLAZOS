@@ -359,7 +359,8 @@ def reemplazos_view(request):
     count(*) as registros,
     ds.nombre_dia,
     r.fecha_reemplazo, 
-    r.profesor_reemplazo
+    r.profesor_reemplazo,
+    GROUP_CONCAT(r.id_reemplazo ORDER BY r.id_reemplazo SEPARATOR '-') as id_reemplazos
     from test.reemplazos r
     join test.horario h on h.id_horario = r.horario_id_horario 
     join test.profesor p on p.id_profesor = h.profesor_id_profesor
@@ -388,6 +389,7 @@ def reemplazos_view(request):
         nombre_dia = row[7]
         fecha_reemplazo = row[8]
         profesor_reemplazo = row[9]
+        id_reemplazo = row[10]
 
         reemplazos_listados.append({
             'semana': semana,
@@ -400,6 +402,7 @@ def reemplazos_view(request):
             'nombre_dia': nombre_dia,
             'fecha_reemplazo': fecha_reemplazo,
             'profesor_reemplazo': profesor_reemplazo,
+            'id_reemplazo': id_reemplazo
         })
 
     return render(request, 'templates/gestion_reemplazo.html', {
