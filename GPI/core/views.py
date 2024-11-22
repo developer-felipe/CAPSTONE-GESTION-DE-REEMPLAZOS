@@ -346,89 +346,62 @@ def registrar_recuperacion(request):
 
 def reemplazos_view(request):
     sql_query = '''
-    SELECT
-        r.profesor_reemplazo AS profesor_reemplazo,
-        r.fecha_reemplazo AS fecha_reemplazo,
-        r.semana AS semana,
-        h.seccion AS seccion,
-        sm.nombre_dia AS nombre_dia,
-        m.hora_modulo AS hora_modulo,
-        s.numero_sala AS numero_sala,
-        a.nombre_asignatura AS nombre_asignatura,
-        p.nombre AS nombre,
-        p.segundo_nombre AS segundo_nombre,
-        p.apellido AS apellido,
-        p.segundo_apellido AS segundo_apellido
-    FROM
-        test.reemplazos r
-    INNER JOIN
-        test.horario h ON r.horario_id_horario = h.id_horario
-    INNER JOIN
-        test.dia_semana sm ON h.dia_semana_id_dia = sm.id_dia
-    INNER JOIN
-        test.modulo m ON h.modulo_id_modulo = m.id_modulo
-    INNER JOIN
-        test.sala s ON h.sala_id_sala = s.id_sala
-    INNER JOIN
-        test.asignatura a ON h.asignatura_id_asignatura = a.id_asignatura
-    INNER JOIN
-        test.profesor p ON h.profesor_id_profesor = p.id_profesor
-    ORDER BY
-        r.fecha_reemplazo;
+    select r.semana, 
+    concat(p.nombre,' ',IF(p.segundo_nombre IS NOT NULL, CONCAT(p.segundo_nombre, ' '),''), p.apellido, IF(p.segundo_apellido IS NOT NULL, CONCAT(' ',p.segundo_apellido),'')) as profesor,
+    a.nombre_asignatura,
+    h.seccion,
+    s.numero_sala,
+        CONCAT(
+            SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), '-', 1), 
+            '-',
+            SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
+        ) AS modulo,
+    count(*) as registros,
+    ds.nombre_dia,
+    r.fecha_reemplazo, 
+    r.profesor_reemplazo
+    from test.reemplazos r
+    join test.horario h on h.id_horario = r.horario_id_horario 
+    join test.profesor p on p.id_profesor = h.profesor_id_profesor
+    join test.sala s on s.id_sala = h.sala_id_sala 
+    join test.modulo mo on mo.id_modulo = h.modulo_id_modulo
+    join test.asignatura a on a.id_asignatura = h.asignatura_id_asignatura 
+    join test.dia_semana ds on ds.id_dia = h.dia_semana_id_dia 
+    group by r.semana, r.fecha_reemplazo, r.profesor_reemplazo, s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia 
+    order by r.fecha_reemplazo 
     '''
-    
+
     with connection.cursor() as cursor:
         cursor.execute(sql_query)
         rows = cursor.fetchall()
 
-    reemplazos_dict = defaultdict(list)
-
-    # Agrupar los registros por los atributos relevantes
-    for row in rows:
-        profesor_reemplazo = row[0]
-        fecha_reemplazo = row[1].strftime('%d de %B de %Y')
-        semana = row[2]
-        seccion = row[3]
-        dia_semana = row[4]
-        hora_modulo = row[5]
-        numero_sala = row[6]
-        nombre_asignatura = row[7]
-        profesor_nombre = " ".join(filter(None, [row[8], row[9], row[10], row[11]]))
-
-        reemplazos_dict[(profesor_reemplazo, nombre_asignatura, seccion, numero_sala, fecha_reemplazo, dia_semana, semana)].append(hora_modulo)
-
     reemplazos_listados = []
 
-    # Procesar las horas y unir los rangos de tiempo cuando sea necesario
-    for key, horarios in reemplazos_dict.items():
-        profesor_reemplazo, nombre_asignatura, seccion, numero_sala, fecha_reemplazo, dia_semana, semana = key
-
-        # Ordenamos las horas
-        horarios.sort()
-
-        # Usar la lógica que ya tienes para combinar los rangos de tiempo
-        hora_inicio = horarios[0]
-        hora_fin = horarios[-1]
-        hora_inicio_corta = hora_inicio[:5]  # Tomamos solo las primeras 5 posiciones (HH:MM)
-        hora_fin_corta = hora_fin[-5:]  # Tomamos las últimas 5 posiciones (HH:MM)
-        hora_modulo = hora_inicio_corta + "-" + hora_fin_corta  # Formamos el rango de tiempo
-
-        # Agregar el número de módulos agrupados
-        numero_modulos = len(horarios)  # El número de módulos es simplemente la cantidad de horas
+    for row in rows:
+        semana = row[0]
+        profesor_nombre = row[1] 
+        nombre_asignatura = row[2] 
+        seccion = row[3]
+        numero_sala = row[4]
+        hora_modulo = row[5]
+        registros = row[6]
+        nombre_dia = row[7]
+        fecha_reemplazo = row[8]
+        profesor_reemplazo = row[9]
 
         reemplazos_listados.append({
+            'semana': semana,
+            'profesor_nombre': profesor_nombre,
             'nombre_asignatura': nombre_asignatura,
             'seccion': seccion,
             'numero_sala': numero_sala,
             'hora_modulo': hora_modulo,
+            'registros': registros,
+            'nombre_dia': nombre_dia,
             'fecha_reemplazo': fecha_reemplazo,
-            'dia_semana': dia_semana,
-            'profesor_nombre': profesor_nombre,
             'profesor_reemplazo': profesor_reemplazo,
-            'semana': semana,
-            'numero_modulos': numero_modulos  # Se añade la cantidad de módulos
         })
-    
+
     return render(request, 'templates/gestion_reemplazo.html', {
         'reemplazos': reemplazos_listados
     })
