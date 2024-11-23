@@ -723,3 +723,4 @@ def eliminar_licencia(request, id_licencia):
         except Licencia.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Licencia no encontrada.'})
     return JsonResponse({'success': False, 'message': 'Método no permitido.'})
+

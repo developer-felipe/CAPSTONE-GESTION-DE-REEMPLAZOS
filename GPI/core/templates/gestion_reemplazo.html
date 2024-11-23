@@ -105,8 +105,14 @@
                 </td>
                 <td>
                     <div class="d-flex">
-                        <button class="btn btn-warning btn-edit me-2" data-bs-toggle="modal" data-bs-target="#editModal"
-                            data-id="{{ reemplazo.id_reemplazo }}">
+                        <button class="btn btn-warning btn-edit me-2" id="btn-edit-{{ reemplazo.id_reemplazo }}"
+                            data-bs-toggle="modal" data-bs-target="#editModal" data-semana="{{ reemplazo.semana }}"
+                            data-profesor="{{ reemplazo.profesor_nombre }}"
+                            data-asignatura="{{ reemplazo.nombre_asignatura }}" data-seccion="{{ reemplazo.seccion }}"
+                            data-sala="{{ reemplazo.numero_sala }}" data-modulo="{{ reemplazo.hora_modulo }}"
+                            data-num_modulo="{{ reemplazo.registros }}" data-dia="{{ reemplazo.nombre_dia }}"
+                            data-fecha="{{ reemplazo.fecha_reemplazo }}"
+                            data-profesor_remp="{{ reemplazo.profesor_reemplazo }}">
                             <i class="material-icons me-2">edit</i>
                         </button>
                     </div>
@@ -120,67 +126,178 @@
         </tbody>
     </table>
 
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        fetch('/profesores_con_licencia_no_asignada/')
-            .then(response => response.json())
-            .then(data => {
-                const docentesSelect = document.getElementById('docente');
-                docentesSelect.innerHTML = '<option value="">Selecciona un docente con licencia</option>';
-                const profesores = data.profesores;
+    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Editar Reemplazo</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
 
-                if (profesores.length > 0) {
-                    profesores.forEach(profesor => {
-                        let nombreCompleto = `${profesor.nombre} ${profesor.apellido}`;
-                        if (profesor.segundo_nombre) {
-                            nombreCompleto = `${profesor.nombre} ${profesor.segundo_nombre} ${profesor.apellido}`;
-                        }
-                        if (profesor.segundo_apellido) {
-                            nombreCompleto = `${profesor.nombre} ${profesor.segundo_nombre || ''} ${profesor.apellido} ${profesor.segundo_apellido}`;
-                        }
-                        const option = document.createElement('option');
-                        option.value = profesor.id_profesor;
-                        option.textContent = nombreCompleto.trim();
-                        option.setAttribute('data-bs-id-licencia', profesor.id_licencia);
-                        option.setAttribute('data-bs-fecha-inicio', profesor.fecha_inicio);
-                        option.setAttribute('data-bs-fecha-termino', profesor.fecha_termino);
-                        docentesSelect.appendChild(option);
-                    });
-                } else {
-                    const option = document.createElement('option');
-                    option.value = '';
-                    option.textContent = 'No hay docentes con licencias no asignadas.';
-                    docentesSelect.appendChild(option);
-                }
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="clases" class="form-label">Clases a Reemplazar:</label>
+                        <table id="tabla-clases" class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Semana</th>
+                                    <th scope="col">Asignatura</th>
+                                    <th scope="col">Sección</th>
+                                    <th scope="col">Sala</th>
+                                    <th scope="col">Módulo</th>
+                                    <th scope="col">Día</th>
+                                    <th scope="col">Fecha de Clase</th>
+                                    <th scope="col">Profesor Reemplazante</th>
+                                </tr>
+                            </thead>
+                            <tbody id="body-edit">
+                                <!-- Las filas serán insertadas aquí por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const boton = document.querySelectorAll(".btn-edit")
+            boton.forEach(function (boton) {
+                boton.addEventListener("click", function () {
+                    const idReemplazo = boton.id.split('-')[2]
+                    const ids = boton.id.split('-').slice(2)
+                    const semana = boton.dataset.semana
+                    const profesor = boton.dataset.profesor
+                    const asignatura = boton.dataset.asignatura
+                    const seccion = boton.dataset.seccion
+                    const sala = boton.dataset.sala
+                    const modulo = boton.dataset.modulo
+                    const num_ = boton.dataset.num_modulo
+                    const dia = boton.dataset.dia
+                    const fecha = boton.dataset.fecha
+                    const profesor_remp = boton.dataset.profesor_remp
+
+                    console.log(
+                        ids,
+                        semana,
+                        profesor,
+                        asignatura,
+                        seccion,
+                        sala,
+                        modulo,
+                        num_,
+                        dia,
+                        fecha,
+                        profesor_remp)
+                    const tbody = document.getElementById('body-edit');
+                    tbody.innerHTML = '';
+                    ids.forEach(id => {
+                        const tr = document.createElement('tr');  // Crear una nueva fila
+                        tr.innerHTML = `
+                        <select class="form-select" name="edit_semana" required>
+                            <option value="">N° Semana</option>
+                            ${[...Array(18).keys()].map(i => {
+                            return `<option value="${i + 1}" ${semana == i + 1 ? 'selected' : ''}>Semana ${i + 1}</option>`;
+                            }).join('')}
+                        </select>
+                        <td>${asignatura}</td>
+                        <td>${seccion}</td>
+                        <td>${sala}</td>
+                        <td>${modulo}</td>
+                        <td>${dia}</td>
+                        <td>${fecha}</td>
+                        <td>${profesor_remp}</td>
+                    `;
+                        tbody.appendChild(tr);  // Añadir la fila al tbody
+                        /*const selectReemplazo = row.querySelector(`#profesor_reemplazo_${clase.id_horario}`);
+                        fetch(`/obtener_profesores_disponibles/?dia_semana=${clase.dia_semana_id}&modulo_id=${clase.modulo_id}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.profesores && data.profesores.length > 0) {
+                                    data.profesores.forEach(profesor => {
+                                        const option = document.createElement('option');
+                                        option.value = profesor.id_profesor;
+                                        option.textContent = `${profesor.nombre} ${profesor.segundo_nombre || ''} ${profesor.apellido} ${profesor.segundo_apellido || ''}`.trim();
+                                        selectReemplazo.appendChild(option);
+                                    });
+                                } else {
+                                    const option = document.createElement('option');
+                                    option.textContent = 'No hay profesores disponibles';
+                                    selectReemplazo.appendChild(option);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error al obtener los profesores:', error);
+                            });
+                            */
+                    })
+                })
             })
-            .catch(error => {
-                console.error('Error al obtener los docentes:', error);
-            });
-    });
-
-
-    document.getElementById('docente').addEventListener('change', function () {
-        const docenteId = this.value;
-        const selectedOption = this.options[this.selectedIndex];
-        const fechaInicio = selectedOption.getAttribute('data-bs-fecha-inicio');
-        const fechaTermino = selectedOption.getAttribute('data-bs-fecha-termino');
-
-        if (docenteId && fechaInicio && fechaTermino) {
-            const url = `/obtener_clases_por_docente/?docente_id=${encodeURIComponent(docenteId)}&fecha_inicio=${encodeURIComponent(fechaInicio)}&fecha_termino=${encodeURIComponent(fechaTermino)}`;
-            fetch(url)
+            fetch('/profesores_con_licencia_no_asignada/')
                 .then(response => response.json())
                 .then(data => {
-                    const clases = data.clases || []
-                    const tablaClases = document.getElementById('tabla-clases').getElementsByTagName('tbody')[0];
-                    tablaClases.innerHTML = '';
-                    if (clases.length === 0) {
-                        tablaClases.innerHTML = `<tr><td colspan="8" class="text-center">No hay clases programadas para este docente durante el rango de fechas.</td></tr>`;
+                    const docentesSelect = document.getElementById('docente');
+                    docentesSelect.innerHTML = '<option value="">Selecciona un docente con licencia</option>';
+                    const profesores = data.profesores;
+
+                    if (profesores.length > 0) {
+                        profesores.forEach(profesor => {
+                            let nombreCompleto = `${profesor.nombre} ${profesor.apellido}`;
+                            if (profesor.segundo_nombre) {
+                                nombreCompleto = `${profesor.nombre} ${profesor.segundo_nombre} ${profesor.apellido}`;
+                            }
+                            if (profesor.segundo_apellido) {
+                                nombreCompleto = `${profesor.nombre} ${profesor.segundo_nombre || ''} ${profesor.apellido} ${profesor.segundo_apellido}`;
+                            }
+                            const option = document.createElement('option');
+                            option.value = profesor.id_profesor;
+                            option.textContent = nombreCompleto.trim();
+                            option.setAttribute('data-bs-id-licencia', profesor.id_licencia);
+                            option.setAttribute('data-bs-fecha-inicio', profesor.fecha_inicio);
+                            option.setAttribute('data-bs-fecha-termino', profesor.fecha_termino);
+                            docentesSelect.appendChild(option);
+                        });
                     } else {
-                        clases.forEach(clase => {
-                            const row = tablaClases.insertRow();
-                            row.innerHTML = `
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'No hay docentes con licencias no asignadas.';
+                        docentesSelect.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al obtener los docentes:', error);
+
+
+                });
+
+        });
+
+
+        document.getElementById('docente').addEventListener('change', function () {
+            const docenteId = this.value;
+            const selectedOption = this.options[this.selectedIndex];
+            const fechaInicio = selectedOption.getAttribute('data-bs-fecha-inicio');
+            const fechaTermino = selectedOption.getAttribute('data-bs-fecha-termino');
+
+            if (docenteId && fechaInicio && fechaTermino) {
+                const url = `/obtener_clases_por_docente/?docente_id=${encodeURIComponent(docenteId)}&fecha_inicio=${encodeURIComponent(fechaInicio)}&fecha_termino=${encodeURIComponent(fechaTermino)}`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const clases = data.clases || []
+                        const tablaClases = document.getElementById('tabla-clases').getElementsByTagName('tbody')[0];
+                        tablaClases.innerHTML = '';
+                        if (clases.length === 0) {
+                            tablaClases.innerHTML = `<tr><td colspan="8" class="text-center">No hay clases programadas para este docente durante el rango de fechas.</td></tr>`;
+                        } else {
+                            clases.forEach(clase => {
+                                const row = tablaClases.insertRow();
+                                row.innerHTML = `
                                 <td><select class="form-select" name="semana_${clase.id}" required>
                                 <option value="">N° Semana</option>${[...Array(18).keys()].map(i => `<option value="${i + 1}">Semana ${i + 1}</option>`).join('')}
                                 </select></td>
@@ -192,113 +309,114 @@
                                 <td>${clase.fecha_clase}</td>
                                 <td><select id="profesor_reemplazo_${clase.id_horario}" name="profesor_reemplazo" class="form-select" required>
                                 <option value="">Selecciona un profesor reemplazante</option></select></td>`;
-                            const selectReemplazo = row.querySelector(`#profesor_reemplazo_${clase.id_horario}`);
-                            fetch(`/obtener_profesores_disponibles/?dia_semana=${clase.dia_semana_id}&modulo_id=${clase.modulo_id}`)
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.profesores && data.profesores.length > 0) {
-                                        data.profesores.forEach(profesor => {
+                                const selectReemplazo = row.querySelector(`#profesor_reemplazo_${clase.id_horario}`);
+                                fetch(`/obtener_profesores_disponibles/?dia_semana=${clase.dia_semana_id}&modulo_id=${clase.modulo_id}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.profesores && data.profesores.length > 0) {
+                                            data.profesores.forEach(profesor => {
+                                                const option = document.createElement('option');
+                                                option.value = profesor.id_profesor;
+                                                option.textContent = `${profesor.nombre} ${profesor.segundo_nombre || ''} ${profesor.apellido} ${profesor.segundo_apellido || ''}`.trim();
+                                                selectReemplazo.appendChild(option);
+                                            });
+                                        } else {
                                             const option = document.createElement('option');
-                                            option.value = profesor.id_profesor;
-                                            option.textContent = `${profesor.nombre} ${profesor.segundo_nombre || ''} ${profesor.apellido} ${profesor.segundo_apellido || ''}`.trim();
+                                            option.textContent = 'No hay profesores disponibles';
                                             selectReemplazo.appendChild(option);
-                                        });
-                                    } else {
-                                        const option = document.createElement('option');
-                                        option.textContent = 'No hay profesores disponibles';
-                                        selectReemplazo.appendChild(option);
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error al obtener los profesores:', error);
-                                });
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error al obtener las clases:', error);
-                });
-        } else {
-            console.error('Faltan parámetros: docenteId, fechaInicio o fechaTermino');
-        }
-    });
-
-    document.getElementById('envio').addEventListener('click', function (e) {
-        e.preventDefault();
-        const formulario = document.querySelector('form');
-        const reemplazosData = [];
-        const rows = document.querySelectorAll('#tabla-clases tbody tr');
-        const selectedOption = document.querySelector('option:checked');
-        const idLicencia = selectedOption ? selectedOption.getAttribute('data-bs-id-licencia') : null;
-
-        if (!idLicencia) {
-            console.error('No se ha seleccionado una opción válida para id_licencia');
-            alert('Por favor, selecciona una opción de licencia.');
-            return;
-        }
-        rows.forEach(row => {
-            const semanaSelect = row.querySelector('select[name^="semana_"]');
-            const profesorSelect = row.querySelector('select[name="profesor_reemplazo"]');
-            const selectedOption = profesorSelect.options[profesorSelect.selectedIndex];
-            const profesor_reemplazo = selectedOption ? selectedOption.textContent.trim() : null;
-            const profesor_reemplazo_select = profesorSelect ? profesorSelect.value : null;
-            let tdAsignatura = row.querySelector('td[data-bs-id-asignatura]');
-            let idAsignatura = tdAsignatura.dataset.bsIdAsignatura;
-            const semana = semanaSelect ? semanaSelect.value : null;
-            const fecha_clase = row.querySelector('td:nth-child(7)').textContent.trim();
-            const [day, month, year] = fecha_clase.split('-');
-            const fechaFormateada = `${year}-${month}-${day}`;
-            if (semana && profesor_reemplazo && profesor_reemplazo_select) {
-                reemplazosData.push({
-                    semana,
-                    fecha_reemplazo: fechaFormateada,
-                    profesor_reemplazo,
-                    horario_id: idAsignatura
-                });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error al obtener los profesores:', error);
+                                    });
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al obtener las clases:', error);
+                    });
+            } else {
+                console.error('Faltan parámetros: docenteId, fechaInicio o fechaTermino');
             }
         });
-        if (reemplazosData.length > 0) {
-            fetch('/registrar_reemplazo/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'),
-                },
-                body: JSON.stringify({
-                    reemplazos: reemplazosData,
-                    id_licencia: idLicencia
-                })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Reemplazos registrados con éxito.');
-                    } else {
-                        alert('Hubo un error al registrar los reemplazos.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error al enviar los reemplazos:', error);
-                });
-        } else {
-            alert('Por favor, selecciona todos los campos necesarios.');
-        }
-    });
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+        document.getElementById('envio').addEventListener('click', function (e) {
+            e.preventDefault();
+            const formulario = document.querySelector('form');
+            const reemplazosData = [];
+            const rows = document.querySelectorAll('#tabla-clases tbody tr');
+            const selectedOption = document.querySelector('option:checked');
+            const idLicencia = selectedOption ? selectedOption.getAttribute('data-bs-id-licencia') : null;
+
+            if (!idLicencia) {
+                console.error('No se ha seleccionado una opción válida para id_licencia');
+                alert('Por favor, selecciona una opción de licencia.');
+                return;
+            }
+            rows.forEach(row => {
+                const semanaSelect = row.querySelector('select[name^="semana_"]');
+                const profesorSelect = row.querySelector('select[name="profesor_reemplazo"]');
+                const selectedOption = profesorSelect.options[profesorSelect.selectedIndex];
+                const profesor_reemplazo = selectedOption ? selectedOption.textContent.trim() : null;
+                const profesor_reemplazo_select = profesorSelect ? profesorSelect.value : null;
+                let tdAsignatura = row.querySelector('td[data-bs-id-asignatura]');
+                let idAsignatura = tdAsignatura.dataset.bsIdAsignatura;
+                const semana = semanaSelect ? semanaSelect.value : null;
+                const fecha_clase = row.querySelector('td:nth-child(7)').textContent.trim();
+                const [day, month, year] = fecha_clase.split('-');
+                const fechaFormateada = `${year}-${month}-${day}`;
+                if (semana && profesor_reemplazo && profesor_reemplazo_select) {
+                    reemplazosData.push({
+                        semana,
+                        fecha_reemplazo: fechaFormateada,
+                        profesor_reemplazo,
+                        horario_id: idAsignatura
+                    });
+                }
+            });
+            if (reemplazosData.length > 0) {
+                fetch('/registrar_reemplazo/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        reemplazos: reemplazosData,
+                        id_licencia: idLicencia
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Reemplazos registrados con éxito.');
+                        } else {
+                            alert('Hubo un error al registrar los reemplazos.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al enviar los reemplazos:', error);
+                    });
+            } else {
+                alert('Por favor, selecciona todos los campos necesarios.');
+            }
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
                 }
             }
+            return cookieValue;
         }
-        return cookieValue;
-    }
 
-</script>
-{% endblock %}
+
+    </script>
+    {% endblock %}
