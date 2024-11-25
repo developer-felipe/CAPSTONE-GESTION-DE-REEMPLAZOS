@@ -20,25 +20,26 @@
      <table class="table">
      <thead>
           <tr>
-               <th>Fecha Inicio</th>
-               <th>Fecha Fin</th>
-               <th>Motivo</th>
-               <th>Observaciones</th>
-               <th>Acciones</th>
+               <th class="text-center">Fecha Inicio</th>
+               <th class="text-center">Fecha Fin</th>
+               <th class="text-center">Motivo</th>
+               <th class="text-center">Observaciones</th>
+               <th class="text-center">Acciones</th>
           </tr>
      </thead>
      <tbody>
           {% for licencia in licencias %}
           <tr>
-               <td>{{ licencia.fecha_inicio }}</td>
-               <td>{{ licencia.fecha_termino }}</td>
-               <td>{{ licencia.motivo }}</td>
-               <td>{{ licencia.observaciones }}</td>
+               <td class="text-center">{{ licencia.fecha_inicio }}</td>
+               <td class="text-center">{{ licencia.fecha_termino }}</td>
+               <td class="text-center">{{ licencia.motivo }}</td>
+               <td class="text-center">{{ licencia.observaciones }}</td>
                <td>
                     <button class="btn btn-warning" 
                     data-bs-toggle="modal" 
                     data-bs-target="#editarLicenciaModal"
                     data-id="{{ licencia.id_licencia }}"
+                    
                     data-url="{% url 'editar_licencia' licencia.id_licencia %}">
                     Editar
                     </button>

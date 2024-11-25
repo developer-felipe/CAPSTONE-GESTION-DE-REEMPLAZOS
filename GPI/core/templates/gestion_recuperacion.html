@@ -105,8 +105,8 @@
                 <td class="text-center">{{ rec.profesor }}</td>
                 <td class="text-center">{{ rec.asignatura }}</td>
                 <td class="text-center">{{ rec.numero_modulos }}</td>
-                <td class="text-center">{{ rec.fecha_clase }}</td>
-                <td class="text-center">{{ rec.fecha_recuperacion }}</td>
+                <td class="text-center">{{ rec.fecha_clase|date:"d-m-Y" }}</td>
+                <td class="text-center">{{ rec.fecha_recuperacion|date:"d-m-Y" }}</td>
                 <td class="text-center">{{ rec.hora_recuperacion }}</td>
                 <td class="text-center">{{ rec.sala }}</td>
                 <td>
@@ -114,7 +114,7 @@
                         <button class="btn btn-warning btn-edit me-2" data-bs-toggle="modal" data-bs-target="#editModal"
                             data-id="{{ rec.id_recuperacion }}" data-profesor="{{ rec.profesor }}"
                             data-asignatura="{{ rec.asignatura }}" data-numero_modulos="{{ rec.numero_modulos }}"
-                            data-fecha_clase="{{ rec.fecha_clase }}" data-fecha_recuperacion="{{ rec.fecha_recuperacion }}"
+                            data-fecha_clase="{{ rec.fecha_clase|date:'Y-m-d' }}" data-fecha_recuperacion="{{ rec.fecha_recuperacion|date:'Y-m-d' }}"
                             data-hora_recuperacion="{{ rec.hora_recuperacion }}" data-sala="{{ rec.sala }}">
                             <i class="material-icons me-2">edit</i>
                         </button>
@@ -484,19 +484,23 @@
         return cookieValue;
     }
 
+    function convertirFechaFormatoInput(fecha) {
+    const partes = fecha.split('-'); 
+    return `${partes[2]}-${partes[1]}-${partes[0]}`; 
+} 
+
     $('#editModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
         var editId = button.data('id');
         var numeroModulos = button.data('numero_modulos');
-        var fechaClase = button.data('fecha_clase');
-        var fechaRecuperacion = button.data('fecha_recuperacion');
-        var horaRecuperacion = button.data('hora_recuperacion');
+        var fechaClase = button.data('fecha_clase'); 
+        var fechaRecuperacion = button.data('fecha_recuperacion'); 
         var sala = button.data('sala');
         $('#edit_id').val(editId);
         $('#numero_modulos').val(numeroModulos);
         $('#fecha_clase').val(fechaClase);
-        $('#fecha_recuperacion').val(fechaRecuperacion);
-        $('#hora_recuperacion').val(horaRecuperacion);
+        $('#fecha_clase').val(convertirFechaFormatoInput(fechaClase));
+        $('#fecha_recuperacion').val(convertirFechaFormatoInput(fechaRecuperacion));
         $('#sala').val(sala);
     });
 

@@ -360,7 +360,9 @@ def reemplazos_view(request):
     ds.nombre_dia,
     r.fecha_reemplazo, 
     r.profesor_reemplazo,
-    GROUP_CONCAT(r.id_reemplazo ORDER BY r.id_reemplazo SEPARATOR '-') as id_reemplazos
+    GROUP_CONCAT(r.id_reemplazo ORDER BY r.id_reemplazo SEPARATOR '-') as id_reemplazos,
+ 	IF(COUNT(mo.id_modulo) > 1, GROUP_CONCAT(mo.id_modulo ORDER BY mo.id_modulo SEPARATOR '-'), MAX(mo.id_modulo)) AS id_modulo,
+    ds.id_dia
     from test.reemplazos r
     join test.horario h on h.id_horario = r.horario_id_horario 
     join test.profesor p on p.id_profesor = h.profesor_id_profesor
@@ -390,6 +392,8 @@ def reemplazos_view(request):
         fecha_reemplazo = row[8]
         profesor_reemplazo = row[9]
         id_reemplazo = row[10]
+        id_modulo= row[11]
+        id_dia= row[12]
 
         reemplazos_listados.append({
             'semana': semana,
@@ -402,7 +406,9 @@ def reemplazos_view(request):
             'nombre_dia': nombre_dia,
             'fecha_reemplazo': fecha_reemplazo,
             'profesor_reemplazo': profesor_reemplazo,
-            'id_reemplazo': id_reemplazo
+            'id_reemplazo': id_reemplazo,
+            'id_modulo': id_modulo,
+            'id_dia':id_dia
         })
 
     return render(request, 'templates/gestion_reemplazo.html', {
@@ -711,6 +717,20 @@ def editar_licencia(request, id_licencia):
         except Exception as e:
             return JsonResponse({'success': False, 'message': f'Error inesperado: {str(e)}'})
 
+    elif request.method == 'GET':  
+        try:
+            licencia = Licencia.objects.get(id_licencia=id_licencia)
+            data = {
+                'id_licencia': licencia.id_licencia,
+                'fecha_inicio': licencia.fecha_inicio,
+                'fecha_termino': licencia.fecha_termino,
+                'motivo': licencia.motivo,
+                'observaciones': licencia.observaciones
+            }
+            return JsonResponse(data)
+        except Licencia.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Licencia no encontrada.'})
+
     return JsonResponse({'success': False, 'message': 'Método no permitido.'})
     
 
@@ -724,3 +744,47 @@ def eliminar_licencia(request, id_licencia):
             return JsonResponse({'success': False, 'message': 'Licencia no encontrada.'})
     return JsonResponse({'success': False, 'message': 'Método no permitido.'})
 
+def profesor_por_nombre(request, nombre):
+    logger.info(f'Buscando profesor con el nombre: {nombre}')
+    nombre_parts = nombre.split()
+    logger.info(f'Nombre dividido en partes: {nombre_parts}')
+    filters = Q()
+    for part in nombre_parts:
+        logger.info(f'Buscando la parte: {part}')
+        filters |= Q(nombre__icontains=part) | Q(segundo_nombre__icontains=part) | Q(apellido__icontains=part) | Q(segundo_apellido__icontains=part)
+    try:
+        profesores = Profesor.objects.filter(filters)
+        logger.info(f'Profesores encontrados: {profesores.count()}')
+        
+        if profesores.exists():
+            profesor_data = [{
+                'id_profesor': p.id_profesor,
+                'nombre': p.nombre,
+                'segundo_nombre': p.segundo_nombre,
+                'apellido': p.apellido,
+                'segundo_apellido': p.segundo_apellido,
+            } for p in profesores]
+            
+            return JsonResponse({'profesores': profesor_data}, status=200)
+        else:
+            logger.warning('No se encontró ningún profesor.')
+            return JsonResponse({'mensaje': 'No se encontró el profesor'}, status=404)
+    
+    except Exception as e:
+        logger.error(f'Error al realizar la búsqueda: {str(e)}')
+        return JsonResponse({'mensaje': 'Error en la búsqueda'}, status=500)
+    
+def modulo_por_id(request, modulo):
+    try:
+        modulo_obj = Modulo.objects.get(id_modulo=modulo)
+        data = {
+            'id_modulo': modulo_obj.id_modulo,
+            'hora_modulo': modulo_obj.hora_modulo
+        }
+        return JsonResponse(data, status=200)
+    except Modulo.DoesNotExist:
+        logger.error(f'Módulo con ID {modulo} no encontrado.')
+        return JsonResponse({'mensaje': 'Módulo no encontrado'}, status=404)
+    except Exception as e:
+        logger.error(f'Error al realizar la búsqueda: {str(e)}')
+        return JsonResponse({'mensaje': 'Error en la búsqueda'}, status=500)

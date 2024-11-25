@@ -1,22 +1,22 @@
-     $(document).ready(function () {
-          $('#editarLicenciaModal').on('show.bs.modal', function (event) {
-          const button = $(event.relatedTarget); 
-          const licenciaId = button.data('id');
-          const actionUrl = button.data('url'); 
-     
-          $('#editarLicenciaForm').attr('action', actionUrl);
-     
-          fetch(`/licencias/${licenciaId}/`)
-               .then(response => response.json())
-               .then(data => {
-                    $('#fechaInicio').val(data.fecha_inicio);
-                    $('#fecha_termino').val(data.fecha_termino);
-                    $('#motivo').val(data.motivo);
-                    $('#observaciones').val(data.observaciones);
-                    $('#idLicencia').val(data.id_licencia); 
-               })
-               .catch(error => console.error('Error al cargar los datos de la licencia:', error));
-          });
+$(document).ready(function () {
+     $('#editarLicenciaModal').on('show.bs.modal', function (event) {
+         const button = $(event.relatedTarget); 
+         const licenciaId = button.data('id');
+         const actionUrl = button.data('url'); 
+         
+         $('#editarLicenciaForm').attr('action', actionUrl);
+         
+         fetch(`/licencias/${licenciaId}/`)
+             .then(response => response.json())
+             .then(data => {
+                 $('#fechaInicio').val(data.fecha_inicio);
+                 $('#fecha_termino').val(data.fecha_termino);
+                 $('#motivo').val(data.motivo);
+                 $('#observaciones').val(data.observaciones);
+                 $('#idLicencia').val(data.id_licencia);
+             })
+             .catch(error => console.error('Error al cargar los datos de la licencia:', error));
+     });
      
           $('body').on('click', '.btn-danger', function () {
           const licenciaId = $(this).data('id');
