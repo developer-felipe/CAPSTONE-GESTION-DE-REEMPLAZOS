@@ -28,7 +28,7 @@ urlpatterns = [
     path('registrar_reemplazo/', registrar_reemplazo, name='registrar_reemplazo'),
     path('registrar_recuperacion/', registrar_recuperacion, name='registrar_recuperacion'),
     
-    path('modificar_docente/', modificar_docente_view, name='modificar_docente'),
+    path('modificar_docente/<int:id>/', modificar_docente_view, name='modificar_docente'),
     path('modificar_profesor_y_horarios/', modificar_profesor_y_horarios, name='modificar_profesor_y_horarios'),
     
     path('eliminar-recuperacion/<int:id_recuperacion>/', eliminar_recuperacion, name='eliminar_recuperacion'),

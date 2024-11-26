@@ -570,35 +570,15 @@ def registrar_reemplazo(request):
 
 
 #-----------------
-def modificar_docente_view(request):
+def modificar_docente_view(request,id):
     modulos = Modulo.objects.all()
     dias = DiaSemana.objects.all()
-    profesores = Profesor.objects.all()
+    profesor = get_object_or_404(Profesor, id_profesor=id)
     context = {
         'modulos': modulos,
         'dias': dias,
-        'profesores': profesores,
+        'profesor':profesor
     }
-
-    if request.method == 'PUT':
-        data = json.loads(request.body)
-        profesor_id = data.get('id_profesor')
-        if profesor_id:
-            try:
-                profesor = Profesor.objects.get(id_profesor=profesor_id)
-                profesor.nombre = data.get('primer_nombre', profesor.nombre).strip().capitalize()
-                profesor.segundo_nombre = data.get('segundo_nombre', profesor.segundo_nombre).strip().capitalize()
-                profesor.apellido = data.get('primer_apellido', profesor.apellido).strip().capitalize()
-                profesor.segundo_apellido = data.get('segundo_apellido', profesor.segundo_apellido).strip().capitalize()
-                profesor.save()
-
-                return JsonResponse({"message": "Profesor actualizado exitosamente!"}, status=200)
-            except Profesor.DoesNotExist:
-                return JsonResponse({"error": "Profesor no encontrado."}, status=404)
-
-        else:
-            return JsonResponse({"error": "ID de profesor no proporcionado."}, status=400)
-
     return render(request, 'templates/modificar_docente.html', context)
 
 def modificar_profesor_y_horarios(request):

@@ -68,11 +68,13 @@
             <div class="collapse" id="collapseOptions-{{ profesor.id_profesor }}">
                 <div class="d-flex flex-column align-items-center" style="gap: 15px; margin-top: 10px;">
                     <div class="w-100">
-                        <button type="button" class="btn btn-outline-secondary w-100" id="agregarLicenciaBtn"
-                            data-id="{{ profesor.id_profesor }}">
-                            <span class="fs-5">Modificar docente</span>
-                            <i class="material-icons me-2">manage_accounts</i>
-                        </button>
+                        <form action="{% url 'modificar_docente' id=profesor.id_profesor %}" method="get">
+                            <button type="submit" class="btn btn-outline-secondary w-100" id="modProfe"
+                                data-mod_prof="{{ profesor.id_profesor }}">
+                                <span class="fs-5">Modificar docente</span>
+                                <i class="material-icons me-2">manage_accounts</i>
+                            </button>
+                        </form>
                     </div>
                     <div class="w-100">
                         <button type="button" class="btn btn-primary btn-sm w-100" id="agregarLicenciaBtn"
@@ -170,5 +172,13 @@
         return cookieValue;
     }
     const csrftoken = getCookie('csrftoken');
+
+    botonEditar = document.querySelectorAll('#modProfe')
+    botonEditar.forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            id = boton.dataset.mod_prof
+            console.log(id)
+        })
+    })
 </script>
 {% endblock %}

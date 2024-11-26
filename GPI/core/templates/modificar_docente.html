@@ -6,7 +6,6 @@
 <div class="container pt-5">
     <h3>Modificar Profesor</h3>
 
-    <!-- Formulario para modificar el docente -->
     <form id="form-modificar-docente">
         <div class="form-nombre pt-2">
             <label for="primer_nombre">Primer Nombre</label>
@@ -23,11 +22,6 @@
         <div class="form-group pt-3">
             <label for="segundo_apellido">Segundo Apellido</label>
             <input type="text" id="segundo_apellido" name="segundo_apellido" class="form-control">
-        </div>
-
-        <!-- Botón para enviar los datos -->
-        <div class="button pt-3">
-            <button type="submit" id="guardarButton" class="btn btn-warning">Guardar Cambios</button>
         </div>
     </form>
 </div>
@@ -67,6 +61,7 @@
         <button id="btn-horario" class="btn btn-warning" type="button">Establecer horario</button>
     </div>
 </div>
+
 
 <!-- Modal para Asignar Horario -->
 <div class="modal fade" id="asignar" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -167,7 +162,7 @@
 
     async function obtenerDocente() {
         const response = await fetch(`/docentes/${docenteId}/`);
-        
+
         if (response.ok) {
             const docente = await response.json();
             document.getElementById('primer_nombre').value = docente.primer_nombre;
