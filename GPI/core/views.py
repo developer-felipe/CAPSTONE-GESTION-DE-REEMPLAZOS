@@ -788,3 +788,51 @@ def modulo_por_id(request, modulo):
     except Exception as e:
         logger.error(f'Error al realizar la búsqueda: {str(e)}')
         return JsonResponse({'mensaje': 'Error en la búsqueda'}, status=500)
+    
+def actualizar_reemplazo(request):
+    logger.debug("Iniciando la solicitud para actualizar reemplazo.")  # Log inicial para ver si la solicitud llega
+    
+    if request.method == 'POST':
+        try:
+            logger.debug("Método POST recibido. Procesando datos...")  # Log para confirmar que se recibe el POST
+
+            # Obtener los datos del cuerpo JSON
+            data = json.loads(request.body)
+            reemplazo_id = data.get('reemplazoId')
+            semana = data.get('semana')
+            profesor_remp = data.get('profesor_remp')
+
+            logger.debug("Datos recibidos: reemplazo_id=%s, semana=%s, profesor_remp=%s", reemplazo_id, semana, profesor_remp)
+
+            # Verificar si los datos requeridos están presentes
+            if not reemplazo_id or not semana or not profesor_remp:
+                logger.error("Faltan datos requeridos. reemplazo_id=%s, semana=%s, profesor_remp=%s", reemplazo_id, semana, profesor_remp)
+                return JsonResponse({'success': False, 'message': 'Faltan datos requeridos.'}, status=400)
+
+            # Buscar el objeto Reemplazo con el id proporcionado
+            try:
+                reemplazo = Reemplazos.objects.get(id_reemplazo=reemplazo_id)
+                logger.debug("Reemplazo encontrado: %s", reemplazo)
+            except Reemplazos.DoesNotExist:
+                logger.error("Reemplazo no encontrado con id_reemplazo=%s", reemplazo_id)
+                return JsonResponse({'success': False, 'message': 'Reemplazo no encontrado.'}, status=404)
+
+            # Actualizar los campos del objeto Reemplazo
+            reemplazo.semana = semana
+            reemplazo.profesor_reemplazo = profesor_remp
+            reemplazo.save()  # Guardar los cambios en la base de datos
+            logger.info("Reemplazo actualizado: %s", reemplazo)
+
+            # Devolver una respuesta JSON indicando éxito
+            return JsonResponse({'success': True, 'message': 'Reemplazo actualizado exitosamente.'})
+
+        except json.JSONDecodeError:
+            logger.error("Error al procesar el JSON.")
+            return JsonResponse({'success': False, 'message': 'Error al procesar el JSON.'}, status=400)
+        except Exception as e:
+            logger.error("Error inesperado: %s", str(e))
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+    # Si no es un POST, indicar el error
+    logger.warning("Método no permitido: %s", request.method)
+    return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)

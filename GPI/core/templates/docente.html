@@ -117,7 +117,7 @@
             <div class="modal-body">
                 <form method="POST" action="{% url 'guardar_licencia' %}" id="licenciaForm">
                     {% csrf_token %}
-                    <input type="hidden" id="idProfesor" name="profesor_id_profesor">
+                    <input type="hidden" id="idProfesor" name="profesor_id_profesor" value="">
                     <div class="mb-3">
                         <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
                         <input type="date" class="form-control" id="fechaInicio" name="fecha_inicio" required>
