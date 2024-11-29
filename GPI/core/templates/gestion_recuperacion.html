@@ -187,7 +187,7 @@
     
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary" id="saveChangesBtn">Guardar cambios</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 </div>
             </form>
         </div>
@@ -195,28 +195,6 @@
 </div>
 
 
-<div class="modal fade" id="agregarSalaModal" tabindex="-1" aria-labelledby="agregarSalaModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="agregarSalaModalLabel">Agregar Nueva Sala</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label for="nueva-sala" class="col-form-label">Nombre de Sala</label>
-                        <input type="text" class="form-control" id="nueva-sala">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                <button type="button" class="btn btn-warning" onclick="addSala()">Agregar</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -349,46 +327,6 @@
             });
     }
 
-    function addSala() {
-        let nuevaSala = document.getElementById('nueva-sala').value;
-        if (nuevaSala.trim() === '') {
-            alert('Por favor, ingrese un número para la sala.');
-            return;
-        }
-        nuevaSala = nuevaSala.charAt(0).toUpperCase() + nuevaSala.slice(1);
-        fetch('/salas/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify({ numero_sala: nuevaSala })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al agregar sala: ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(response => {
-                alert('Sala agregada: ' + nuevaSala);
-                $('#agregarSalaModal').modal('hide');
-                obtenerSalas();
-            })
-            .catch(error => {
-                console.log('Error al agregar sala:', error);
-                alert('Hubo un error al agregar la sala.');
-            });
-    }
-
-    document.getElementById('sala').addEventListener('change', function () {
-        const selectedValue = this.value;
-
-        if (selectedValue === 'agregar') {
-            const myModal = new bootstrap.Modal(document.getElementById('agregarSalaModal'));
-            myModal.show();
-        }
-    });
 
 
     document.getElementById('profesor').addEventListener('change', function () {
@@ -492,100 +430,6 @@
     const partes = fecha.split('-'); 
     return `${partes[2]}-${partes[1]}-${partes[0]}`; 
 } 
-
-$('#editModal').on('show.bs.modal', function (event) {
-    var button = $(event.relatedTarget);  // El botón que abrió el modal
-    var editId = button.data('id');  // ID de la recuperación
-    var profesor = button.data('profesor'); // Nombre del profesor
-    var asignatura = button.data('asignatura'); // Nombre de la asignatura
-    var numeroModulos = button.data('numero_modulos'); 
-    var fechaClase = button.data('fecha_clase');
-    var fechaRecuperacion = button.data('fecha_recuperacion'); 
-    var sala = button.data('sala');
-    var horaRecuperacion = button.data('hora_recuperacion');  // Hora de recuperación
-
-    // Asignar valores al modal
-    $('#edit_id').val(editId);
-    $('#edit_numero_modulos').val(numeroModulos);
-    $('#edit_fecha_clase').val(convertirFechaFormatoInput(fechaClase));
-    $('#edit_fecha_recuperacion').val(convertirFechaFormatoInput(fechaRecuperacion));
-    $('#edit_hora_recuperacion').val(horaRecuperacion); // Asignar hora de recuperación
-
-    // Llenar select de profesor
-    fetch('/docente_recuperación/')
-        .then(response => response.json())
-        .then(data => {
-            const profesorSelect = $('#edit_profesor');
-            profesorSelect.empty();
-            profesorSelect.append('<option value="">Selecciona un profesor</option>');
-
-            // Llenar los profesores
-            data.profesores.forEach(profesorItem => {
-                const option = $('<option></option>');
-                option.val(profesorItem.nombre);  // Usar nombre del profesor
-                option.text(`${profesorItem.nombre} ${profesorItem.apellido}`);
-                profesorSelect.append(option);
-            });
-
-            // Asignar el valor seleccionado del profesor
-            profesorSelect.val(profesor); // Aquí asignamos el nombre del profesor recibido en el botón
-        })
-        .catch(error => {
-            console.error('Error al obtener los datos de los profesores:', error);
-        });
-
-    // Llenar select de asignaturas
-    fetch(`/docente_asignatura/${profesor}/`)
-        .then(response => response.json())
-        .then(data => {
-            const asignaturaSelect = $('#edit_asignatura');
-            asignaturaSelect.empty();
-            asignaturaSelect.append('<option value="">Selecciona una asignatura</option>');
-
-            // Llenar las asignaturas
-            data.asignaturas.forEach(asignaturaItem => {
-                const option = $('<option></option>');
-                option.val(asignaturaItem.nombre_asignatura); // Usar el nombre de la asignatura
-                option.text(asignaturaItem.nombre_asignatura);
-                asignaturaSelect.append(option);
-            });
-
-            // Asignar la asignatura seleccionada
-            asignaturaSelect.val(asignatura); // Aquí asignamos la asignatura recibida en el botón
-        })
-        .catch(error => {
-            console.error('Error al obtener las asignaturas:', error);
-        });
-
-    // Llenar select de salas de forma dinámica
-    fetch('/api/salas')  // Aquí deberías hacer la petición a la API que devuelve las salas
-        .then(response => response.json())
-        .then(data => {
-            const salaSelect = $('#edit_sala');
-            salaSelect.empty();
-            salaSelect.append('<option value="">Selecciona una sala</option>');
-
-            // Llenar las salas
-            data.salas.forEach(salaItem => {
-                const option = $('<option></option>');
-                option.val(salaItem.codigo);  // Usamos el código o identificador de la sala
-                option.text(salaItem.codigo);  // Aquí debes asignar el texto que quieres mostrar en el select
-                salaSelect.append(option);
-            });
-
-            // Asignar la sala seleccionada
-            salaSelect.val(sala); // Aquí asignamos la sala recibida en el botón
-        })
-        .catch(error => {
-            console.error('Error al obtener las salas:', error);
-        });
-});
-
-// Función para convertir la fecha al formato requerido por el input
-function convertirFechaFormatoInput(fecha) {
-    const partes = fecha.split('-');  // Suponiendo que la fecha está en formato 'yyyy-mm-dd'
-    return `${partes[2]}-${partes[1]}-${partes[0]}`;  // Regresar en formato 'dd-mm-yyyy'
-}
 
 
 </script>

@@ -29,6 +29,8 @@
      </thead>
      <tbody>
           {% for licencia in licencias %}
+          {% csrf_token %}
+
           <tr>
                <td class="text-center">{{ licencia.fecha_inicio }}</td>
                <td class="text-center">{{ licencia.fecha_termino }}</td>
@@ -50,6 +52,7 @@
      </tbody>
      </table>
 </div>
+
 
 <!-- Modal para editar licencia -->
 <div class="modal fade" id="editarLicenciaModal" tabindex="-1" aria-labelledby="editarLicenciaModalLabel" aria-hidden="true">
@@ -87,6 +90,9 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/deletelicencia.js' %}"></script>
 <script src="{% static 'js/editlicencia.js' %}"></script> 
+
+ 
 
 {% endblock %}

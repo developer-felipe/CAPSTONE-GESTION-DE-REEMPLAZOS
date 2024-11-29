@@ -710,17 +710,20 @@ def editar_licencia(request, id_licencia):
             return JsonResponse({'success': False, 'message': 'Licencia no encontrada.'})
 
     return JsonResponse({'success': False, 'message': 'Método no permitido.'})
-    
 
+    
 def eliminar_licencia(request, id_licencia):
     if request.method == 'DELETE':
         try:
             licencia = Licencia.objects.get(id_licencia=id_licencia)
             licencia.delete()
-            return JsonResponse({'success': True, 'message': 'Licencia eliminada correctamente.'})
+            return JsonResponse({'success': True, 'message': 'Licencia eliminada correctamente'})
         except Licencia.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Licencia no encontrada.'})
-    return JsonResponse({'success': False, 'message': 'Método no permitido.'})
+            return JsonResponse({'success': False, 'message': 'Licencia no encontrada'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
 
 def profesor_por_nombre(request, nombre):
     logger.info(f'Buscando profesor con el nombre: {nombre}')

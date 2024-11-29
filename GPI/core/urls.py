@@ -39,7 +39,7 @@ urlpatterns = [
     
     path('profesor_licencias/<int:profesor_id>/', gestionar_licencias, name='gestionar_licencias'),
     path('licencias/<int:id_licencia>/', editar_licencia, name='editar_licencia'),
-    path('licencias/<int:id_licencia>/', eliminar_licencia, name='eliminar_licencia'),
+    path('licencias/eliminar/<int:id_licencia>/', eliminar_licencia, name='eliminar_licencia'),
     
     path('reemplazos/profesor_por_nombre/<str:nombre>/', profesor_por_nombre, name='profesor_por_nombre'),
     path('modulo_por_id/<int:modulo>/', modulo_por_id, name='modulo_por_id'),
