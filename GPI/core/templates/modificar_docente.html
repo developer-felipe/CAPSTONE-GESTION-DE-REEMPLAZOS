@@ -163,7 +163,7 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-
+    let horariosAsignados = [];
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -208,23 +208,23 @@
     function cargarHorariosEnDOM(horarios) {
         horarios.forEach(horario => {
             const celda = document.querySelector(`#div-horario table tbody tr:nth-child(${parseInt(horario.id_modulo)}) td:nth-child(${parseInt(horario.id_dia) + 1})`);
-
+            const arraypos = horariosAsignados.length
             if (celda) {
                 celda.innerHTML = `
-                    <div class="d-flex flex-column p-2 bg-light border rounded shadow-sm position-relative text-center">
-                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
-                                onclick="desasignarBloque(${horario.id_modulo}, ${horario.id_dia}, ${horario.id_horario})">
-                            <span class="material-icons" style="font-size: 16px;">close</span>
-                        </button>
-                        <div class="mb-2">
-                            <span class="text-primary font-weight-bold">${horario.asignatura} (${horario.jornada})</span>
-                        </div>
-                        <div class="small text-muted">Sección: ${horario.seccion}</div>
-                        <div class="small text-muted">Sala: ${horario.sala}</div>
+                <div class="d-flex flex-column p-2 bg-light border rounded shadow-sm position-relative text-center">
+                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
+                            onclick="desasignarBloque(${horario.id_modulo}, ${horario.id_dia}, ${arraypos})">
+                        <span class="material-icons" style="font-size: 16px;">close</span>
+                    </button>
+                    <div class="mb-2">
+                        <span class="text-primary font-weight-bold">${horario.asignatura} (${horario.jornada})</span>
                     </div>
-                `;
+                    <div class="small text-muted">Sección: ${horario.seccion}</div>
+                    <div class="small text-muted">Sala: ${horario.sala}</div>
+                </div>
+            `;
                 horariosAsignados.push({
-                    array_pos: horariosAsignados.length,
+                    array_pos: arraypos,
                     asignaturaID: horario.id_asignatura,
                     diaID: horario.id_dia,
                     jornada: horario.jornada,
@@ -232,6 +232,7 @@
                     salaID: horario.id_sala,
                     seccion: horario.seccion
                 });
+                console.log(horariosAsignados)
             } else {
                 console.log(`No se encontró la celda para el día ${horario.dia} y módulo ${horario.modulo}`);
             }
@@ -239,7 +240,7 @@
     }
 
 
-    let horariosAsignados = [];
+
     function actualizarBloque(moduloID, diaID, asignatura, jornada, sala, seccion, array_pos) {
         const celda = document.querySelector(`#div-horario table tbody tr:nth-child(${parseInt(moduloID)}) td:nth-child(${parseInt(diaID) + 1})`);
         if (celda) {
@@ -278,7 +279,8 @@
     }
 
     $(document).ready(function () {
-        const ultimoId = $('label[for="primer_nombre"]').data('last');
+        const profesorID = form.dataset.prof_id;
+        console.log(profesorID)
         $('#btn-horario').on('click', function () {
             const primerNombre = $('#primer_nombre').val().trim();
             const primerApellido = $('#primer_apellido').val().trim();
@@ -289,7 +291,7 @@
             }
             const datosFormulario = {
                 profesor: {
-                    id: ultimoId,
+                    id: profesorID,
                     nombre: primerNombre.toUpperCase(),
                     apellido: primerApellido.toUpperCase(),
                     segundo_nombre: $('#segundo_nombre').val().toUpperCase() || '',
@@ -297,7 +299,7 @@
                 },
                 horarios_asignados: horariosAsignados
             };
-            fetch('//', {
+            fetch('/editar_profesor/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -359,6 +361,34 @@
     $(document).ready(function () {
         obtenerAsignaturas();
         obtenerSalas();
+    });
+
+    document.getElementById('btn-bloque').addEventListener('click', function () {
+        const moduloID = this.getAttribute('data-modulo-id');
+        const diaID = this.getAttribute('data-dia-id');
+        const asignaturaSelect = document.getElementById('asignatura');
+        const asignaturaID = asignaturaSelect.value;
+        const jornadaSelect = document.getElementById('jornada').value;
+        const seccionSelect = document.getElementById('seccion').value;
+        const salaSelect = document.getElementById('sala');
+        const salaID = salaSelect.value;
+        if (asignaturaID && jornadaSelect && seccionSelect && salaID) {
+            const array_pos = horariosAsignados.length
+            horariosAsignados.push({
+                moduloID: moduloID,
+                diaID: diaID,
+                asignaturaID: asignaturaID,
+                jornada: jornadaSelect,
+                seccion: seccionSelect,
+                salaID: salaID,
+                array_pos: array_pos
+            });
+            actualizarBloque(moduloID, diaID, asignaturaSelect.options[asignaturaSelect.selectedIndex].text, jornadaSelect, salaSelect.options[salaSelect.selectedIndex].text, seccionSelect, array_pos);
+            $('#asignar').modal('hide');
+            console.log(horariosAsignados)
+        } else {
+            alert('Por favor, completa todos los campos.');
+        }
     });
 
     function addAsignatura() {
@@ -453,6 +483,14 @@
             }
         }
     });
+
+    function obtenerDiaModulo(button) {
+        const moduloID = button.getAttribute('data-modulo-id');
+        const diaID = button.getAttribute('data-dia-id');
+        document.getElementById('btn-bloque').setAttribute('data-modulo-id', moduloID);
+        document.getElementById('btn-bloque').setAttribute('data-dia-id', diaID);
+    }
+
 </script>
 
 {% endblock %}

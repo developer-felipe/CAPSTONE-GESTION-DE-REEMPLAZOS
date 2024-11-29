@@ -42,6 +42,7 @@ CREATE TABLE horario (
     sala_id_sala INT NOT NULL,
     dia_semana_id_dia INT NOT NULL,
     modulo_id_modulo INT NOT NULL,
+    activo TINYINT(1) DEFAULT 1;
     profesor_id_profesor INT NOT NULL,
     UNIQUE(seccion, asignatura_id_asignatura, sala_id_sala, dia_semana_id_dia, modulo_id_modulo, profesor_id_profesor),
     FOREIGN KEY (asignatura_id_asignatura) REFERENCES asignatura(id_asignatura),

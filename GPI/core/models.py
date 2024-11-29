@@ -52,6 +52,7 @@ class Horario(models.Model):
     id_horario = models.AutoField(primary_key=True)
     seccion = models.IntegerField()
     jornada = models.CharField(max_length=1)
+    activo = models.BooleanField(default=True)
     asignatura_id_asignatura = models.ForeignKey(Asignatura, models.DO_NOTHING, db_column='asignatura_id_asignatura')
     sala_id_sala = models.ForeignKey(Sala, models.DO_NOTHING, db_column='sala_id_sala')
     dia_semana_id_dia = models.ForeignKey(DiaSemana, models.DO_NOTHING, db_column='dia_semana_id_dia')

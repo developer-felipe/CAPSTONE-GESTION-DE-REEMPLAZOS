@@ -261,6 +261,102 @@ def crear_profesor_y_horarios(request):
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+
+def editar_profesor(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            profesor_data = data.get('profesor')
+            if not profesor_data.get('id') or not profesor_data.get('nombre') or not profesor_data.get('apellido'):
+                return JsonResponse({"error": "Faltan datos del profesor"}, status=400)
+
+            try:
+                profesor = Profesor.objects.get(id_profesor=profesor_data['id'])
+            except Profesor.DoesNotExist:
+                return JsonResponse({"error": f"Profesor con ID {profesor_data['id']} no existe."}, status=400)
+
+            profesor.nombre = profesor_data['nombre']
+            profesor.apellido = profesor_data['apellido']
+            profesor.segundo_nombre = profesor_data.get('segundo_nombre', '')
+            profesor.segundo_apellido = profesor_data.get('segundo_apellido', '')
+            profesor.save()
+
+            logger.info(f"Profesor {profesor.nombre} {profesor.apellido} actualizado exitosamente.")
+
+            horarios_actuales = Horario.objects.filter(profesor_id_profesor=profesor)
+
+            horarios_enviados = [
+                (horario_data['asignaturaID'], horario_data['salaID'], horario_data['moduloID'], horario_data['diaID'], horario_data['seccion'])
+                for horario_data in data['horarios_asignados']
+            ]
+
+            for horario_actual in horarios_actuales:
+                horario_key = (horario_actual.asignatura_id_asignatura.id_asignatura, 
+                               horario_actual.sala_id_sala.id_sala, 
+                               horario_actual.modulo_id_modulo.id_modulo, 
+                               horario_actual.dia_semana_id_dia.id_dia, 
+                               horario_actual.seccion)
+
+                if horario_key not in horarios_enviados:
+                    horario_actual.activo = 0 
+                    horario_actual.save()
+                    logger.info(f"Desactivando horario para el profesor {profesor.nombre} {profesor.apellido}: "
+                                f"Asignatura ID {horario_actual.asignatura_id_asignatura.id_asignatura}, "
+                                f"Sala ID {horario_actual.sala_id_sala.id_sala}, "
+                                f"Módulo ID {horario_actual.modulo_id_modulo.id_modulo}, "
+                                f"Día ID {horario_actual.dia_semana_id_dia.id_dia}, "
+                                f"Sección {horario_actual.seccion}")
+
+
+            for horario_data in data['horarios_asignados']:
+                try:
+                    asignatura = Asignatura.objects.get(id_asignatura=horario_data['asignaturaID'])
+                    sala = Sala.objects.get(id_sala=horario_data['salaID'])
+                    modulo = Modulo.objects.get(id_modulo=horario_data['moduloID'])
+                    dia = DiaSemana.objects.get(id_dia=horario_data['diaID'])
+                except Asignatura.DoesNotExist:
+                    return JsonResponse({"error": f"Asignatura con ID {horario_data['asignaturaID']} no existe."}, status=400)
+                except Sala.DoesNotExist:
+                    return JsonResponse({"error": f"Sala con ID {horario_data['salaID']} no existe."}, status=400)
+                except Modulo.DoesNotExist:
+                    return JsonResponse({"error": f"Módulo con ID {horario_data['moduloID']} no existe."}, status=400)
+                except DiaSemana.DoesNotExist:
+                    return JsonResponse({"error": f"Día de semana con ID {horario_data['diaID']} no existe."}, status=400)
+
+                try:
+                    horario_existente = Horario.objects.get(
+                        profesor_id_profesor=profesor,
+                        asignatura_id_asignatura=asignatura,
+                        sala_id_sala=sala,
+                        dia_semana_id_dia=dia,
+                        modulo_id_modulo=modulo,
+                        seccion=horario_data['seccion']
+                    )
+                    if horario_existente.jornada != horario_data['jornada']:
+                        horario_existente.jornada = horario_data['jornada']
+                        horario_existente.save()
+                        logger.info(f"Jornada del horario para el profesor {profesor.nombre} {profesor.apellido} "
+                                    f"actualizada a {horario_data['jornada']}.")
+                except Horario.DoesNotExist:
+                    Horario.objects.create(
+                        profesor_id_profesor=profesor,
+                        asignatura_id_asignatura=asignatura,
+                        sala_id_sala=sala,
+                        dia_semana_id_dia=dia,
+                        modulo_id_modulo=modulo,
+                        seccion=horario_data['seccion'],
+                        jornada=horario_data['jornada']
+                    )
+                    logger.info(f"Horario creado para el profesor {profesor.nombre} {profesor.apellido}: "
+                                f"Asignatura ID {asignatura.id_asignatura}, Sala ID {sala.id_sala}, "
+                                f"Módulo ID {modulo.id_modulo}, Día ID {dia.id_dia}, "
+                                f"Sección {horario_data['seccion']}, Jornada {horario_data['jornada']}.")
+            
+            return JsonResponse({"message": "Profesor y horarios actualizados exitosamente!"}, status=200)
+
+        except Exception as e:
+            logger.error(f"Error al actualizar el profesor: {str(e)}")
+            return JsonResponse({"error": str(e)}, status=500)
    
 def crear_docente_view(request):
     modulos = Modulo.objects.all()
@@ -432,7 +528,6 @@ def profesores_con_licencia_no_asignada(request):
 
     return JsonResponse({'profesores': profesores_data}, safe=False)
 
-#-----------------------------------------
 
 logger = logging.getLogger(__name__)
 def obtener_clases_por_docente(request):
@@ -458,7 +553,7 @@ def obtener_clases_por_docente(request):
             return JsonResponse({'error': 'Profesor no encontrado'}, status=404)
         
         horarios = Horario.objects.filter(
-            profesor_id_profesor=profesor
+            profesor_id_profesor=profesor, activo=True
         ).filter(Q(dia_semana_id_dia__gte=1) & Q(dia_semana_id_dia__lte=6))
 
         logger.debug(f"Horarios obtenidos: {horarios.count()} horarios")
@@ -468,7 +563,7 @@ def obtener_clases_por_docente(request):
         while current_date <= fecha_termino:
             dia_semana = current_date.weekday() + 1
             logger.debug(f"Procesando fecha: {current_date} (Día de la semana: {dia_semana})")
-            for horario in horarios.filter(dia_semana_id_dia=dia_semana):
+            for horario in horarios.filter(dia_semana_id_dia=dia_semana,):
                 dia = current_date.strftime('%A').capitalize()
                 clases.append({
                     'asignatura': horario.asignatura_id_asignatura.nombre_asignatura,
@@ -564,8 +659,6 @@ def registrar_reemplazo(request):
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
-
-#-----------------
 def modificar_docente_view(request,id):
     modulos = Modulo.objects.all()
     dias = DiaSemana.objects.all()
@@ -663,7 +756,6 @@ def todas_salas(request):
     return JsonResponse({'todas_salas': salas_data})
 
 
-#--------------------
 def gestionar_licencias(request, profesor_id):
     profesor = get_object_or_404(Profesor, id_profesor=profesor_id)
 
@@ -798,7 +890,7 @@ def actualizar_reemplazo(request):
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
 
 def obtenerHorario(request,id_profesor):
-    horarios = Horario.objects.filter(profesor_id_profesor=id_profesor)
+    horarios = Horario.objects.filter(profesor_id_profesor=id_profesor, activo=1)
     horarios_data = []
     for horario in horarios:
         horarios_data.append({
@@ -815,3 +907,4 @@ def obtenerHorario(request,id_profesor):
             'id_modulo': horario.modulo_id_modulo.id_modulo,
         })
     return JsonResponse({'horarios': horarios_data})
+

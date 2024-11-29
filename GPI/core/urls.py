@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from .views import (login_view, reemplazos_view,guardar_licencia ,recuperacion_view,base_view, docente_view, reportes_view, CustomLogoutView,asignatura_view, sala_view, crear_docente_view, crear_profesor_y_horarios,
 profesores_con_licencia_no_asignada,obtener_clases_por_docente,obtener_profesores_disponibles,registrar_reemplazo, modificar_docente_view, modificar_profesor_y_horarios, registrar_recuperacion,
  eliminar_recuperacion , gestionar_licencias,editar_licencia ,eliminar_licencia ,todas_salas,todas_asignaturas,docente_recuperación, docente_asignatura, profesor_por_nombre, modulo_por_id,
- actualizar_reemplazo,obtenerHorario)
+ actualizar_reemplazo,obtenerHorario, editar_profesor)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -45,5 +45,6 @@ urlpatterns = [
     path('modulo_por_id/<int:modulo>/', modulo_por_id, name='modulo_por_id'),
     path('reemplazos/actualizar_reemplazo/',actualizar_reemplazo, name='actualizar_reemplazo'),
     path('obtener_horarios/<int:id_profesor>/', obtenerHorario, name='obtener_horarios'),
-
+    path('obtener_horarios/<int:id_profesor>/', obtenerHorario, name='obtener_horarios'),
+    path('editar_profesor/', editar_profesor, name='editar_profesor'),
 ]
