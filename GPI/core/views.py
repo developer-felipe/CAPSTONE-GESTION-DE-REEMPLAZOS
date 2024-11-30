@@ -110,6 +110,10 @@ def recuperacion_view(request):
         'recuperaciones': recuperaciones
     })
 
+
+
+        
+
 def eliminar_recuperacion(request, id_recuperacion):
     try:
         recuperacion = Recuperacion.objects.get(id_recuperacion=id_recuperacion)
@@ -157,7 +161,22 @@ def actualizar_recuperacion(request, id_recuperacion):
 
 
 def reportes_view(request):
-    return render(request, 'templates/reportes.html')
+    profesores = Profesor.objects.all()
+
+    profesores_concatenados = []
+
+    for profesor in profesores:
+        nombre_completo = f"{profesor.nombre} {profesor.segundo_nombre} {profesor.apellido} {profesor.segundo_apellido}"
+        profesores_concatenados.append({
+            'id': profesor.id_profesor,
+            'nombre_completo': nombre_completo
+        })
+
+    context = {
+        'profesores': profesores_concatenados,
+    }
+
+    return render(request, 'templates/reportes.html', context)
 
 
 @login_required(login_url='/login/') 
@@ -532,7 +551,7 @@ def profesores_con_licencia_no_asignada(request):
 logger = logging.getLogger(__name__)
 def obtener_clases_por_docente(request):
     docente_id = request.GET.get('docente_id')
-    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_inicio = request.GET.get('fecha_inicio')  
     fecha_termino = request.GET.get('fecha_termino')
 
     if not docente_id or not fecha_inicio or not fecha_termino:
@@ -908,3 +927,118 @@ def obtenerHorario(request,id_profesor):
         })
     return JsonResponse({'horarios': horarios_data})
 
+def horas_periodo(request):
+    docente_id = request.GET.get('profesorId')
+    fecha_inicio = request.GET.get('fechaInicio')
+    fecha_termino = request.GET.get('fechaTermino')
+
+    if not docente_id or not fecha_inicio or not fecha_termino:
+        logger.error("Faltan parámetros en la solicitud.")
+        return JsonResponse({'error': 'Faltan parámetros'}, status=400)
+
+    try:
+        fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+        fecha_termino = datetime.strptime(fecha_termino, '%Y-%m-%d').date()
+        
+        if fecha_termino < fecha_inicio:
+            logger.warning("La fecha de término no puede ser antes de la fecha de inicio.")
+            return JsonResponse({'error': 'La fecha de término no puede ser antes de la fecha de inicio'}, status=400)
+        try:
+            profesor = Profesor.objects.get(id_profesor=docente_id)
+            nombre_completo = f"{profesor.nombre} {profesor.segundo_nombre} {profesor.apellido} {profesor.segundo_apellido}".strip()
+            logger.debug(f"Profesor encontrado: {nombre_completo}")
+
+        except Profesor.DoesNotExist:
+            logger.error(f"Profesor con id {docente_id} no encontrado.")
+            return JsonResponse({'error': 'Profesor no encontrado'}, status=404)
+        query = '''
+        SELECT 
+            r.semana, 
+            CONCAT(p.nombre, ' ', 
+                IF(p.segundo_nombre IS NOT NULL, CONCAT(p.segundo_nombre, ' '), ''), 
+                p.apellido, 
+                IF(p.segundo_apellido IS NOT NULL, CONCAT(' ', p.segundo_apellido), '')
+            ) AS profesor,
+            a.nombre_asignatura,
+            h.seccion,
+            s.numero_sala,
+            CONCAT(
+                SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), '-', 1), 
+                '-',
+                SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
+            ) AS modulo,
+            COUNT(*) AS registros,
+            ds.nombre_dia,
+            r.fecha_reemplazo, 
+            r.profesor_reemplazo,
+            GROUP_CONCAT(r.id_reemplazo ORDER BY r.id_reemplazo SEPARATOR '-') AS id_reemplazos,
+            IF(COUNT(mo.id_modulo) > 1, GROUP_CONCAT(mo.id_modulo ORDER BY mo.id_modulo SEPARATOR '-'), MAX(mo.id_modulo)) AS id_modulo,
+            ds.id_dia
+        FROM 
+            test.reemplazos r
+        JOIN 
+            test.horario h ON h.id_horario = r.horario_id_horario 
+        JOIN 
+            test.profesor p ON p.id_profesor = h.profesor_id_profesor
+        JOIN 
+            test.sala s ON s.id_sala = h.sala_id_sala 
+        JOIN 
+            test.modulo mo ON mo.id_modulo = h.modulo_id_modulo
+        JOIN 
+            test.asignatura a ON a.id_asignatura = h.asignatura_id_asignatura 
+        JOIN 
+            test.dia_semana ds ON ds.id_dia = h.dia_semana_id_dia
+        WHERE 
+            r.fecha_reemplazo BETWEEN %s AND %s
+            AND r.profesor_reemplazo = %s
+        GROUP BY 
+            r.semana, r.fecha_reemplazo, r.profesor_reemplazo, 
+            s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia
+        ORDER BY 
+            r.fecha_reemplazo;
+        '''
+        
+        with connection.cursor() as cursor:
+            cursor.execute(query, [fecha_inicio, fecha_termino, nombre_completo])
+            reemplazos = cursor.fetchall()
+
+        reemplazos_listados = []
+
+        for row in reemplazos:
+            reemplazos_listados.append({
+                'semana': row[0],
+                'profesor_nombre': row[1],
+                'nombre_asignatura': row[2],
+                'seccion': row[3],
+                'numero_sala': row[4],
+                'hora_modulo': row[5],
+                'registros': row[6],
+                'nombre_dia': row[7],
+                'fecha_reemplazo': row[8],
+                'profesor_reemplazo': row[9],
+                'id_reemplazo': row[10],
+                'id_modulo': row[11],
+                'id_dia': row[12]
+            })
+
+        horas_reemplazo = len(reemplazos_listados)
+
+        horas_horarios = horas_reemplazo
+        horas_totales = horas_horarios + horas_reemplazo
+
+        if horas_totales >= 40:
+            tipo_pago = "BONO"
+        else:
+            tipo_pago = "PROGRAMACIÓN"
+
+        return JsonResponse({
+            'horas_horarios': horas_horarios,
+            'horas_reemplazo': horas_reemplazo,
+            'horas_totales': horas_totales,
+            'tipo_pago': tipo_pago,
+            'reemplazos': reemplazos_listados
+        })
+
+    except Exception as e:
+        logger.error(f"Error inesperado: {str(e)}")
+        return JsonResponse({'error': f'Error: {str(e)}'}, status=500)

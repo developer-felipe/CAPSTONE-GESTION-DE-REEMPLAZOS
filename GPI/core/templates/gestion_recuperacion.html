@@ -9,8 +9,8 @@
     <h1>Gestión de Recuperación</h1>
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
     </div>
-    <form method="POST" id="search-form">
-        <div class="input-group mb-3">
+    <form method="GET" action="{% url 'recuperacion' %}" class="mb-4">
+        <div class="input-group">
             <input type="text" name="filter" class="form-control" placeholder="Buscar por nombre docente...">
             <button type="submit" class="btn btn-primary">Buscar</button>
         </div>
@@ -89,6 +89,7 @@
     <table class="table">
         <thead>
             <tr>
+                <th class="text-center">ID</th>
                 <th class="text-center">Profesor</th>
                 <th class="text-center">Asignatura</th>
                 <th class="text-center">Número de Módulos</th>
@@ -102,6 +103,7 @@
         <tbody>
             {% for rec in recuperaciones %}
             <tr>
+                <td class="text-center">{{ rec.id_recuperacion }}</td>
                 <td class="text-center">{{ rec.profesor }}</td>
                 <td class="text-center">{{ rec.asignatura }}</td>
                 <td class="text-center">{{ rec.numero_modulos }}</td>
@@ -138,51 +140,55 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="edit-recuperacion-form" method="PUT">
-                <input type="hidden" id="edit_id" name="edit_id">
+                <input type="hidden" id="edit_id" name="edit_id" value="">
                 <div class="modal-body">
                     <!-- Formulario de edición -->
                     <input type="hidden" id="edit_id">
                     
                     <div class="mb-3">
-                        <label for="edit_profesor" class="form-label">Profesor</label>
-                        <select id="edit_profesor" class="form-select">
-                            <!-- Las opciones se llenarán con JS -->
+                        <select id="edit_profesor" name="profesor" class="form-select" required>
+                            <option value="">Selecciona un profesor</option>
+                            <!-- Opciones se llenan dinámicamente -->
                         </select>
                     </div>
     
                     <div class="mb-3">
-                        <label for="edit_asignatura" class="form-label">Asignatura</label>
-                        <select id="edit_asignatura" class="form-select">
-                            <!-- Las opciones se llenarán con JS -->
+                        <select id="edit_asignatura" name="asignatura" class="form-select" required>
+                            <option value="">Selecciona una asignatura</option>
+                            <!-- Opciones se llenan dinámicamente -->
                         </select>
                     </div>
     
                     <div class="mb-3">
-                        <label for="edit_numero_modulos" class="form-label">Número de módulos</label>
-                        <input type="number" id="edit_numero_modulos" class="form-control">
+                        <label for="edit_numero_modulos" class="form-label">Número de Módulos</label>
+                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos"
+                            required>
                     </div>
     
                     <div class="mb-3">
-                        <label for="edit_fecha_clase" class="form-label">Fecha de clase</label>
-                        <input type="date" id="edit_fecha_clase" class="form-control">
+                        <label for="edit_fecha_clase" class="form-label">Fecha de Clase</label>
+                        <input type="date" class="form-control" id="edit_fecha_clase" name="fecha_clase" required>
                     </div>
     
                     <div class="mb-3">
-                        <label for="edit_fecha_recuperacion" class="form-label">Fecha de recuperación</label>
-                        <input type="date" id="edit_fecha_recuperacion" class="form-control">
+                        <label for="edit_fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
+                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion"
+                            required>
                     </div>
-    
+
+                    <div class="mb-3">
+                        <label for="edit_hora_recuperacion" class="form-label">Hora de Recuperación</label>
+                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion"
+                            required>
+                    </div>
                     <div class="mb-3">
                         <label for="edit_sala" class="form-label">Sala</label>
-                        <select id="edit_sala" class="form-select">
-                            <!-- Las opciones se llenarán con JS -->
+                        <select id="edit_sala" name="sala" class="form-select" required>
+                            <option value="">Selecciona una sala</option>
+                            <!-- Opciones se llenan dinámicamente -->
                         </select>
                     </div>
-    
-                    <div class="mb-3">
-                        <label for="edit_hora_recuperacion" class="form-label">Hora de recuperación</label>
-                        <input type="time" id="edit_hora_recuperacion" class="form-control">
-                    </div>
+                    
                 </div>
     
                 <div class="modal-footer">
@@ -198,7 +204,8 @@
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="{% static 'js/modificarclaserecu.js' %}"></script>
+<script src="{% static 'js/editarRecuperacion.js' %}"></script> 
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         obtenerSalas()
@@ -238,28 +245,7 @@
             });
     });
 
-    function actualizarRecuperacion(idRecuperacion, data) {
-        fetch(`/ruta/actualizar-recuperacion/${idRecuperacion}/`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken'),
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Recuperación actualizada correctamente.');
-                } else {
-                    alert('Error al actualizar la recuperación: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Hubo un error al procesar la solicitud.');
-            });
-    }
+
 
     function eliminarRecuperacion(button) {
         const idRecuperacion = button.getAttribute('data-id');
@@ -368,26 +354,35 @@
             });
     });
 
-    document.getElementById('recuperacion-form').addEventListener('submit', function (event) {
+
+        document.getElementById('recuperacion-form').addEventListener('submit', function (event) {
         event.preventDefault();
+
         const profesorSelect = document.getElementById('profesor');
         const selectedOption = profesorSelect.options[profesorSelect.selectedIndex];
         const profesorNombre = selectedOption.innerHTML;
+
         const asignaturaSelect = document.getElementById('profesor-asignatura');
         const selectedAsign = asignaturaSelect.options[asignaturaSelect.selectedIndex];
         const asignaturaNombre = selectedAsign.innerHTML;
+
         const profesorId = profesorSelect.value;
         const formData = new FormData(event.target);
+
         const salaSelect = document.getElementById('sala');
         const selectSala = salaSelect.options[salaSelect.selectedIndex];
         const salaNombre = selectSala.innerHTML;
+
         const data = {};
-        data.profesorNombre = profesorNombre
-        data.asignaturaNombre = asignaturaNombre
-        data.salaNombre = salaNombre
+        data.profesorNombre = profesorNombre;
+        data.asignaturaNombre = asignaturaNombre;
+        data.salaNombre = salaNombre;
+
         formData.forEach((value, key) => {
             data[key] = value;
         });
+
+        console.log('Datos a enviar:', data); 
 
         fetch('{% url "registrar_recuperacion" %}', {
             method: 'POST',
@@ -397,18 +392,21 @@
             },
             body: JSON.stringify(data)
         })
-            .then(response => response.json())
-            .then(responseData => {
-                if (responseData.success) {
-                    alert('Recuperación registrada correctamente.');
-                } else {
-                    alert('Error al registrar la recuperación.');
-                }
-            })
-            .catch(error => {
-                console.error('Error al enviar los datos:', error);
-                alert('Hubo un error al procesar la solicitud.');
-            });
+        .then(response => response.json())
+        .then(responseData => {
+            console.log('Respuesta del servidor:', responseData); 
+
+            if (responseData.success) {
+                alert('Recuperación registrada correctamente.');
+                window.location.reload(); 
+            } else {
+                alert('Error al registrar la recuperación.');
+            }
+        })
+        .catch(error => {
+            console.error('Error al enviar los datos:', error);
+            alert('Hubo un error al procesar la solicitud.');
+        });
     });
 
     function getCookie(name) {
@@ -425,11 +423,6 @@
         }
         return cookieValue;
     }
-
-    function convertirFechaFormatoInput(fecha) {
-    const partes = fecha.split('-'); 
-    return `${partes[2]}-${partes[1]}-${partes[0]}`; 
-} 
 
 
 </script>

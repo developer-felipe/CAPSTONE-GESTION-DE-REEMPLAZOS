@@ -1,6 +1,5 @@
 {% extends 'templates/base.html' %}
 {% load static %}
-
 {% block css %}
 <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
 <link rel="stylesheet" href="{% static 'core/bootstrap/css/bootstrap.min.css' %}">
@@ -11,103 +10,47 @@
 <div class="container">
     <h1 class="text-center">REPORTES</h1>
 
-    <!-- Filtro de búsqueda reducido -->
     <div class="card mb-3 mx-auto" style="background-color: #f8f8d8; border-radius: 20px; max-width: 600px;">
         <div class="card-body p-4">
             <h3 class="text-center">Filtro</h3>
             <form method="GET" action="{% url 'reportes' %}">
                 <div class="form-group">
-                    <label for="docente">Nombre docente:</label>
-                    <select id="docente" name="docente" class="form-control" required>
-                        <option value="">Seleccione un docente</option>
-                        {% for docente in docentes %}
-                        <option value="{{ docente.id }}">{{ docente.nombre }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="mb-3">
+                        <label for="docente">Nombre docente:</label>
+                        <select id="docente" name="docente" class="form-control" required>
+                            <option value="">Seleccione un docente</option>
+                            {% for profesor in profesores %}
+                            <option value="{{ profesor.id }}">{{ profesor.nombre_completo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="mes">Mes:</label>
-                    <select id="mes" name="mes" class="form-control">
-                        <option value="">Seleccione un mes</option>
-                        <option value="enero">Enero</option>
-                        <option value="febrero">Febrero</option>
-                        <option value="marzo">Marzo</option>
-                        <option value="abril">Abril</option>
-                        <option value="mayo">Mayo</option>
-                        <option value="junio">Junio</option>
-                        <option value="julio">Julio</option>
-                        <option value="agosto">Agosto</option>
-                        <option value="septiembre">Septiembre</option>
-                        <option value="octubre">Octubre</option>
-                        <option value="noviembre">Noviembre</option>
-                        <option value="diciembre">Diciembre</option>
-                    </select>
+                    <div class="mb-3">
+                        <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
+                        <input type="date" class="form-control" id="fechaInicio" name="fecha_inicio" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fechaFin" class="form-label">Fecha de Término</label>
+                        <input type="date" class="form-control" id="fechaFin" name="fecha_fin" required>
+                    </div>
                 </div>
 
-                <div class="text-center"> <!-- Agregado para centrar el botón -->
-                    <button type="submit" class="btn btn-success btn-block mt-3" style="max-width: 200px;">Buscar</button>
+                <div class="text-center">
+                    <button id="btn-filtro" type="button" class="btn btn-success btn-block mt-3"
+                        onclick="enviarDatos()">Buscar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Tabla de resultados del reporte -->
     <div class="report-section mt-5">
-        <h3 class="text-center">Reporte Docente {{ docente }}, Mes: {{ mes }}</h3>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover table-bordered text-center">
-                <thead class="thead-dark">
-                    <tr>
-                        <th style="width: 10%;">Cant. horas sem</th>
-                        <th style="width: 15%;">Nombre docente</th>
-                        <th style="width: 10%;">Mes</th>
-                        <th style="width: 15%;">Total horas trabajadas</th>
-                        <th style="width: 15%;">Horas por programación</th>
-                        <th style="width: 10%;">Horas por bono</th>
-                        <th style="width: 10%;">Clases recuperadas</th>
-                        <th style="width: 10%;">Clases suspendidas</th>
-                        <th style="width: 15%;">Fecha último reemplazo</th>
-                        <th style="width: 10%;">Forma de pago</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if reportes %}
-                        {% for reporte in reportes %}
-                        <tr>
-                            <td>{{ reporte.horas_sem }}</td>
-                            <td>{{ reporte.nombre_docente }}</td>
-                            <td>{{ reporte.mes }}</td>
-                            <td>{{ reporte.total_horas_trabajadas }}</td>
-                            <td>{{ reporte.horas_programacion }}</td>
-                            <td>{{ reporte.horas_bono }}</td>
-                            <td>{{ reporte.clases_recuperadas }}</td>
-                            <td>{{ reporte.clases_suspendidas }}</td>
-                            <td>{{ reporte.fecha_ultimo_reemplazo }}</td>
-                            <td>{{ reporte.forma_pago }}</td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="10">No se encontraron reportes para el docente y mes seleccionados.</td>
-                        </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
     </div>
 
-    <div class="text-center mt-4">
-        <button class="btn btn-dark" onclick="emitirInforme()">Emitir Informe</button>
-    </div>
-    
+
 </div>
 
-<script>
-function emitirInforme() {
-    // Lógica para emitir informe, como abrir un modal o redirigir a otra página
-    alert('Función de emisión de informe no implementada.');
-}
-</script>
+<script src="{% static 'js/reporte.js' %}"></script>
 
 {% endblock %}
