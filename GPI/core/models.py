@@ -2,13 +2,27 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 from django.contrib.auth.hashers import make_password
 from django.db import models
 
+class Carrera(models.Model):
+    id_carrera = models.AutoField(primary_key=True)
+    nombre_carrera = models.CharField(max_length=64)
+
+    class Meta:
+        managed = True
+        db_table = 'carrera'
+
+    def __str__(self):
+        return self.nombre_carrera
+
 class Asignatura(models.Model):
     id_asignatura = models.AutoField(primary_key=True)
     nombre_asignatura = models.CharField(max_length=24)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'asignatura'
+
+    def __str__(self):
+        return self.nombre_asignatura
 
 class DiaSemana(models.Model):
     id_dia = models.AutoField(primary_key=True)
@@ -58,6 +72,7 @@ class Horario(models.Model):
     dia_semana_id_dia = models.ForeignKey(DiaSemana, models.DO_NOTHING, db_column='dia_semana_id_dia')
     modulo_id_modulo = models.ForeignKey(Modulo, models.DO_NOTHING, db_column='modulo_id_modulo')
     profesor_id_profesor = models.ForeignKey(Profesor, models.DO_NOTHING, db_column='profesor_id_profesor')
+    carrera_id_carrera = models.ForeignKey(Carrera, models.DO_NOTHING, db_column='carrera_id_carrera')
 
     class Meta:
         managed = False
@@ -88,11 +103,11 @@ class Recuperacion(models.Model):
     fecha_recuperacion = models.DateField()
     hora_recuperacion = models.TimeField()
     sala = models.CharField(max_length=4)
+    horario = models.ForeignKey(Horario, models.DO_NOTHING, db_column='horario_id_horario')
 
     class Meta:
         managed = False
         db_table = 'recuperacion'
-
 
 
 class Reemplazos(models.Model):

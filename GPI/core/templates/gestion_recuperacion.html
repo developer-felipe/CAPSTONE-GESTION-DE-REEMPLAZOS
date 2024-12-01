@@ -424,6 +424,57 @@
         return cookieValue;
     }
 
+    document.getElementById('editRecuperacionForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+
+    const recuperacionId = document.getElementById('recuperacion-id').value; 
+
+    fetch(`/actualizar-recuperacion/${recuperacionId}/`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')  
+        },
+        body: JSON.stringify(data) 
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Recuperación actualizada correctamente.');
+            window.location.reload();  
+        } else {
+            alert(data.message || 'Hubo un error al actualizar.');
+        }
+    })
+    .catch(error => {
+        console.error('Error al enviar la solicitud PUT:', error);
+        alert('Hubo un error inesperado.');
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
 
 </script>
 

@@ -1,14 +1,14 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
-from django.db import connection
+from django.db import connection, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
-from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Licencia, Reemplazos,Recuperacion
+from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Licencia, Reemplazos,Recuperacion, Carrera
 from django.core.exceptions import ObjectDoesNotExist
 import json
 import logging
@@ -42,18 +42,13 @@ def docente_view(request):
         id_profesor = request.POST.get('id_profesor')
         if id_profesor:
             try:
-                # Obtener al profesor a eliminar
                 profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
-
-                # Eliminar horarios asociados
                 horarios_asociados = Horario.objects.filter(profesor_id_profesor=profesor_a_eliminar)
+                
                 for horario in horarios_asociados:
                     Reemplazos.objects.filter(horario=horario).delete()
-
-                # Eliminar licencias asociadas
+                    
                 Licencia.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
-
-                # Eliminar el profesor
                 profesor_a_eliminar.delete()
 
                 messages.success(request, "Profesor y sus licencias eliminadas exitosamente.")
@@ -205,7 +200,6 @@ def asignatura_view(request):
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-
 def sala_view(request):
     if request.method == 'GET':
         salas = Sala.objects.all().order_by('numero_sala').values('id_sala', 'numero_sala')
@@ -227,20 +221,42 @@ def sala_view(request):
         }, status=201)
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-from django.db import transaction
-from django.http import JsonResponse
-import json
-from .models import Profesor, Asignatura, Sala, Modulo, DiaSemana, Horario
+def carrera_view(request):
+    if request.method == 'GET':
+        carreras = Carrera.objects.all().order_by('nombre_carrera').values('id_carrera', 'nombre_carrera')
+        carreras_list = list(carreras)
+        return JsonResponse(carreras_list, safe=False)
+
+    elif request.method == 'POST':
+        data = json.loads(request.body)
+        nombre_carrera = data.get('nombre')
+        
+        if nombre_carrera:
+            nueva_carrera = Carrera(nombre_carrera=nombre_carrera)
+            nueva_carrera.save()
+            return JsonResponse({
+                'message': 'Carrera agregada',
+                'nombre': nueva_carrera.nombre_carrera,
+                'id': nueva_carrera.id_carrera}, status=201)          
+        else:
+            return JsonResponse({'error': 'Nombre de carrera no proporcionado'}, status=400)
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 def crear_profesor_y_horarios(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             profesor_data = data.get('profesor')
+
             if not profesor_data.get('nombre') or not profesor_data.get('apellido'):
+                logger.warning("Faltan datos del profesor: nombre o apellido no proporcionados.")
                 return JsonResponse({"error": "Faltan datos del profesor"}, status=400)
+
             ultimo_profesor = Profesor.objects.last()
             nuevo_id_profesor = ultimo_profesor.id_profesor + 1 if ultimo_profesor else 1
+            logger.info(f"Creando nuevo profesor con ID: {nuevo_id_profesor}")
+
             with transaction.atomic():
                 profesor = Profesor.objects.create(
                     id_profesor=nuevo_id_profesor,
@@ -249,20 +265,31 @@ def crear_profesor_y_horarios(request):
                     segundo_nombre=profesor_data.get('segundo_nombre', ''),
                     segundo_apellido=profesor_data.get('segundo_apellido', '')
                 )
+                logger.info(f"Profesor {profesor.nombre} {profesor.apellido} creado exitosamente.")
+
                 for horario_data in data['horarios_asignados']:
                     try:
                         asignatura = Asignatura.objects.get(id_asignatura=horario_data['asignaturaID'])
                         sala = Sala.objects.get(id_sala=horario_data['salaID'])
                         modulo = Modulo.objects.get(id_modulo=horario_data['moduloID'])
                         dia = DiaSemana.objects.get(id_dia=horario_data['diaID'])
+                        carrera = Carrera.objects.get(id_carrera=horario_data['carreraID'])
                     except Asignatura.DoesNotExist:
+                        logger.error(f"Asignatura con ID {horario_data['asignaturaID']} no existe.")
                         return JsonResponse({"error": f"Asignatura con ID {horario_data['asignaturaID']} no existe."}, status=400)
                     except Sala.DoesNotExist:
+                        logger.error(f"Sala con ID {horario_data['salaID']} no existe.")
                         return JsonResponse({"error": f"Sala con ID {horario_data['salaID']} no existe."}, status=400)
                     except Modulo.DoesNotExist:
+                        logger.error(f"Módulo con ID {horario_data['moduloID']} no existe.")
                         return JsonResponse({"error": f"Módulo con ID {horario_data['moduloID']} no existe."}, status=400)
                     except DiaSemana.DoesNotExist:
+                        logger.error(f"Día de semana con ID {horario_data['diaID']} no existe.")
                         return JsonResponse({"error": f"Día de semana con ID {horario_data['diaID']} no existe."}, status=400)
+                    except Carrera.DoesNotExist:
+                        logger.error(f"Carrera con ID {horario_data['carreraID']} no existe.")
+                        return JsonResponse({"error": f"Carrera con ID {horario_data['carreraID']} no existe."}, status=400)
+
                     Horario.objects.create(
                         profesor_id_profesor=profesor,
                         asignatura_id_asignatura=asignatura,
@@ -270,12 +297,18 @@ def crear_profesor_y_horarios(request):
                         dia_semana_id_dia=dia,
                         modulo_id_modulo=modulo,
                         seccion=horario_data['seccion'],
-                        jornada=horario_data['jornada']
+                        jornada=horario_data['jornada'],
+                        carrera_id_carrera=carrera
                     )
+                    logger.info(f"Horario creado para el profesor {profesor.nombre} {profesor.apellido}, seccion {horario_data['seccion']}.")
+
                 return JsonResponse({"message": "Profesor y horarios creados exitosamente!"}, status=201)
 
         except Exception as e:
+            logger.error(f"Error al crear profesor y horarios: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 def editar_profesor(request):
     if request.method == 'POST':
@@ -301,7 +334,7 @@ def editar_profesor(request):
             horarios_actuales = Horario.objects.filter(profesor_id_profesor=profesor)
 
             horarios_enviados = [
-                (horario_data['asignaturaID'], horario_data['salaID'], horario_data['moduloID'], horario_data['diaID'], horario_data['seccion'])
+                (horario_data['asignaturaID'], horario_data['salaID'], horario_data['moduloID'], horario_data['diaID'], horario_data['seccion'], horario_data['carreraID'])
                 for horario_data in data['horarios_asignados']
             ]
 
@@ -310,17 +343,19 @@ def editar_profesor(request):
                                horario_actual.sala_id_sala.id_sala, 
                                horario_actual.modulo_id_modulo.id_modulo, 
                                horario_actual.dia_semana_id_dia.id_dia, 
-                               horario_actual.seccion)
+                               horario_actual.seccion,
+                               horario_actual.carrera_id_carrera.id_carrera)
 
                 if horario_key not in horarios_enviados:
-                    horario_actual.activo = 0 
+                    horario_actual.activo = 0
                     horario_actual.save()
                     logger.info(f"Desactivando horario para el profesor {profesor.nombre} {profesor.apellido}: "
                                 f"Asignatura ID {horario_actual.asignatura_id_asignatura.id_asignatura}, "
                                 f"Sala ID {horario_actual.sala_id_sala.id_sala}, "
                                 f"Módulo ID {horario_actual.modulo_id_modulo.id_modulo}, "
                                 f"Día ID {horario_actual.dia_semana_id_dia.id_dia}, "
-                                f"Sección {horario_actual.seccion}")
+                                f"Sección {horario_actual.seccion}, "
+                                f"Carrera ID {horario_actual.carrera_id_carrera.id_carrera}")
 
 
             for horario_data in data['horarios_asignados']:
@@ -329,6 +364,7 @@ def editar_profesor(request):
                     sala = Sala.objects.get(id_sala=horario_data['salaID'])
                     modulo = Modulo.objects.get(id_modulo=horario_data['moduloID'])
                     dia = DiaSemana.objects.get(id_dia=horario_data['diaID'])
+                    carrera = Carrera.objects.get(id_carrera=horario_data['carreraID'])
                 except Asignatura.DoesNotExist:
                     return JsonResponse({"error": f"Asignatura con ID {horario_data['asignaturaID']} no existe."}, status=400)
                 except Sala.DoesNotExist:
@@ -337,6 +373,8 @@ def editar_profesor(request):
                     return JsonResponse({"error": f"Módulo con ID {horario_data['moduloID']} no existe."}, status=400)
                 except DiaSemana.DoesNotExist:
                     return JsonResponse({"error": f"Día de semana con ID {horario_data['diaID']} no existe."}, status=400)
+                except Carrera.DoesNotExist:
+                    return JsonResponse({"error": f"Carrera con ID {horario_data['carreraID']} no existe."}, status=400)
 
                 try:
                     horario_existente = Horario.objects.get(
@@ -345,6 +383,7 @@ def editar_profesor(request):
                         sala_id_sala=sala,
                         dia_semana_id_dia=dia,
                         modulo_id_modulo=modulo,
+                        carrera_id_carrera=carrera,
                         seccion=horario_data['seccion']
                     )
                     if horario_existente.jornada != horario_data['jornada']:
@@ -359,13 +398,15 @@ def editar_profesor(request):
                         sala_id_sala=sala,
                         dia_semana_id_dia=dia,
                         modulo_id_modulo=modulo,
+                        carrera_id_carrera=carrera,
                         seccion=horario_data['seccion'],
                         jornada=horario_data['jornada']
                     )
                     logger.info(f"Horario creado para el profesor {profesor.nombre} {profesor.apellido}: "
                                 f"Asignatura ID {asignatura.id_asignatura}, Sala ID {sala.id_sala}, "
                                 f"Módulo ID {modulo.id_modulo}, Día ID {dia.id_dia}, "
-                                f"Sección {horario_data['seccion']}, Jornada {horario_data['jornada']}.")
+                                f"Sección {horario_data['seccion']}, Jornada {horario_data['jornada']}, "
+                                f"Carrera ID {carrera.id_carrera}.")
             
             return JsonResponse({"message": "Profesor y horarios actualizados exitosamente!"}, status=200)
 
@@ -677,13 +718,15 @@ def registrar_reemplazo(request):
 def modificar_docente_view(request,id):
     modulos = Modulo.objects.all()
     dias = DiaSemana.objects.all()
+    carrera = Carrera.objects.all()
     horarios = Horario.objects.filter(profesor_id_profesor=id)
     profesor = get_object_or_404(Profesor, id_profesor=id)
     context = {
         'modulos': modulos,
         'dias': dias,
         'profesor':profesor,
-        'horario:':horarios
+        'horario:':horarios,
+        'carrera':carrera
     }
     return render(request, 'templates/modificar_docente.html', context)
 
@@ -691,6 +734,7 @@ def modificar_profesor_y_horarios(request):
     if request.method == 'PUT':
         try:
             data = json.loads(request.body)
+            logger.info(f"Datos recibidos: {data}")
             profesor_data = data.get('profesor')
             profesor_id = profesor_data.get('id_profesor')
 
@@ -706,12 +750,21 @@ def modificar_profesor_y_horarios(request):
             profesor.save()
 
             for horario_data in data.get('horarios_asignados', []):
+                logger.info(f"Procesando horario: {horario_data}")
+
                 try:
                     asignatura = Asignatura.objects.get(id_asignatura=horario_data['asignaturaID'])
                     sala = Sala.objects.get(id_sala=horario_data['salaID'])
                     modulo = Modulo.objects.get(id_modulo=horario_data['moduloID'])
                     dia = DiaSemana.objects.get(id_dia=horario_data['diaID'])
+                    carrera = Carrera.objects.get(id_carrera=horario_data['carreraID'])
+
+                    if not carrera:
+                        logger.error(f"Carrera no encontrada: {horario_data['carreraID']}")
+                        return JsonResponse({"error": "Carrera no encontrada."}, status=400)
+
                 except Exception as e:
+                    logger.error(f"Error al obtener los objetos relacionados: {str(e)}")
                     return JsonResponse({"error": f"Error al obtener los objetos relacionados: {str(e)}"}, status=500)
 
                 horario, created = Horario.objects.update_or_create(
@@ -720,6 +773,7 @@ def modificar_profesor_y_horarios(request):
                     sala_id_sala=sala,
                     dia_semana_id_dia=dia,
                     modulo_id_modulo=modulo,
+                    carrera_id_carrera=carrera,
                     defaults={
                         'seccion': horario_data['seccion'],
                         'jornada': horario_data['jornada']
@@ -729,6 +783,7 @@ def modificar_profesor_y_horarios(request):
             return JsonResponse({"message": "Profesor y horarios actualizados exitosamente!"}, status=200)
 
         except Exception as e:
+            logger.error(f"Error al modificar profesor y horarios: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
@@ -769,6 +824,10 @@ def todas_salas(request):
         'numero_sala'
     ))
     return JsonResponse({'todas_salas': salas_data})
+
+def todas_carreras(request):
+    carreras = Carreras.objects.all()
+    return JsonResponse(carreras)
 
 
 def gestionar_licencias(request, profesor_id):
@@ -920,6 +979,7 @@ def obtenerHorario(request,id_profesor):
             'id_dia': horario.dia_semana_id_dia.id_dia,
             'modulo': horario.modulo_id_modulo.hora_modulo,
             'id_modulo': horario.modulo_id_modulo.id_modulo,
+            'id_carrera': horario.carrera_id_carrera.id_carrera
         })
     return JsonResponse({'horarios': horarios_data})
 
@@ -935,67 +995,74 @@ def horas_periodo(request):
     try:
         fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
         fecha_termino = datetime.strptime(fecha_termino, '%Y-%m-%d').date()
-        
+
         if fecha_termino < fecha_inicio:
             logger.warning("La fecha de término no puede ser antes de la fecha de inicio.")
             return JsonResponse({'error': 'La fecha de término no puede ser antes de la fecha de inicio'}, status=400)
+
         try:
             profesor = Profesor.objects.get(id_profesor=docente_id)
             nombre_completo = f"{profesor.nombre} {profesor.segundo_nombre} {profesor.apellido} {profesor.segundo_apellido}".strip()
             logger.debug(f"Profesor encontrado: {nombre_completo}")
-
         except Profesor.DoesNotExist:
             logger.error(f"Profesor con id {docente_id} no encontrado.")
             return JsonResponse({'error': 'Profesor no encontrado'}, status=404)
-        query = '''
-        SELECT 
-            r.semana, 
-            CONCAT(p.nombre, ' ', 
-                IF(p.segundo_nombre IS NOT NULL, CONCAT(p.segundo_nombre, ' '), ''), 
-                p.apellido, 
-                IF(p.segundo_apellido IS NOT NULL, CONCAT(' ', p.segundo_apellido), '')
-            ) AS profesor,
-            a.nombre_asignatura,
-            h.seccion,
-            s.numero_sala,
-            CONCAT(
-                SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), '-', 1), 
-                '-',
-                SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
-            ) AS modulo,
-            COUNT(*) AS registros,
-            ds.nombre_dia,
-            r.fecha_reemplazo, 
-            r.profesor_reemplazo,
-            GROUP_CONCAT(r.id_reemplazo ORDER BY r.id_reemplazo SEPARATOR '-') AS id_reemplazos,
-            IF(COUNT(mo.id_modulo) > 1, GROUP_CONCAT(mo.id_modulo ORDER BY mo.id_modulo SEPARATOR '-'), MAX(mo.id_modulo)) AS id_modulo,
-            ds.id_dia
-        FROM 
-            test.reemplazos r
-        JOIN 
-            test.horario h ON h.id_horario = r.horario_id_horario 
-        JOIN 
-            test.profesor p ON p.id_profesor = h.profesor_id_profesor
-        JOIN 
-            test.sala s ON s.id_sala = h.sala_id_sala 
-        JOIN 
-            test.modulo mo ON mo.id_modulo = h.modulo_id_modulo
-        JOIN 
-            test.asignatura a ON a.id_asignatura = h.asignatura_id_asignatura 
-        JOIN 
-            test.dia_semana ds ON ds.id_dia = h.dia_semana_id_dia
-        WHERE 
-            r.fecha_reemplazo BETWEEN %s AND %s
-            AND r.profesor_reemplazo = %s
-        GROUP BY 
-            r.semana, r.fecha_reemplazo, r.profesor_reemplazo, 
-            s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia
-        ORDER BY 
-            r.fecha_reemplazo;
-        '''
-        
+
+        dias_de_rango = [dia.id_dia for dia in DiaSemana.objects.filter(id_dia__in=range(1, 8))]
+
+        horarios = Horario.objects.filter(
+            profesor_id_profesor=profesor,
+            dia_semana_id_dia__in=dias_de_rango
+        )
+
+        horas_horarios = horarios.count()
+
         with connection.cursor() as cursor:
-            cursor.execute(query, [fecha_inicio, fecha_termino, nombre_completo])
+            cursor.execute('''
+                SELECT 
+                    r.semana, 
+                    CONCAT(p.nombre, ' ', 
+                        IF(p.segundo_nombre IS NOT NULL, CONCAT(p.segundo_nombre, ' '), ''), 
+                        p.apellido, 
+                        IF(p.segundo_apellido IS NOT NULL, CONCAT(' ', p.segundo_apellido), '')) AS profesor,
+                    a.nombre_asignatura,
+                    h.seccion,
+                    s.numero_sala,
+                    CONCAT(
+                        SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), '-', 1), 
+                        '-',
+                        SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
+                    ) AS modulo,
+                    COUNT(*) AS registros,
+                    ds.nombre_dia,
+                    r.fecha_reemplazo, 
+                    r.profesor_reemplazo,
+                    GROUP_CONCAT(r.id_reemplazo ORDER BY r.id_reemplazo SEPARATOR '-') AS id_reemplazos,
+                    IF(COUNT(mo.id_modulo) > 1, GROUP_CONCAT(mo.id_modulo ORDER BY mo.id_modulo SEPARATOR '-'), MAX(mo.id_modulo)) AS id_modulo,
+                    ds.id_dia
+                FROM 
+                    test.reemplazos r
+                JOIN 
+                    test.horario h ON h.id_horario = r.horario_id_horario 
+                JOIN 
+                    test.profesor p ON p.id_profesor = h.profesor_id_profesor
+                JOIN 
+                    test.sala s ON s.id_sala = h.sala_id_sala 
+                JOIN 
+                    test.modulo mo ON mo.id_modulo = h.modulo_id_modulo
+                JOIN 
+                    test.asignatura a ON a.id_asignatura = h.asignatura_id_asignatura 
+                JOIN 
+                    test.dia_semana ds ON ds.id_dia = h.dia_semana_id_dia
+                WHERE 
+                    r.fecha_reemplazo BETWEEN %s AND %s
+                    AND r.profesor_reemplazo = %s
+                GROUP BY 
+                    r.semana, r.fecha_reemplazo, r.profesor_reemplazo, 
+                    s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia
+                ORDER BY 
+                    r.fecha_reemplazo;
+            ''', [fecha_inicio, fecha_termino, nombre_completo])
             reemplazos = cursor.fetchall()
 
         reemplazos_listados = []
@@ -1017,15 +1084,10 @@ def horas_periodo(request):
                 'id_dia': row[12]
             })
 
-        horas_reemplazo = len(reemplazos_listados)
-
-        horas_horarios = horas_reemplazo
+        horas_reemplazo = sum(reemplazo['registros'] for reemplazo in reemplazos_listados)
         horas_totales = horas_horarios + horas_reemplazo
 
-        if horas_totales >= 40:
-            tipo_pago = "BONO"
-        else:
-            tipo_pago = "PROGRAMACIÓN"
+        tipo_pago = "BONO" if horas_totales >= 40 else "PROGRAMACIÓN"
 
         return JsonResponse({
             'horas_horarios': horas_horarios,

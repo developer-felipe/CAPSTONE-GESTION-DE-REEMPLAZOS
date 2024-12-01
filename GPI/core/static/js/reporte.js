@@ -48,6 +48,7 @@ async function enviarDatos() {
       const tipo_pago = result.tipo_pago;
 
       const reportSection = document.querySelector(".report-section");
+      reportSection.innerHTML = "";
 
       const tableHTML = `
           <h3 class="text-center">Reporte</h3>
@@ -73,45 +74,52 @@ async function enviarDatos() {
                           : reemplazos
                               .map((reemplazo) => {
                                 return `
-                                <tr>
-                                    <td>${reemplazo.semana}</td>
-                                    <td>${reemplazo.seccion}</td>
-                                    <td>${reemplazo.nombre_asignatura}</td>
-                                    <td>${reemplazo.hora_modulo}</td>
-                                    <td>${reemplazo.registros}</td>
-                                    <td>${reemplazo.numero_sala}</td>
-                                    <td>${reemplazo.fecha_reemplazo}</td>
-                                    <td>${reemplazo.profesor_nombre}</td>
-                                    <td>${reemplazo.profesor_reemplazo}</td>
-                                </tr>
-                              `;
+                                  <tr>
+                                      <td>${reemplazo.semana}</td>
+                                      <td>${reemplazo.seccion}</td>
+                                      <td>${reemplazo.nombre_asignatura}</td>
+                                      <td>${reemplazo.hora_modulo}</td>
+                                      <td>${reemplazo.registros}</td>
+                                      <td>${reemplazo.numero_sala}</td>
+                                      <td>${reemplazo.fecha_reemplazo}</td>
+                                      <td>${reemplazo.profesor_nombre}</td>
+                                      <td>${reemplazo.profesor_reemplazo}</td>
+                                  </tr>
+                                `;
                               })
-                              .join("")
+                              .join(" ")
                       }
-                      <tr class="font-weight-bold">
-                      </tr>
-                      <tr>
-                          <td colspan="8" class="font-weight-bold">Horas totales por Horario:</td>
-                          <td>${horas_horarios}</td>
-                      </tr>
-                      <tr>
-                          <td colspan="8" class="font-weight-bold">Horas totales de Reemplazo:</td>
-                          <td>${horas_reemplazo}</td>
-                      </tr>
-                      <tr>
-                          <td colspan="8" class="font-weight-bold">Horas totales de Reemplazo:</td>
-                          <td>${total_horas}</td>
-                      </tr>
-                      <tr>
-                          <td colspan="8" class="font-weight-bold">Tipo de pago:</td>
-                          <td>${tipo_pago}</td>
-                      </tr>
+                      ${
+                        reemplazos.length > 0
+                          ? `
+                          <tr class="font-weight-bold">
+                          </tr>
+                          <tr>
+                              <td colspan="8" class="font-weight-bold">Horas por Horario:</td>
+                              <td>${horas_horarios}</td>
+                          </tr>
+                          <tr>
+                              <td colspan="8" class="font-weight-bold">Horas de Reemplazo:</td>
+                              <td>${horas_reemplazo}</td>
+                          </tr>
+                          <tr>
+                              <td colspan="8" class="font-weight-bold">Horas totales:</td>
+                              <td>${total_horas}</td>
+                          </tr>
+                          <tr>
+                              <td colspan="8" class="font-weight-bold">Tipo de pago:</td>
+                              <td>${tipo_pago}</td>
+                          </tr>
+                          `
+                          : ""
+                      }
                   </tbody>
               </table>
           </div>
           <div class="text-center mt-4">
               <button class="btn btn-dark" onclick="emitirInforme()">Emitir Informe</button>
-          </div>`;
+          </div>
+      `;
 
       reportSection.innerHTML = tableHTML;
     } catch (error) {

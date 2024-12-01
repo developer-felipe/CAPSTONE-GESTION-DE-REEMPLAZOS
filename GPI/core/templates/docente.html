@@ -66,31 +66,29 @@
             <div style="width: 12px;"></div>
             <div class="collapse" id="collapseOptions-{{ profesor.id_profesor }}">
                 <div class="d-flex flex-column align-items-center" style="gap: 15px; margin-top: 10px;">
-                    <div class="w-100">
                         <form action="{% url 'modificar_docente' id=profesor.id_profesor %}" method="get">
-                            <button type="submit" class="btn btn-outline-secondary w-100" id="modProfe"
+                            <button type="submit" class="btn btn-outline-secondary w-120" id="modProfe"
                                 data-mod_prof="{{ profesor.id_profesor }}">
                                 <span class="fs-5">Modificar docente</span>
                                 <i class="material-icons me-2">manage_accounts</i>
                             </button>
                         </form>
-                    </div>
-                    <div class="w-100">
-                        <button type="button" class="btn btn-primary btn-sm w-100" id="agregarLicenciaBtn"
+                    <div class="w-120">
+                        <button type="button" class="btn btn-primary btn-sm w-120" id="agregarLicenciaBtn"
                             data-id="{{ profesor.id_profesor }}">
                             <span class="fs-5">Agregar licencia</span>
                             <i class="material-icons me-2">description</i>
                         </button>
                     </div>
-                    <div class="w-100">
+                    <div class="w-120">
                         <a href="{% url 'gestionar_licencias' profesor.id_profesor %}"
                             class="btn btn-success btn-sm w-100">
                             <span class="fs-5">Gestionar licencias</span>
                             <i class="material-icons me-2">edit_document</i>
                         </a>
                     </div>
-                    <div class="w-100">
-                        <button type="button" class="btn btn-danger btn-sm w-100" id="btnEliminar" data-id="{{ profesor.id_profesor }}">
+                    <div class="w-120">
+                        <button type="button" class="btn btn-danger btn-sm w-120" id="btnEliminar" data-id="{{ profesor.id_profesor }}">
                             <span class="fs-5">Eliminar</span>
                             <i class="material-icons me-2">person_remove</i>
                         </button>

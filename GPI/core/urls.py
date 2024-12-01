@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
-from .views import (login_view, reemplazos_view,guardar_licencia ,recuperacion_view,base_view, docente_view, reportes_view, CustomLogoutView,asignatura_view, sala_view, crear_docente_view, crear_profesor_y_horarios,
+from .views import (login_view, reemplazos_view,guardar_licencia ,recuperacion_view,base_view, docente_view, reportes_view, CustomLogoutView,asignatura_view, sala_view,carrera_view, crear_docente_view, crear_profesor_y_horarios,
 profesores_con_licencia_no_asignada,obtener_clases_por_docente,obtener_profesores_disponibles,registrar_reemplazo, modificar_docente_view, modificar_profesor_y_horarios, registrar_recuperacion,
  eliminar_recuperacion ,actualizar_recuperacion , gestionar_licencias,editar_licencia ,eliminar_licencia ,todas_salas,todas_asignaturas,docente_recuperación, docente_asignatura, profesor_por_nombre, modulo_por_id,
  actualizar_reemplazo,obtenerHorario, editar_profesor, horas_periodo)
@@ -17,6 +17,7 @@ urlpatterns = [
     path('docente/', docente_view, name='docente'),
     path('reportes/', reportes_view, name='reportes'),
     path('asignaturas/', asignatura_view, name='asignatura_list'),
+    path('carreras/', carrera_view, name='carrera_view'),
     path('salas/', sala_view, name='sala_list'),
     path('guardar_licencia/', guardar_licencia, name='guardar_licencia'),
     path('profesor/<int:profesor_id>/guardar_licencia/', guardar_licencia, name='guardar_licencia'),

@@ -34,6 +34,11 @@ CREATE TABLE profesor (
     segundo_apellido VARCHAR(24)
 );
 
+CREATE TABLE carrera (
+    id_carrera INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_carrera VARCHAR(64) NOT NULL
+);
+
 CREATE TABLE horario (
     id_horario INT AUTO_INCREMENT PRIMARY KEY,
     seccion INT NOT NULL,
@@ -42,14 +47,16 @@ CREATE TABLE horario (
     sala_id_sala INT NOT NULL,
     dia_semana_id_dia INT NOT NULL,
     modulo_id_modulo INT NOT NULL,
-    activo TINYINT(1) DEFAULT 1;
+    activo TINYINT(1) DEFAULT 1,
     profesor_id_profesor INT NOT NULL,
+    carrera_id_carrera INT NOT NULL,  -- Relación con carrera
     UNIQUE(seccion, asignatura_id_asignatura, sala_id_sala, dia_semana_id_dia, modulo_id_modulo, profesor_id_profesor),
     FOREIGN KEY (asignatura_id_asignatura) REFERENCES asignatura(id_asignatura),
     FOREIGN KEY (sala_id_sala) REFERENCES sala(id_sala),
     FOREIGN KEY (dia_semana_id_dia) REFERENCES dia_semana(id_dia),
     FOREIGN KEY (modulo_id_modulo) REFERENCES modulo(id_modulo),
-    FOREIGN KEY (profesor_id_profesor) REFERENCES profesor(id_profesor)
+    FOREIGN KEY (profesor_id_profesor) REFERENCES profesor(id_profesor),
+    FOREIGN KEY (carrera_id_carrera) REFERENCES carrera(id_carrera)  -- Relación con carrera
 );
 
 CREATE TABLE licencia (
@@ -71,7 +78,9 @@ CREATE TABLE recuperacion (
     fecha_clase DATE NOT NULL,
     fecha_recuperacion DATE NOT NULL,
     hora_recuperacion TIME NOT NULL,
-    sala VARCHAR(4) NOT NULL
+    sala VARCHAR(4) NOT NULL,
+    horario_id_horario INT NOT NULL,
+    FOREIGN KEY (horario_id_horario) REFERENCES horario(id_horario)
 );
 
 CREATE TABLE reemplazos (
@@ -93,7 +102,6 @@ CREATE TABLE usuario (
     is_superuser BOOLEAN DEFAULT FALSE,
     is_staff BOOLEAN DEFAULT FALSE
 );
-
 """
 
         try:
