@@ -30,50 +30,46 @@ def login_view(request):
             messages.error(request, 'Usuario o contraseña incorrectos.')
     return render(request, 'templates/login.html')
 
+
+
 def docente_view(request):
     profesores = Profesor.objects.all()
     context = {
         'profesores': profesores,
     }
 
-    if request.method == 'POST':
-        if 'eliminar' in request.POST:
-            id_profesor = request.POST.get('id_profesor')
+    if request.method == 'POST' and 'id_profesor' in request.POST:
+        id_profesor = request.POST.get('id_profesor')
+        if id_profesor:
             try:
+                # Obtener al profesor a eliminar
                 profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
 
+                # Eliminar horarios asociados
                 horarios_asociados = Horario.objects.filter(profesor_id_profesor=profesor_a_eliminar)
                 for horario in horarios_asociados:
                     Reemplazos.objects.filter(horario=horario).delete()
 
-                horarios_asociados.delete()
+                # Eliminar licencias asociadas
                 Licencia.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
+
+                # Eliminar el profesor
                 profesor_a_eliminar.delete()
+
                 messages.success(request, "Profesor y sus licencias eliminadas exitosamente.")
                 return redirect('docente')
+
             except Profesor.DoesNotExist:
                 messages.error(request, "El profesor no existe.")
                 return redirect('docente')
-        else:
-            nombre = request.POST.get('primer_nombre').strip().capitalize()
-            segundo_nombre = request.POST.get('segundo_nombre').strip().capitalize() 
-            apellido = request.POST.get('primer_apellido').strip().capitalize()
-            segundo_apellido = request.POST.get('segundo_apellido').strip().capitalize()
-
-            if not nombre or not apellido:
-                messages.error(request, 'Los nombres y apellidos son obligatorios.')
-                return redirect('docente')
-
-            nuevo_profesor = Profesor(
-                nombre=nombre,
-                segundo_nombre=segundo_nombre,
-                apellido=apellido,
-                segundo_apellido=segundo_apellido
-            )
-            nuevo_profesor.save()
-            messages.success(request, "Profesor agregado exitosamente.")
 
     return render(request, 'templates/docente.html', context)
+
+
+
+
+
+
 
 def guardar_licencia(request):
     if request.method == 'POST':

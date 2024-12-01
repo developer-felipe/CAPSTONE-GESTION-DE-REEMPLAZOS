@@ -2,6 +2,7 @@
 
 {% block content %}
 {% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
 
 
 <div class="container">
@@ -9,13 +10,7 @@
      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
      </div>
 
-{% if messages %}
-<div class="alert alert-success">
-     {% for message in messages %}
-     <p>{{ message }}</p>
-     {% endfor %}
-</div>
-{% endif %}
+
 
      <table class="table">
      <thead>
@@ -45,7 +40,8 @@
                     data-url="{% url 'editar_licencia' licencia.id_licencia %}">
                     Editar
                     </button>
-                    <button class="btn btn-danger" data-id="{{ licencia.id_licencia }}">Eliminar</button>
+                    <button class="btn btn-danger" data-id="{{ licencia.id_licencia }}" 
+                    id="deleteButton{{ licencia.id_licencia }}">Eliminar</button>
                </td>
           </tr>
           {% endfor %}
