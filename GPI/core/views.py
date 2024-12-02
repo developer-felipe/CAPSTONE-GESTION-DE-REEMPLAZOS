@@ -1017,6 +1017,7 @@ def horas_periodo(request):
             return JsonResponse({'error': 'La fecha de término no puede ser antes de la fecha de inicio'}, status=400)
 
         try:
+            # Obtener los datos del profesor
             profesor = Profesor.objects.get(id_profesor=docente_id)
             nombre_completo = f"{profesor.nombre} {profesor.segundo_nombre} {profesor.apellido} {profesor.segundo_apellido}".strip()
             logger.debug(f"Profesor encontrado: {nombre_completo}")
@@ -1024,52 +1025,44 @@ def horas_periodo(request):
             logger.error(f"Profesor con id {docente_id} no encontrado.")
             return JsonResponse({'error': 'Profesor no encontrado'}, status=404)
 
-        dias_de_rango = [dia.id_dia for dia in DiaSemana.objects.filter(id_dia__in=range(1, 8))]
-
-        horarios = Horario.objects.filter(
-            profesor_id_profesor=profesor,
-            dia_semana_id_dia__in=dias_de_rango
-        )
-
-        horas_horarios = horarios.count()
-
+        # Ejecutar la consulta con los parámetros proporcionados (fechas y profesor)
         with connection.cursor() as cursor:
             cursor.execute('''
-    select
-    concat(p.nombre,' ',IF(p.segundo_nombre IS NOT NULL, CONCAT(p.segundo_nombre, ' '),''), p.apellido, IF(p.segundo_apellido IS NOT NULL, CONCAT(' ',p.segundo_apellido),'')) as profesor,
-    a.nombre_asignatura,
-    c.nombre_carrera,
-    h.jornada,
-    h.seccion,
-    s.numero_sala,
-        CONCAT(
-            SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), '-', 1), 
-            '-',
-            SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
-        ) AS modulo,
-    ds.nombre_dia,
-    r.fecha_reemplazo, 
-    r.profesor_reemplazo,
-    l.motivo,
-    l.observaciones,
-    GROUP_CONCAT(r.id_reemplazo ORDER BY r.id_reemplazo SEPARATOR '-') as id_reemplazos
-    from test.reemplazos r
-    join test.horario h on h.id_horario = r.horario_id_horario 
-    join test.profesor p on p.id_profesor = h.profesor_id_profesor
-    join test.sala s on s.id_sala = h.sala_id_sala 
-    join test.modulo mo on mo.id_modulo = h.modulo_id_modulo
-    join test.asignatura a on a.id_asignatura = h.asignatura_id_asignatura 
-    join test.dia_semana ds on ds.id_dia = h.dia_semana_id_dia
-    join test.carrera c on h.carrera_id_carrera = c.id_carrera
-    join test.licencia l on l.profesor_id_profesor = p.id_profesor
-    where r.fecha_reemplazo between l.fecha_inicio and l.fecha_termino and h.activo = true and l.estado = "asignado" 
-    group by r.semana, r.fecha_reemplazo, r.profesor_reemplazo, s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia
-    order by r.fecha_reemplazo
-            ''', [fecha_inicio, fecha_termino, nombre_completo])
+                SELECT
+                    r.semana,
+                    CONCAT(p.nombre, ' ', IF(p.segundo_nombre IS NOT NULL, CONCAT(p.segundo_nombre, ' '), ''), p.apellido, IF(p.segundo_apellido IS NOT NULL, CONCAT(' ', p.segundo_apellido), '')) AS profesor,
+                    a.nombre_asignatura,
+                    h.seccion,
+                    s.numero_sala,
+                    CONCAT(
+                        SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), '-', 1),
+                        '-',
+                        SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
+                    ) AS modulo,
+                    COUNT(*) AS registros,
+                    ds.nombre_dia,
+                    r.fecha_reemplazo,
+                    r.profesor_reemplazo,
+                    GROUP_CONCAT(r.id_reemplazo ORDER BY r.id_reemplazo SEPARATOR '-') AS id_reemplazos,
+                    IF(COUNT(mo.id_modulo) > 1, GROUP_CONCAT(mo.id_modulo ORDER BY mo.id_modulo SEPARATOR '-'), MAX(mo.id_modulo)) AS id_modulo,
+                    ds.id_dia
+                FROM test.reemplazos r
+                JOIN test.horario h ON h.id_horario = r.horario_id_horario
+                JOIN test.profesor p ON p.id_profesor = h.profesor_id_profesor
+                JOIN test.sala s ON s.id_sala = h.id_sala
+                JOIN test.modulo mo ON mo.id_modulo = h.id_modulo
+                JOIN test.asignatura a ON a.id_asignatura = h.asignatura_id_asignatura
+                JOIN test.dia_semana ds ON ds.id_dia = h.dia_semana_id_dia
+                WHERE r.fecha_reemplazo BETWEEN %s AND %s
+                AND r.profesor_id_profesor = %s
+                GROUP BY r.semana, r.fecha_reemplazo, r.profesor_reemplazo, s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia
+                ORDER BY r.fecha_reemplazo
+            ''', [fecha_inicio, fecha_termino, docente_id])
+
             reemplazos = cursor.fetchall()
 
+        # Preparar la respuesta con los datos obtenidos
         reemplazos_listados = []
-
         for row in reemplazos:
             reemplazos_listados.append({
                 'semana': row[0],
@@ -1082,18 +1075,19 @@ def horas_periodo(request):
                 'nombre_dia': row[7],
                 'fecha_reemplazo': row[8],
                 'profesor_reemplazo': row[9],
-                'id_reemplazo': row[10],
+                'id_reemplazos': row[10],
                 'id_modulo': row[11],
                 'id_dia': row[12]
             })
 
+        # Calcular las horas totales
         horas_reemplazo = sum(reemplazo['registros'] for reemplazo in reemplazos_listados)
-        horas_totales = horas_horarios + horas_reemplazo
+        horas_totales = horas_reemplazo
 
+        # Determinar tipo de pago
         tipo_pago = "BONO" if horas_totales >= 40 else "PROGRAMACIÓN"
 
         return JsonResponse({
-            'horas_horarios': horas_horarios,
             'horas_reemplazo': horas_reemplazo,
             'horas_totales': horas_totales,
             'tipo_pago': tipo_pago,
@@ -1252,3 +1246,37 @@ def reporte_dara(request):
         file_paths.append(output_file_path)
 
     return JsonResponse({"files": file_paths, "reemplazos_listados": reemplazos_listados}, safe=False)
+
+
+# SELECT 
+#     r.semana, 
+#     CONCAT(
+#         p.nombre, ' ',
+#         IF(p.segundo_nombre IS NOT NULL, CONCAT(p.segundo_nombre, ' '), ''),
+#         p.apellido,
+#         IF(p.segundo_apellido IS NOT NULL, CONCAT(' ', p.segundo_apellido), '')
+#     ) AS profesor,
+#     a.nombre_asignatura,
+#     h.seccion,
+#     s.numero_sala,
+#     CONCAT(
+#         SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), '-', 1), 
+#         '-',
+#         SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
+#     ) AS modulo,
+#     COUNT(*) AS registros,
+#     ds.nombre_dia,
+#     r.fecha_reemplazo, 
+#     r.profesor_reemplazo
+# FROM test.reemplazos r
+# JOIN test.horario h ON h.id_horario = r.horario_id_horario 
+# JOIN test.profesor p ON p.id_profesor = h.profesor_id_profesor
+# JOIN test.sala s ON s.id_sala = h.sala_id_sala 
+# JOIN test.modulo mo ON mo.id_modulo = h.modulo_id_modulo
+# JOIN test.asignatura a ON a.id_asignatura = h.asignatura_id_asignatura 
+# JOIN test.dia_semana ds ON ds.id_dia = h.dia_semana_id_dia 
+# where p.id_profesor = 1 AND r.fecha_reemplazo BETWEEN '2024-12-01' AND '2024-12-27'
+# GROUP BY r.semana, r.fecha_reemplazo, r.profesor_reemplazo, s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia 
+# ORDER BY r.fecha_reemplazo;
+# GROUP BY r.semana, r.fecha_reemplazo, r.profesor_reemplazo, s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia 
+# ORDER BY r.fecha_reemplazo;
