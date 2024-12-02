@@ -1,3 +1,98 @@
+document.addEventListener("DOMContentLoaded", function () {
+  const formReemplazo = document.getElementById("formReemplazo");
+  formReemplazo.addEventListener("click", function () {
+    console.log("click en formReemplazo");
+    fetch("/profesores/")
+      .then((response) => response.json())
+      .then((profesores) => {
+        const divSelection = document.querySelector("#reporte_reemplazo");
+        let opcionesDocentes =
+          '<option value="">Seleccione un docente</option>';
+
+        profesores.forEach((profesor) => {
+          opcionesDocentes += `<option value="${profesor.id}">${profesor.nombre_completo}</option>`;
+        });
+
+        divSelection.innerHTML = `
+          <div class="card mb-3 mx-auto w-50 mt-5">
+              <div class="card-body">
+                  <h3 class="text-center">Filtro para Informe de Reemplazos</h3>
+                  <form method="GET" action="{% url 'reportes' %}">
+                      <div class="form-group">
+                          <div class="mb-3">
+                              <label for="docente">Nombre docente:</label>
+                              <select id="docente" name="docente" class="form-control" required>
+                                  ${opcionesDocentes}
+                              </select>
+                          </div>
+                      </div>
+                      <div class="form-group">
+                          <div class="mb-3">
+                              <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
+                              <input type="date" class="form-control" id="fechaInicio" name="fecha_inicio" required>
+                          </div>
+                          <div class="mb-3">
+                              <label for="fechaFin" class="form-label">Fecha de Término</label>
+                              <input type="date" class="form-control" id="fechaFin" name="fecha_fin" required>
+                          </div>
+                      </div>
+                      <div class="text-center">
+                          <button id="btn-filtro-reemplazo" type="button" class="btn btn-success btn-block mt-3" onclick="enviarDatos()">Buscar</button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+        `;
+        document.getElementById("reporte_dara").innerHTML = "";
+      })
+      .catch((error) =>
+        console.error("Error al cargar los profesores:", error)
+      );
+  });
+
+  const formDARA = document.getElementById("formDARA");
+  formDARA.addEventListener("click", function () {
+    console.log("click en formDARA");
+    fetch("/licencias_profesores/")
+      .then((response) => response.json())
+      .then((licencias) => {
+        const divSelection = document.querySelector("#reporte_dara");
+        let opcionesLicencias =
+          '<option value="">Seleccione una licencia</option>';
+        console.log(licencias);
+
+        licencias.forEach((licencia) => {
+          opcionesLicencias += `<option value="${licencia.id_licencia}" 
+            data-fechaInicio="${licencia.fi}" 
+            data-fechaTermino="${licencia.ft}">
+            ${licencia.nombre_profesor} con fecha ${licencia.fecha_inicio} hasta ${licencia.fecha_termino}</option>`;
+        });
+        divSelection.innerHTML = `
+          <div class="card mb-3 mx-auto w-50 mt-5">
+              <div class="card-body">
+                  <h3 class="text-center">Filtro para Informe DARA</h3>
+                  <form method="GET" action="{% url 'reportes' %}">
+                      <div class="form-group">
+                          <div class="mb-3">
+                              <label for="licencia">Nombre docente:</label>
+                              <select id="licencia" name="licencia" class="form-control" required>
+                                  ${opcionesLicencias}
+                              </select>
+                          </div>
+                      </div>
+                      <div class="text-center">
+                          <button id="btn-filtro-dara" type="button" class="btn btn-success btn-block mt-3" onclick="DARA()">Buscar</button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+        `;
+
+      })
+      .catch((error) => console.error("Error al cargar las licencias:", error));
+  });
+});
+
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== "") {
@@ -129,5 +224,41 @@ async function enviarDatos() {
     console.log(
       "Faltan datos: asegúrate de que todos los campos estén completos."
     );
+  }
+}
+
+async function DARA() {
+  const licencia = document.getElementById("licencia");
+  const licenciaID = licencia.value;
+  const fechaInicio =
+    licencia.options[licencia.selectedIndex].getAttribute("data-fechaInicio");
+  const fechaTermino =
+    licencia.options[licencia.selectedIndex].getAttribute("data-fechaTermino");
+
+  console.log(licenciaID, fechaInicio, "/", fechaTermino);
+
+  if (licenciaID && fechaInicio && fechaTermino) {
+    try {
+      const response = await fetch(
+        `/reporte_dara/?licenciaID=${licenciaID}&fechaInicio=${fechaInicio}&fechaTermino=${fechaTermino}`,
+        {
+          method: "GET",
+          headers: {
+            "X-CSRFToken": csrftoken,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error al enviar datos: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(result);
+    } catch (error) {
+      console.error("Error en la solicitud:", error);
+    }
+  } else {
+    console.error("Faltan los parámetros necesarios.");
   }
 }

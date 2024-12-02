@@ -191,7 +191,7 @@
                     const id_dia = document.getElementById("reg_dia").dataset.dia_id;
                     const id_modulos = id_modulo.split('-');
                     const tbody = document.getElementById('body-edit');
-                    tbody.innerHTML = '';  // Limpiar las filas anteriores si es necesario
+                    tbody.innerHTML = '';
 
                     ids.forEach((id, index) => {
                         const tr = document.createElement('tr');
@@ -421,6 +421,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
+                            location.reload()
                             alert('Reemplazos registrados con éxito.');
                         } else {
                             alert('Hubo un error al registrar los reemplazos.');

@@ -5,55 +5,25 @@
 <link rel="stylesheet" href="{% static 'core/bootstrap/css/bootstrap.min.css' %}">
 {% block extra_css %}{% endblock %}
 {% endblock css %}
-
 {% block content %}
+
 <div class="container">
     <h1 class="text-center">REPORTES</h1>
 
-    <div-botones class="d-flex justify-content-center gap-5">
-        <button type="button" class="btn btn-warning     btn-block mt-3">Generar informe de Reemplazos</button>
-        <button type="button" class="btn btn-success btn-block mt-3">Generar informe DARA</button>
-    </div-botones>
-
-    <div class="card mb-3 mx-auto" style="background-color: #f8f8d8; border-radius: 20px; max-width: 600px;">
-        <div class="card-body p-4">
-            <h3 class="text-center">Filtro</h3>
-            <form method="GET" action="{% url 'reportes' %}">
-                <div class="form-group">
-                    <div class="mb-3">
-                        <label for="docente">Nombre docente:</label>
-                        <select id="docente" name="docente" class="form-control" required>
-                            <option value="">Seleccione un docente</option>
-                            {% for profesor in profesores %}
-                            <option value="{{ profesor.id }}">{{ profesor.nombre_completo }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="mb-3">
-                        <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
-                        <input type="date" class="form-control" id="fechaInicio" name="fecha_inicio" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="fechaFin" class="form-label">Fecha de Término</label>
-                        <input type="date" class="form-control" id="fechaFin" name="fecha_fin" required>
-                    </div>
-                </div>
-
-                <div class="text-center">
-                    <button id="btn-filtro" type="button" class="btn btn-success btn-block mt-3"
-                        onclick="enviarDatos()">Buscar</button>
-                </div>
-            </form>
-        </div>
+    <div class="d-flex justify-content-center gap-5">
+        <button type="button" class="btn btn-warning btn-block mt-3" id="formReemplazo">Generar informe de
+            Reemplazos</button>
+        <button type="button" class="btn btn-success btn-block mt-3" id="formDARA">Generar informe DARA</button>
     </div>
 
-    <div class="report-section mt-5">
+    <div id="reporte_reemplazo">
     </div>
 
+    <div id="reporte_dara">
+    </div>
 
+    <div id="reporte-section" class="report-section mt-3">
+    </div> 
 </div>
 
 <script src="{% static 'js/reporte.js' %}"></script>

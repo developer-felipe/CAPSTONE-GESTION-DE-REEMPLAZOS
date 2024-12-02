@@ -11,8 +11,11 @@ from django.http import JsonResponse, HttpResponse
 from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Licencia, Reemplazos,Recuperacion, Carrera
 from django.core.exceptions import ObjectDoesNotExist
 import json
+import openpyxl
+from openpyxl.styles import NamedStyle, Border, Alignment
 import logging
 import locale
+import os
 from datetime import timedelta, datetime
 from collections import defaultdict
 
@@ -29,8 +32,6 @@ def login_view(request):
         else:
             messages.error(request, 'Usuario o contraseña incorrectos.')
     return render(request, 'templates/login.html')
-
-
 
 def docente_view(request):
     profesores = Profesor.objects.all()
@@ -59,12 +60,6 @@ def docente_view(request):
                 return redirect('docente')
 
     return render(request, 'templates/docente.html', context)
-
-
-
-
-
-
 
 def guardar_licencia(request):
     if request.method == 'POST':
@@ -99,11 +94,7 @@ def recuperacion_view(request):
 
     return render(request, 'templates/gestion_recuperacion.html', {
         'recuperaciones': recuperaciones
-    })
-
-
-
-        
+    })        
 
 def eliminar_recuperacion(request, id_recuperacion):
     try:
@@ -115,9 +106,6 @@ def eliminar_recuperacion(request, id_recuperacion):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
     
-
-
-
 @csrf_protect  
 def actualizar_recuperacion(request, id_recuperacion):
     if request.method == 'PUT': 
@@ -149,8 +137,6 @@ def actualizar_recuperacion(request, id_recuperacion):
     else:
         return JsonResponse({'success': False, 'message': 'Método no permitido. Solo se permite PUT.'})
 
-
-
 def reportes_view(request):
     profesores = Profesor.objects.all()
 
@@ -176,7 +162,6 @@ def base_view(request):
 
 def CustomLogoutView(request):
     return render(request, 'templates/login.html')
-
 
 def asignatura_view(request):
     if request.method == 'GET':
@@ -829,6 +814,24 @@ def todas_carreras(request):
     carreras = Carreras.objects.all()
     return JsonResponse(carreras)
 
+def licencias_profesores(request):
+    licencias = Licencia.objects.select_related('profesor_id_profesor').all()
+    licencias_info = [
+        {
+            'id_licencia': licencia.id_licencia,
+            'motivo': licencia.motivo,
+            'observaciones': licencia.observaciones,
+            'fecha_inicio': licencia.fecha_inicio.strftime('%d/%m'),
+            'fecha_termino': licencia.fecha_termino.strftime('%d/%m'),
+            'fi': licencia.fecha_inicio,
+            'ft': licencia.fecha_termino,
+            'estado': licencia.estado,
+            'nombre_profesor': f"{licencia.profesor_id_profesor.nombre} {licencia.profesor_id_profesor.segundo_nombre} {licencia.profesor_id_profesor.apellido} {licencia.profesor_id_profesor.segundo_apellido}",
+        }
+        for licencia in licencias
+    ]
+
+    return JsonResponse(licencias_info, safe=False)
 
 def gestionar_licencias(request, profesor_id):
     profesor = get_object_or_404(Profesor, id_profesor=profesor_id)
@@ -920,6 +923,19 @@ def profesor_por_nombre(request, nombre):
     except Exception as e:
         logger.error(f'Error al realizar la búsqueda: {str(e)}')
         return JsonResponse({'mensaje': 'Error en la búsqueda'}, status=500)
+    
+def profesores(request):
+    profesores = Profesor.objects.all()
+
+    profesores_concatenados = []
+    for profesor in profesores:
+        nombre_completo = f"{profesor.nombre} {profesor.segundo_nombre} {profesor.apellido} {profesor.segundo_apellido}"
+        profesores_concatenados.append({
+            'id': profesor.id_profesor,
+            'nombre_completo': nombre_completo
+        })
+
+    return JsonResponse(profesores_concatenados, safe=False)
     
 def modulo_por_id(request, modulo):
     try:
@@ -1019,49 +1035,36 @@ def horas_periodo(request):
 
         with connection.cursor() as cursor:
             cursor.execute('''
-                SELECT 
-                    r.semana, 
-                    CONCAT(p.nombre, ' ', 
-                        IF(p.segundo_nombre IS NOT NULL, CONCAT(p.segundo_nombre, ' '), ''), 
-                        p.apellido, 
-                        IF(p.segundo_apellido IS NOT NULL, CONCAT(' ', p.segundo_apellido), '')) AS profesor,
-                    a.nombre_asignatura,
-                    h.seccion,
-                    s.numero_sala,
-                    CONCAT(
-                        SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), '-', 1), 
-                        '-',
-                        SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
-                    ) AS modulo,
-                    COUNT(*) AS registros,
-                    ds.nombre_dia,
-                    r.fecha_reemplazo, 
-                    r.profesor_reemplazo,
-                    GROUP_CONCAT(r.id_reemplazo ORDER BY r.id_reemplazo SEPARATOR '-') AS id_reemplazos,
-                    IF(COUNT(mo.id_modulo) > 1, GROUP_CONCAT(mo.id_modulo ORDER BY mo.id_modulo SEPARATOR '-'), MAX(mo.id_modulo)) AS id_modulo,
-                    ds.id_dia
-                FROM 
-                    test.reemplazos r
-                JOIN 
-                    test.horario h ON h.id_horario = r.horario_id_horario 
-                JOIN 
-                    test.profesor p ON p.id_profesor = h.profesor_id_profesor
-                JOIN 
-                    test.sala s ON s.id_sala = h.sala_id_sala 
-                JOIN 
-                    test.modulo mo ON mo.id_modulo = h.modulo_id_modulo
-                JOIN 
-                    test.asignatura a ON a.id_asignatura = h.asignatura_id_asignatura 
-                JOIN 
-                    test.dia_semana ds ON ds.id_dia = h.dia_semana_id_dia
-                WHERE 
-                    r.fecha_reemplazo BETWEEN %s AND %s
-                    AND r.profesor_reemplazo = %s
-                GROUP BY 
-                    r.semana, r.fecha_reemplazo, r.profesor_reemplazo, 
-                    s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia
-                ORDER BY 
-                    r.fecha_reemplazo;
+    select
+    concat(p.nombre,' ',IF(p.segundo_nombre IS NOT NULL, CONCAT(p.segundo_nombre, ' '),''), p.apellido, IF(p.segundo_apellido IS NOT NULL, CONCAT(' ',p.segundo_apellido),'')) as profesor,
+    a.nombre_asignatura,
+    c.nombre_carrera,
+    h.jornada,
+    h.seccion,
+    s.numero_sala,
+        CONCAT(
+            SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), '-', 1), 
+            '-',
+            SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
+        ) AS modulo,
+    ds.nombre_dia,
+    r.fecha_reemplazo, 
+    r.profesor_reemplazo,
+    l.motivo,
+    l.observaciones,
+    GROUP_CONCAT(r.id_reemplazo ORDER BY r.id_reemplazo SEPARATOR '-') as id_reemplazos
+    from test.reemplazos r
+    join test.horario h on h.id_horario = r.horario_id_horario 
+    join test.profesor p on p.id_profesor = h.profesor_id_profesor
+    join test.sala s on s.id_sala = h.sala_id_sala 
+    join test.modulo mo on mo.id_modulo = h.modulo_id_modulo
+    join test.asignatura a on a.id_asignatura = h.asignatura_id_asignatura 
+    join test.dia_semana ds on ds.id_dia = h.dia_semana_id_dia
+    join test.carrera c on h.carrera_id_carrera = c.id_carrera
+    join test.licencia l on l.profesor_id_profesor = p.id_profesor
+    where r.fecha_reemplazo between l.fecha_inicio and l.fecha_termino and h.activo = true and l.estado = "asignado" 
+    group by r.semana, r.fecha_reemplazo, r.profesor_reemplazo, s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia
+    order by r.fecha_reemplazo
             ''', [fecha_inicio, fecha_termino, nombre_completo])
             reemplazos = cursor.fetchall()
 
@@ -1100,3 +1103,152 @@ def horas_periodo(request):
     except Exception as e:
         logger.error(f"Error inesperado: {str(e)}")
         return JsonResponse({'error': f'Error: {str(e)}'}, status=500)
+
+def copy_cell_border(from_cell, to_cell):
+    to_cell.border = Border(
+        left=from_cell.border.left,
+        right=from_cell.border.right,
+        top=from_cell.border.top,
+        bottom=from_cell.border.bottom,
+        diagonal=from_cell.border.diagonal,
+        diagonal_direction=from_cell.border.diagonal_direction,
+        outline=from_cell.border.outline,
+        vertical=from_cell.border.vertical,
+        horizontal=from_cell.border.horizontal
+    )
+
+def reporte_dara(request):
+    licenciaID = request.GET.get('licenciaID')
+    fechaInicio = request.GET.get('fechaInicio')
+    fechaTermino = request.GET.get('fechaTermino')
+
+    sql_query = '''
+    SELECT
+        CONCAT(p.nombre, ' ', IF(p.segundo_nombre IS NOT NULL, CONCAT(p.segundo_nombre, ' '), ''), p.apellido, IF(p.segundo_apellido IS NOT NULL, CONCAT(' ', p.segundo_apellido), '')) AS profesor,
+        a.nombre_asignatura,
+        c.nombre_carrera,
+        h.jornada,
+        h.seccion,
+        s.numero_sala,
+        CONCAT(
+            SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), '-', 1),
+            '-',
+            SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
+        ) AS modulo,
+        ds.nombre_dia,
+    CONCAT(MIN(r.fecha_reemplazo), '/', MAX(r.fecha_reemplazo)) AS fechas_reemplazo,
+        r.profesor_reemplazo,
+        l.motivo,
+        l.observaciones
+    FROM test.reemplazos r
+    JOIN test.horario h ON h.id_horario = r.horario_id_horario
+    JOIN test.profesor p ON p.id_profesor = h.profesor_id_profesor
+    JOIN test.sala s ON s.id_sala = h.sala_id_sala
+    JOIN test.modulo mo ON mo.id_modulo = h.modulo_id_modulo
+    JOIN test.asignatura a ON a.id_asignatura = h.asignatura_id_asignatura
+    JOIN test.dia_semana ds ON ds.id_dia = h.dia_semana_id_dia
+    JOIN test.carrera c ON h.carrera_id_carrera = c.id_carrera
+    JOIN test.licencia l ON l.profesor_id_profesor = p.id_profesor
+    WHERE r.fecha_reemplazo BETWEEN %s AND %s
+    AND l.id_licencia = %s
+    AND h.activo = TRUE
+    AND l.estado = "asignado"
+    GROUP BY c.nombre_carrera, h.jornada,h.seccion,s.numero_sala,r.profesor_reemplazo,a.nombre_asignatura,ds.nombre_dia,l.motivo,l.observaciones
+    ORDER BY r.fecha_reemplazo, mo.hora_modulo
+    '''
+    
+    with connection.cursor() as cursor:
+        cursor.execute(sql_query, [fechaInicio, fechaTermino, licenciaID])
+        rows = cursor.fetchall()
+
+    reemplazos_listados = []
+    for row in rows:
+        modulo = row[6].split('-')
+        inicio_modulo = modulo[0]
+        fin_modulo = modulo[1]
+        modulo_fec = row[8].split('/')
+        fecha_inicio = modulo_fec[0]
+        fecha_termino = modulo_fec[1]
+        
+        reemplazos_listados.append({
+            'profesor': row[0],
+            'nombre_asignatura': row[1],
+            'nombre_carrera': row[2],
+            'jornada': row[3],
+            'seccion': row[4],
+            'numero_sala': row[5],
+            'inicio_modulo': inicio_modulo,
+            'fin_modulo': fin_modulo,
+            'nombre_dia': row[7],
+            'fecha_reemplazo': row[8],
+            'fecha_inicio': fecha_inicio,
+            'fecha_termino': fecha_termino,
+            'profesor_reemplazo': row[9],
+            'motivo': row[10],
+            'observaciones': row[11]
+        })
+
+    asignaturas_y_carreras = {}
+    for reemplazo in reemplazos_listados:
+        asignatura = reemplazo['nombre_asignatura']
+        carrera = reemplazo['nombre_carrera']
+        key = (asignatura, carrera)
+
+        if key not in asignaturas_y_carreras:
+            asignaturas_y_carreras[key] = []
+
+        asignaturas_y_carreras[key].append(reemplazo)
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    file_paths = []
+
+    for (asignatura, carrera), reemplazos in asignaturas_y_carreras.items():
+        file_path = os.path.join(base_dir, 'static', 'documents', 'DARA.xlsx')
+        wb = openpyxl.load_workbook(file_path)
+        ws = wb.active
+
+        row_actual = 34
+        row_reemplazo = 46
+        
+        for reemplazo in reemplazos:
+            ws.merge_cells(f'N{row_actual}:Q{row_actual}')
+            ws.merge_cells(f'N{row_reemplazo}:Q{row_reemplazo}')
+            ws.merge_cells(f'J{row_actual}:K{row_actual}')
+            ws.merge_cells(f'J{row_reemplazo}:K{row_reemplazo}')
+            ws.merge_cells(f'H{row_actual}:I{row_actual}')
+            ws.merge_cells(f'H{row_reemplazo}:I{row_reemplazo}')
+            ws[f'E10'] = reemplazo['nombre_asignatura']
+            ws[f'E14'] = reemplazo['seccion']
+            ws[f'K14'] = reemplazo['jornada']
+            ws[f'E18'] = reemplazo['nombre_carrera']
+            ws[f'E28'] = reemplazo['observaciones']
+
+            ws[f'C{row_actual}'] = reemplazo['inicio_modulo']
+            ws[f'D{row_actual}'] = reemplazo['fin_modulo']
+            ws[f'E{row_actual}'] = reemplazo['nombre_dia']
+            ws[f'F{row_actual}'] = reemplazo['numero_sala']
+            ws[f'H{row_actual}'] = reemplazo['fecha_inicio']
+            ws[f'J{row_actual}'] = reemplazo['fecha_termino']
+            ws[f'N{row_actual}'] = reemplazo['profesor']
+
+            ws[f'C{row_reemplazo}'] = reemplazo['inicio_modulo']
+            ws[f'D{row_reemplazo}'] = reemplazo['fin_modulo']
+            ws[f'E{row_reemplazo}'] = reemplazo['nombre_dia']
+            ws[f'F{row_reemplazo}'] = reemplazo['numero_sala']
+            ws[f'H{row_reemplazo}'] = reemplazo['fecha_inicio']
+            ws[f'J{row_reemplazo}'] = reemplazo['fecha_termino']
+            ws[f'N{row_reemplazo}'] = reemplazo['profesor_reemplazo']
+
+            row_actual += 1
+            row_reemplazo += 1
+            if row_actual > 34+8:
+                ws.insert_rows(row_actual+1)
+                ws.insert_rows(row_reemplazo+1)
+
+        file_name = f"{asignatura}_{carrera}.xlsx"
+        output_file_path = os.path.join(base_dir, 'static', 'documents', file_name)
+
+        wb.save(output_file_path)
+        file_paths.append(output_file_path)
+
+    return JsonResponse({"files": file_paths, "reemplazos_listados": reemplazos_listados}, safe=False)

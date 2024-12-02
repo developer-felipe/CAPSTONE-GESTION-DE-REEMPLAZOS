@@ -245,7 +245,7 @@
         const carreraSelect = document.getElementById('carrera');
         const carreraID = carreraSelect.value;
         const salaID = salaSelect.value;
-        if (asignaturaID && jornadaSelect && seccionSelect && salaID) {
+        if (asignaturaID && jornadaSelect && seccionSelect && salaID && salaID!="agregar" && carreraID && carreraID!="agregar") {
             const array_pos = horariosAsignados.length
             horariosAsignados.push({
                 moduloID: moduloID,
