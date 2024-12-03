@@ -21,62 +21,75 @@
             Recuperación</button>
     </div>
 
-    <!-- Modal para agregar recuperación -->
-    <div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="extraLargeModalLabel">Agregar Recuperación</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="recuperacion-form">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <select id="profesor" name="profesor" class="form-select" required>
-                                <option value="">Selecciona un profesor</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <select id="profesor-asignatura" name="profesor-asignatura" class="form-select" required>
-                                <option value="">Seleccione una asignatura</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="numero_modulos" class="form-label">Número de Módulos</label>
-                            <input type="number" name="numero_modulos" id="numero_modulos" class="form-control"
-                                required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="fecha_clase" class="form-label">Fecha de Clase</label>
-                            <input type="date" name="fecha_clase" id="fecha_clase" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
-                            <input type="date" name="fecha_recuperacion" id="fecha_recuperacion" class="form-control"
-                                required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="hora_recuperacion" class="form-label">Hora de Recuperación</label>
-                            <input type="time" name="hora_recuperacion" id="hora_recuperacion" class="form-control"
-                                required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="sala" class="form-label">Sala</label>
-                            <select name="sala" id="sala" class="form-control" required>
-                                <option value="">Selecciona una sala</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar Recuperación</button>
-                    </div>
-                </form>
+<!-- Modal para agregar recuperación -->
+<div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="extraLargeModalLabel">Agregar Recuperación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <form id="recuperacion-form">
+                <div class="modal-body">
+                    <!-- Select de Horarios -->
+                    <div class="mb-3">
+                        <label for="horario" class="form-label">Selecciona un Horario</label>
+                        <select id="horario" name="horario" class="form-select" required>
+                            <option value="">Selecciona un horario</option>
+                            <!-- Los horarios se cargarán dinámicamente aquí -->
+                        </select>
+                    </div>
+
+                    <!-- Campos autocompletados -->
+                    <div class="mb-3">
+                        <label for="profesor" class="form-label">Profesor</label>
+                        <input type="text" id="profesor" name="profesor" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="asignatura" class="form-label">Asignatura</label>
+                        <input type="text" id="asignatura" name="asignatura" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_numero_modulos" class="form-label">Número de Módulos</label>
+                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos"
+                            required>
+                    </div>
+                    <!-- Mostrar la hora del módulo -->
+                    <div class="mb-3">
+                        <label for="hora_modulo_display" class="form-label">Hora del Módulo</label>
+                        <span id="hora_modulo_display">Hora del módulo:</span>
+                    </div>
+
+                    <!-- Campos restantes -->
+                    <div class="mb-3">
+                        <label for="fecha_clase" class="form-label">Fecha de Clase</label>
+                        <input type="date" name="fecha_clase" id="fecha_clase" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
+                        <input type="date" name="fecha_recuperacion" id="fecha_recuperacion" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="hora_recuperacion" class="form-label">Hora de Recuperación</label>
+                        <input type="time" name="hora_recuperacion" id="hora_recuperacion" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sala" class="form-label">Sala</label>
+                        <select name="sala" id="sala" class="form-control" required>
+                            <option value="">Selecciona una sala</option>
+                            <!-- Las opciones de sala se llenarán dinámicamente -->
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Recuperación</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
+
 
 
     {% if messages %}
@@ -164,6 +177,7 @@
                         <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos"
                             required>
                     </div>
+                    
     
                     <div class="mb-3">
                         <label for="edit_fecha_clase" class="form-label">Fecha de Clase</label>
@@ -207,184 +221,43 @@
 <script src="{% static 'js/editarRecuperacion.js' %}"></script> 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        obtenerSalas()
-        fetch('/docente_recuperación/')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Red error: ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                const profesorSelect = document.getElementById('profesor');
-                const profesores = data.profesores;
-                if (profesores.length > 0) {
-                    profesores.forEach(profesor => {
-                        let nombreCompleto = `${profesor.nombre} ${profesor.apellido}`;
-                        if (profesor.segundo_nombre) {
-                            nombreCompleto = `${profesor.nombre} ${profesor.segundo_nombre} ${profesor.apellido}`;
-                        }
-                        if (profesor.segundo_apellido) {
-                            nombreCompleto = `${profesor.nombre} ${profesor.segundo_nombre || ''} ${profesor.apellido} ${profesor.segundo_apellido}`;
-                        }
-                        const option = document.createElement('option');
-                        option.value = profesor.id_profesor;
-                        option.textContent = nombreCompleto.trim();
-                        profesorSelect.appendChild(option);
-                    });
-                } else {
-                    const option = document.createElement('option');
-                    option.value = '';
-                    option.textContent = 'No hay docentes.';
-                    profesorSelect.appendChild(option);
-                }
-            })
-            .catch(error => {
-                console.error('Error al obtener los datos:', error);
-            });
-    });
+document.addEventListener('DOMContentLoaded', function () {
+    obtenerHorariosRecuperacion();
+    obtenerSalas(); 
 
+    document.getElementById('horario').addEventListener('change', function () {
+        const selectedHorarioId = this.value; 
+        if (selectedHorarioId) {
+            const selectedOption = horariosData.find(horario => horario.id_horario == selectedHorarioId); 
+            if (selectedOption) {
+                document.getElementById('profesor').value = selectedOption.profesor ? selectedOption.profesor.nombre : 'No disponible';
+                document.getElementById('asignatura').value = selectedOption.asignatura ? selectedOption.asignatura.nombre : 'No disponible';
 
-
-    function eliminarRecuperacion(button) {
-        const idRecuperacion = button.getAttribute('data-id');
-
-        if (confirm("¿Estás seguro de que deseas eliminar esta recuperación?")) {
-            fetch(`/eliminar-recuperacion/${idRecuperacion}/`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Recuperación eliminada correctamente');
-                        window.location.reload();
-                    } else {
-                        alert(data.message || 'Hubo un error al eliminar la recuperación');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Ocurrió un error al eliminar la recuperación');
-                });
-        }
-    }
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+                document.getElementById('hora_modulo_display').textContent = selectedOption.modulos ? `Hora: ${selectedOption.modulos.hora_modulo}` : 'No disponible';
             }
+        } else {
+            document.getElementById('profesor').value = '';
+            document.getElementById('asignatura').value = '';
+            document.getElementById('hora_modulo_display').textContent = 'Hora del módulo:';
         }
-        return cookieValue;
-    }
-
-    const csrftoken = getCookie('csrftoken');
-
-    function obtenerSalas() {
-        fetch('/salas/')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error en la red: ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                const select = document.getElementById('sala');
-                select.innerHTML = '';
-                select.innerHTML = '<option value="">Selecciona una sala</option>';
-                data.forEach(function (sala) {
-                    select.innerHTML += `<option value="${sala.id_sala}">${sala.numero_sala}</option>`;
-                });
-                select.innerHTML += '<option value="agregar">Agregar sala</option>';
-            })
-            .catch(error => {
-                console.log('Error al obtener salas:', error);
-            });
-    }
-
-
-
-    document.getElementById('profesor').addEventListener('change', function () {
-        const profesorSelect = document.getElementById('profesor');
-        const selectedOption = profesorSelect.options[profesorSelect.selectedIndex];
-        const profesorNombre = selectedOption.innerHTML;
-        const profesorId = profesorSelect.value;
-
-        if (!profesorId) {
-            return;
-        }
-        fetch(`/docente_asignatura/${profesorId}/`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Red error: ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                const asignaturaSelect = document.getElementById('profesor-asignatura');
-                const asignaturas = data.asignaturas;
-                asignaturaSelect.innerHTML = '';
-                if (asignaturas.length > 0) {
-                    asignaturas.forEach(asignatura => {
-                        const option = document.createElement('option');
-                        option.value = asignatura.id_asignatura;
-                        option.textContent = asignatura.nombre_asignatura;
-                        asignaturaSelect.appendChild(option);
-                    });
-                } else {
-                    const option = document.createElement('option');
-                    option.value = '';
-                    option.textContent = 'No hay asignaturas asociadas al profesor.';
-                    asignaturaSelect.appendChild(option);
-                }
-            })
-            .catch(error => {
-                console.error('Error al obtener los datos:', error);
-            });
     });
 
-
-        document.getElementById('recuperacion-form').addEventListener('submit', function (event) {
+    document.getElementById('recuperacion-form').addEventListener('submit', function (event) {
         event.preventDefault();
 
-        const profesorSelect = document.getElementById('profesor');
-        const selectedOption = profesorSelect.options[profesorSelect.selectedIndex];
-        const profesorNombre = selectedOption.innerHTML;
-
-        const asignaturaSelect = document.getElementById('profesor-asignatura');
-        const selectedAsign = asignaturaSelect.options[asignaturaSelect.selectedIndex];
-        const asignaturaNombre = selectedAsign.innerHTML;
-
-        const profesorId = profesorSelect.value;
         const formData = new FormData(event.target);
-
-        const salaSelect = document.getElementById('sala');
-        const selectSala = salaSelect.options[salaSelect.selectedIndex];
-        const salaNombre = selectSala.innerHTML;
-
         const data = {};
-        data.profesorNombre = profesorNombre;
-        data.asignaturaNombre = asignaturaNombre;
-        data.salaNombre = salaNombre;
 
         formData.forEach((value, key) => {
-            data[key] = value;
+
+            if (key === "horario" || key === "sala") {
+                data[key] = value;  
+            } else {
+                data[key] = value;  
+            }
         });
 
-        console.log('Datos a enviar:', data); 
-
-        fetch('{% url "registrar_recuperacion" %}', {
+        fetch('/registrar_recuperacion/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -392,13 +265,17 @@
             },
             body: JSON.stringify(data)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.text(); 
+            }
+            return response.json(); 
+        })
         .then(responseData => {
-            console.log('Respuesta del servidor:', responseData); 
-
+            console.log(responseData);  
             if (responseData.success) {
                 alert('Recuperación registrada correctamente.');
-                window.location.reload(); 
+                window.location.reload();
             } else {
                 alert('Error al registrar la recuperación.');
             }
@@ -408,56 +285,58 @@
             alert('Hubo un error al procesar la solicitud.');
         });
     });
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    document.getElementById('editRecuperacionForm').addEventListener('submit', function (event) {
-    event.preventDefault();
-
-    const formData = new FormData(event.target);
-
-    const data = {};
-    formData.forEach((value, key) => {
-        data[key] = value;
-    });
-
-    const recuperacionId = document.getElementById('recuperacion-id').value; 
-
-    fetch(`/actualizar-recuperacion/${recuperacionId}/`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')  
-        },
-        body: JSON.stringify(data) 
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Recuperación actualizada correctamente.');
-            window.location.reload();  
-        } else {
-            alert(data.message || 'Hubo un error al actualizar.');
-        }
-    })
-    .catch(error => {
-        console.error('Error al enviar la solicitud PUT:', error);
-        alert('Hubo un error inesperado.');
-    });
 });
+
+let horariosData = []; 
+function obtenerHorariosRecuperacion() {
+    fetch('/horarios/recuperacion/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener horarios: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            horariosData = data.horarios || []; 
+            const horarioSelect = document.getElementById('horario');
+            horarioSelect.innerHTML = '<option value="">Selecciona un horario</option>'; 
+            if (horariosData.length > 0) {
+                horariosData.forEach(horario => {
+                    const option = document.createElement('option');
+                    option.value = horario.id_horario; 
+                    option.textContent = `${horario.profesor.nombre} / ${horario.asignatura.nombre} / ${horario.modulos.hora_modulo}`;
+                    horarioSelect.appendChild(option);
+                });
+            } else {
+                const option = document.createElement('option');
+                option.textContent = 'No hay horarios disponibles';
+                horarioSelect.appendChild(option);
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar horarios:', error);
+        });
+}
+
+function obtenerSalas() {
+    fetch('/salas/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la red: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const select = document.getElementById('sala');
+            select.innerHTML = '<option value="">Selecciona una sala</option>';
+            data.forEach(function (sala) {
+                select.innerHTML += `<option value="${sala.id_sala}">${sala.numero_sala}</option>`;
+            });
+        })
+        .catch(error => {
+            console.error('Error al obtener salas:', error);
+        });
+}
 
 function getCookie(name) {
     let cookieValue = null;
@@ -473,6 +352,7 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
 
 
 

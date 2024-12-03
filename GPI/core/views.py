@@ -96,6 +96,33 @@ def recuperacion_view(request):
         'recuperaciones': recuperaciones
     })        
 
+from django.http import JsonResponse
+
+def obtener_horarios_recuperacion(request):
+    horarios = Horario.objects.all()  
+    horarios_data = []
+
+    for h in horarios:
+        profesor = h.profesor_id_profesor  
+        asignatura = h.asignatura_id_asignatura  
+        modulo = h.modulo_id_modulo 
+
+        # Concatenar el nombre completo del profesor
+        profesor_nombre_completo = f"{profesor.nombre} {profesor.segundo_nombre if profesor.segundo_nombre else ''} {profesor.apellido} {profesor.segundo_apellido if profesor.segundo_apellido else ''}".strip()
+
+        horarios_data.append({
+            "id_horario": h.id_horario,
+            "profesor": {"profesor.id_profesor": profesor.id_profesor, "nombre": profesor_nombre_completo},  # Usamos el nombre completo
+            "asignatura": {"asignatura.id_asignatura": asignatura.id_asignatura, "nombre": asignatura.nombre_asignatura},  # Acceder a los atributos de la asignatura
+            "modulos": {"modulo.id_modulo": modulo.id_modulo, "hora_modulo": modulo.hora_modulo},  # Acceder a los atributos del módulo
+        })
+
+    return JsonResponse({"horarios": horarios_data})
+
+
+
+
+
 def eliminar_recuperacion(request, id_recuperacion):
     try:
         recuperacion = Recuperacion.objects.get(id_recuperacion=id_recuperacion)
@@ -441,26 +468,52 @@ def crear_docente_view(request):
     return render(request, 'templates/crear_docente.html',context)
 
 
-
 def registrar_recuperacion(request):
     if request.method == 'POST':
         try:
             logger.info("Iniciando registro de recuperación.")
             data = json.loads(request.body)
             logger.debug(f"Datos recibidos: {data}")
-            profesor = data.get('profesorNombre')
-            asignatura = data.get('asignaturaNombre')
+
+            horario_id = data.get('horario')  
+
+            if not horario_id:
+                logger.warning("Faltan datos en el formulario.")
+                return JsonResponse({'success': False, 'message': 'Faltan datos en el formulario.'}, status=400)
+
+            try:
+                horario = Horario.objects.get(id_horario=horario_id)  
+            except Horario.DoesNotExist:
+                logger.error("Horario no encontrado.")
+                return JsonResponse({'success': False, 'message': 'Horario no válido.'}, status=400)
+
             numero_modulos = data.get('numero_modulos')
             fecha_clase = data.get('fecha_clase')
             fecha_recuperacion = data.get('fecha_recuperacion')
             hora_recuperacion = data.get('hora_recuperacion')
-            sala = data.get('salaNombre')
-            if not all([profesor, asignatura, numero_modulos, fecha_clase, fecha_recuperacion, hora_recuperacion, sala]):
+            sala_id = data.get('sala') 
+
+            if not all([numero_modulos, fecha_clase, fecha_recuperacion, hora_recuperacion, sala_id]):
                 logger.warning("Faltan datos en el formulario.")
                 return JsonResponse({'success': False, 'message': 'Faltan datos en el formulario.'}, status=400)
+
+            try:
+                sala = Sala.objects.get(id_sala=sala_id)  
+            except Sala.DoesNotExist:
+                logger.error("Sala no encontrada.")
+                return JsonResponse({'success': False, 'message': 'Sala no válida.'}, status=400)
+
+            profesor = horario.profesor_id_profesor
+            nombre_completo_profesor = f"{profesor.nombre} {profesor.segundo_nombre or ''} {profesor.apellido} {profesor.segundo_apellido or ''}".strip()
+
+            asignatura = horario.asignatura_id_asignatura
+            nombre_asignatura = asignatura.nombre_asignatura
+            
+
             recuperacion = Recuperacion(
-                profesor=profesor,
-                asignatura=asignatura,
+                horario=horario,  
+                profesor=nombre_completo_profesor,  
+                asignatura=nombre_asignatura,  
                 numero_modulos=numero_modulos,
                 fecha_clase=fecha_clase,
                 fecha_recuperacion=fecha_recuperacion,
@@ -468,6 +521,7 @@ def registrar_recuperacion(request):
                 sala=sala
             )
             recuperacion.save()
+
             return JsonResponse({'success': True, 'message': 'Recuperación registrada correctamente.'})
 
         except Exception as e:
@@ -476,6 +530,8 @@ def registrar_recuperacion(request):
     
     logger.warning("Método no permitido para la solicitud.")
     return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+
 
 def reemplazos_view(request):
     sql_query = '''
@@ -811,7 +867,7 @@ def todas_salas(request):
     return JsonResponse({'todas_salas': salas_data})
 
 def todas_carreras(request):
-    carreras = Carreras.objects.all()
+    carreras = Carrera.objects.all()
     return JsonResponse(carreras)
 
 def licencias_profesores(request):
