@@ -98,6 +98,77 @@ def recuperacion_view(request):
 
 from django.http import JsonResponse
 
+
+#----------------------------------------------------
+
+def obtener_horarios_unicos(request):
+    if request.method == 'GET':
+        try:
+            horarios = (
+                Horario.objects.values(
+                    'profesor_id_profesor',  # ID único del profesor
+                    'profesor_id_profesor__nombre'  # Nombre del profesor
+                )
+                .distinct()  # Elimina duplicados basados en profesor
+            )
+
+            horarios_data = [
+                {
+                    'profesor_id': horario['profesor_id_profesor'],
+                    'profesor_nombre': horario['profesor_id_profesor__nombre'],
+                }
+                for horario in horarios
+            ]
+
+            return JsonResponse({'success': True, 'horarios': horarios_data})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+from datetime import datetime
+from .models import DiaSemana
+
+def obtener_asignaturas_por_fecha(request):
+    if request.method == 'GET':
+        try:
+            horario_id = request.GET.get('horario_id')
+            fecha_clase = request.GET.get('fecha_clase')
+
+            if not horario_id or not fecha_clase:
+                return JsonResponse({'success': False, 'message': 'Horario o fecha no proporcionados'}, status=400)
+
+            # Obtener el día de la semana basado en la fecha
+            fecha_obj = datetime.strptime(fecha_clase, '%Y-%m-%d')
+            dia_semana = fecha_obj.weekday() + 1  # weekday() regresa de 0 (lunes) a 6 (domingo)
+
+            # Validar que la fecha corresponda con los días de lunes a sábado
+            if dia_semana > 6:
+                return JsonResponse({'success': False, 'message': 'Fecha inválida (domingo no permitido)'}, status=400)
+
+            # Buscar horarios asociados al día
+            horarios = Horario.objects.filter(
+                Q(id_horario=horario_id) & Q(dia_semana_id_dia_id=dia_semana)
+            ).select_related('asignatura_id_asignatura')
+
+            asignaturas_data = [
+                {
+                    'id_asignatura': horario.asignatura_id_asignatura.id_asignatura,
+                    'nombre_asignatura': horario.asignatura_id_asignatura.nombre_asignatura,
+                }
+                for horario in horarios
+            ]
+
+            return JsonResponse({'success': True, 'asignaturas': asignaturas_data})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+
+
+
+
+
+#---------------------------------------------------
 def obtener_horarios_recuperacion(request):
     horarios = Horario.objects.all()  
     horarios_data = []
@@ -491,17 +562,13 @@ def registrar_recuperacion(request):
             fecha_clase = data.get('fecha_clase')
             fecha_recuperacion = data.get('fecha_recuperacion')
             hora_recuperacion = data.get('hora_recuperacion')
-            sala_id = data.get('sala') 
+            sala = data.get('sala')  
 
-            if not all([numero_modulos, fecha_clase, fecha_recuperacion, hora_recuperacion, sala_id]):
+            if not all([numero_modulos, fecha_clase, fecha_recuperacion, hora_recuperacion, sala]):
                 logger.warning("Faltan datos en el formulario.")
                 return JsonResponse({'success': False, 'message': 'Faltan datos en el formulario.'}, status=400)
 
-            try:
-                sala = Sala.objects.get(id_sala=sala_id)  
-            except Sala.DoesNotExist:
-                logger.error("Sala no encontrada.")
-                return JsonResponse({'success': False, 'message': 'Sala no válida.'}, status=400)
+            sala = sala 
 
             profesor = horario.profesor_id_profesor
             nombre_completo_profesor = f"{profesor.nombre} {profesor.segundo_nombre or ''} {profesor.apellido} {profesor.segundo_apellido or ''}".strip()
@@ -509,6 +576,7 @@ def registrar_recuperacion(request):
             asignatura = horario.asignatura_id_asignatura
             nombre_asignatura = asignatura.nombre_asignatura
             
+
 
             recuperacion = Recuperacion(
                 horario=horario,  
@@ -518,7 +586,7 @@ def registrar_recuperacion(request):
                 fecha_clase=fecha_clase,
                 fecha_recuperacion=fecha_recuperacion,
                 hora_recuperacion=hora_recuperacion,
-                sala=sala
+                sala=sala  
             )
             recuperacion.save()
 
@@ -530,6 +598,7 @@ def registrar_recuperacion(request):
     
     logger.warning("Método no permitido para la solicitud.")
     return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
 
 
 
