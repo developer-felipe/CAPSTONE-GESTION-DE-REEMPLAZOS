@@ -106,10 +106,10 @@ def obtener_horarios_unicos(request):
         try:
             horarios = (
                 Horario.objects.values(
-                    'profesor_id_profesor',  # ID único del profesor
-                    'profesor_id_profesor__nombre'  # Nombre del profesor
+                    'profesor_id_profesor',  
+                    'profesor_id_profesor__nombre'  
                 )
-                .distinct()  # Elimina duplicados basados en profesor
+                .distinct()  
             )
 
             horarios_data = [
@@ -125,8 +125,6 @@ def obtener_horarios_unicos(request):
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
     return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
 
-from datetime import datetime
-from .models import DiaSemana
 
 def obtener_asignaturas_por_fecha(request):
     if request.method == 'GET':
@@ -137,15 +135,12 @@ def obtener_asignaturas_por_fecha(request):
             if not horario_id or not fecha_clase:
                 return JsonResponse({'success': False, 'message': 'Horario o fecha no proporcionados'}, status=400)
 
-            # Obtener el día de la semana basado en la fecha
             fecha_obj = datetime.strptime(fecha_clase, '%Y-%m-%d')
-            dia_semana = fecha_obj.weekday() + 1  # weekday() regresa de 0 (lunes) a 6 (domingo)
+            dia_semana = fecha_obj.weekday() + 1 
 
-            # Validar que la fecha corresponda con los días de lunes a sábado
             if dia_semana > 6:
                 return JsonResponse({'success': False, 'message': 'Fecha inválida (domingo no permitido)'}, status=400)
 
-            # Buscar horarios asociados al día
             horarios = Horario.objects.filter(
                 Q(id_horario=horario_id) & Q(dia_semana_id_dia_id=dia_semana)
             ).select_related('asignatura_id_asignatura')
@@ -178,14 +173,13 @@ def obtener_horarios_recuperacion(request):
         asignatura = h.asignatura_id_asignatura  
         modulo = h.modulo_id_modulo 
 
-        # Concatenar el nombre completo del profesor
         profesor_nombre_completo = f"{profesor.nombre} {profesor.segundo_nombre if profesor.segundo_nombre else ''} {profesor.apellido} {profesor.segundo_apellido if profesor.segundo_apellido else ''}".strip()
 
         horarios_data.append({
             "id_horario": h.id_horario,
-            "profesor": {"profesor.id_profesor": profesor.id_profesor, "nombre": profesor_nombre_completo},  # Usamos el nombre completo
-            "asignatura": {"asignatura.id_asignatura": asignatura.id_asignatura, "nombre": asignatura.nombre_asignatura},  # Acceder a los atributos de la asignatura
-            "modulos": {"modulo.id_modulo": modulo.id_modulo, "hora_modulo": modulo.hora_modulo},  # Acceder a los atributos del módulo
+            "profesor": {"profesor.id_profesor": profesor.id_profesor, "nombre": profesor_nombre_completo},  
+            "asignatura": {"asignatura.id_asignatura": asignatura.id_asignatura, "nombre": asignatura.nombre_asignatura},  
+            "modulos": {"modulo.id_modulo": modulo.id_modulo, "hora_modulo": modulo.hora_modulo}, 
         })
 
     return JsonResponse({"horarios": horarios_data})
@@ -204,6 +198,8 @@ def eliminar_recuperacion(request, id_recuperacion):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
     
+
+
 @csrf_protect  
 def actualizar_recuperacion(request, id_recuperacion):
     if request.method == 'PUT': 
@@ -213,12 +209,15 @@ def actualizar_recuperacion(request, id_recuperacion):
             if not data.get('numero_modulos') or not data.get('fecha_clase') or not data.get('fecha_recuperacion') or not data.get('hora_recuperacion') or not data.get('sala'):
                 return JsonResponse({'success': False, 'message': 'Faltan datos requeridos.'})
             
-            recuperacion = Recuperacion.objects.get(id=id_recuperacion)
+            # Usamos 'id_recuperacion' para obtener el objeto
+            recuperacion = Recuperacion.objects.get(id_recuperacion=id_recuperacion)
+            
             recuperacion.numero_modulos = data.get('numero_modulos')
             recuperacion.fecha_clase = data.get('fecha_clase')
             recuperacion.fecha_recuperacion = data.get('fecha_recuperacion')
             recuperacion.hora_recuperacion = data.get('hora_recuperacion')
             recuperacion.sala = data.get('sala')
+            
             recuperacion.save()
 
             return JsonResponse({'success': True, 'message': 'Recuperación actualizada correctamente.'})
@@ -234,6 +233,7 @@ def actualizar_recuperacion(request, id_recuperacion):
     
     else:
         return JsonResponse({'success': False, 'message': 'Método no permitido. Solo se permite PUT.'})
+
 
 def reportes_view(request):
     profesores = Profesor.objects.all()

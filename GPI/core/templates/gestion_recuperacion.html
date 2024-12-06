@@ -156,47 +156,47 @@
             </div>
             <form id="edit-recuperacion-form" method="PUT">
                 <input type="hidden" id="edit_id" name="edit_id" value="">
+
                 <div class="modal-body">
                     <!-- Formulario de edición -->
+
+                    <!-- ID de la recuperación (oculto) -->
                     <input type="hidden" id="edit_id">
-                    
+
                     <div class="mb-3">
                         <select id="edit_profesor" name="profesor" class="form-select" required>
                             <option value="">Selecciona un profesor</option>
                             <!-- Opciones se llenan dinámicamente -->
                         </select>
                     </div>
-    
+
                     <div class="mb-3">
                         <select id="edit_asignatura" name="asignatura" class="form-select" required>
                             <option value="">Selecciona una asignatura</option>
                             <!-- Opciones se llenan dinámicamente -->
                         </select>
                     </div>
-    
+
                     <div class="mb-3">
                         <label for="edit_numero_modulos" class="form-label">Número de Módulos</label>
-                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos"
-                            required>
+                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos" required>
                     </div>
-                    
-    
+
                     <div class="mb-3">
                         <label for="edit_fecha_clase" class="form-label">Fecha de Clase</label>
                         <input type="date" class="form-control" id="edit_fecha_clase" name="fecha_clase" required>
                     </div>
-    
+
                     <div class="mb-3">
                         <label for="edit_fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
-                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion"
-                            required>
+                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="edit_hora_recuperacion" class="form-label">Hora de Recuperación</label>
-                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion"
-                            required>
+                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion" required>
                     </div>
+
                     <div class="mb-3">
                         <label for="edit_sala" class="form-label">Sala</label>
                         <select id="edit_sala" name="sala" class="form-select" required>
@@ -204,9 +204,9 @@
                             <!-- Opciones se llenan dinámicamente -->
                         </select>
                     </div>
-                    
+
                 </div>
-    
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
@@ -337,6 +337,45 @@ function obtenerSalas() {
             });
         })
         .catch(error => console.error('Error al obtener salas:', error));
+}
+
+function getCSRFToken() {
+    const csrfToken = document.cookie.split(';').find(cookie => cookie.trim().startsWith('csrftoken='));
+    return csrfToken ? csrfToken.split('=')[1] : '';
+}
+
+function eliminarRecuperacion(button) {
+    const idRecuperacion = button.getAttribute('data-id');
+
+    if (!confirm('¿Estás seguro de que quieres eliminar esta recuperación?')) {
+        return;
+    }
+
+    const csrfToken = getCSRFToken();
+
+    fetch(`/eliminar-recuperacion/${idRecuperacion}/`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken, 
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Recuperación eliminada correctamente');
+            const row = button.closest('tr'); 
+            if (row) {
+                row.remove(); 
+            }
+        } else {
+            alert('Error al eliminar la recuperación: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error al realizar la solicitud DELETE:', error);
+        alert('Hubo un error al intentar eliminar la recuperación.');
+    });
 }
 
 function getCookie(name) {
