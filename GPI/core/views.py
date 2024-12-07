@@ -127,43 +127,70 @@ def obtener_horarios_unicos(request):
 
 
 def obtener_asignaturas_por_fecha(request):
-    if request.method == 'GET':
+    if request.method == 'POST':
         try:
-            horario_id = request.GET.get('horario_id')
-            fecha_clase = request.GET.get('fecha_clase')
+            data = json.loads(request.body)
+            fecha_clase = data.get('fecha_clase')
+            profesorId = data.get('profesorId')
 
-            if not horario_id or not fecha_clase:
-                return JsonResponse({'success': False, 'message': 'Horario o fecha no proporcionados'}, status=400)
+            logger.info(f"Recibida solicitud para obtener asignaturas con fecha: {fecha_clase} y profesorId: {profesorId}")
+
+            if not profesorId or not fecha_clase:
+                logger.warning("Profesor o Fecha no proporcionados")
+                return JsonResponse({'success': False, 'message': 'Profesor o Fecha no proporcionados'}, status=400)
 
             fecha_obj = datetime.strptime(fecha_clase, '%Y-%m-%d')
-            dia_semana = fecha_obj.weekday() + 1 
+            dia_semana = fecha_obj.weekday() + 1
 
             if dia_semana > 6:
+                logger.warning(f"Fecha inválida (domingo no permitido): {fecha_clase}")
                 return JsonResponse({'success': False, 'message': 'Fecha inválida (domingo no permitido)'}, status=400)
-
             horarios = Horario.objects.filter(
-                Q(id_horario=horario_id) & Q(dia_semana_id_dia_id=dia_semana)
+                Q(profesor_id_profesor=profesorId) & Q(dia_semana_id_dia_id=dia_semana) & Q(activo=True)
             ).select_related('asignatura_id_asignatura')
+
+            agrupados = {}
+
+            for horario in horarios:
+                clave = (horario.asignatura_id_asignatura.id_asignatura,
+                         horario.seccion,
+                         horario.carrera_id_carrera.nombre_carrera)
+                if clave not in agrupados:
+                    agrupados[clave] = {
+                        'id_asignatura': horario.asignatura_id_asignatura.id_asignatura,
+                        'nombre_asignatura': horario.asignatura_id_asignatura.nombre_asignatura,
+                        'seccion': horario.seccion,
+                        'jornada': horario.jornada,
+                        'carrera_id': horario.carrera_id_carrera.nombre_carrera,
+                        'modulos': set(),
+                        'numero_modulos': 0 
+                    }
+                
+                agrupados[clave]['modulos'].add(horario.modulo_id_modulo.hora_modulo)
+                agrupados[clave]['numero_modulos'] = len(agrupados[clave]['modulos'])
 
             asignaturas_data = [
                 {
-                    'id_asignatura': horario.asignatura_id_asignatura.id_asignatura,
-                    'nombre_asignatura': horario.asignatura_id_asignatura.nombre_asignatura,
+                    'id_asignatura': valor['id_asignatura'],
+                    'nombre_asignatura': valor['nombre_asignatura'],
+                    'seccion': valor['seccion'],
+                    'jornada': valor['jornada'],
+                    'carrera_id': valor['carrera_id'],
+                    'numero_modulos': valor['numero_modulos']
                 }
-                for horario in horarios
+                for valor in agrupados.values()
             ]
-
+            
+            logger.info(f"Asignaturas encontradas: {len(asignaturas_data)}")
             return JsonResponse({'success': True, 'asignaturas': asignaturas_data})
+
         except Exception as e:
+            logger.error(f"Error al procesar la solicitud: {str(e)}", exc_info=True)
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+    logger.warning("Método no permitido para esta solicitud")
     return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
 
-
-
-
-
-
-#---------------------------------------------------
 def obtener_horarios_recuperacion(request):
     horarios = Horario.objects.all()  
     horarios_data = []
@@ -184,10 +211,6 @@ def obtener_horarios_recuperacion(request):
 
     return JsonResponse({"horarios": horarios_data})
 
-
-
-
-
 def eliminar_recuperacion(request, id_recuperacion):
     try:
         recuperacion = Recuperacion.objects.get(id_recuperacion=id_recuperacion)
@@ -198,8 +221,6 @@ def eliminar_recuperacion(request, id_recuperacion):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
     
-
-
 @csrf_protect  
 def actualizar_recuperacion(request, id_recuperacion):
     if request.method == 'PUT': 
@@ -209,7 +230,6 @@ def actualizar_recuperacion(request, id_recuperacion):
             if not data.get('numero_modulos') or not data.get('fecha_clase') or not data.get('fecha_recuperacion') or not data.get('hora_recuperacion') or not data.get('sala'):
                 return JsonResponse({'success': False, 'message': 'Faltan datos requeridos.'})
             
-            # Usamos 'id_recuperacion' para obtener el objeto
             recuperacion = Recuperacion.objects.get(id_recuperacion=id_recuperacion)
             
             recuperacion.numero_modulos = data.get('numero_modulos')
@@ -1051,7 +1071,6 @@ def profesor_por_nombre(request, nombre):
     
 def profesores(request):
     profesores = Profesor.objects.all()
-
     profesores_concatenados = []
     for profesor in profesores:
         nombre_completo = f"{profesor.nombre} {profesor.segundo_nombre} {profesor.apellido} {profesor.segundo_apellido}"
@@ -1186,7 +1205,6 @@ def horas_periodo(request):
 
             reemplazos = cursor.fetchall()
 
-        # Preparar la respuesta con los datos obtenidos
         reemplazos_listados = []
         for row in reemplazos:
             reemplazos_listados.append({
@@ -1204,12 +1222,8 @@ def horas_periodo(request):
                 'id_modulo': row[11],
                 'id_dia': row[12]
             })
-
-        # Calcular las horas totales
         horas_reemplazo = sum(reemplazo['registros'] for reemplazo in reemplazos_listados)
         horas_totales = horas_reemplazo
-
-        # Determinar tipo de pago
         tipo_pago = "BONO" if horas_totales >= 40 else "PROGRAMACIÓN"
 
         return JsonResponse({
@@ -1371,37 +1385,3 @@ def reporte_dara(request):
         file_paths.append(output_file_path)
 
     return JsonResponse({"files": file_paths, "reemplazos_listados": reemplazos_listados}, safe=False)
-
-
-# SELECT 
-#     r.semana, 
-#     CONCAT(
-#         p.nombre, ' ',
-#         IF(p.segundo_nombre IS NOT NULL, CONCAT(p.segundo_nombre, ' '), ''),
-#         p.apellido,
-#         IF(p.segundo_apellido IS NOT NULL, CONCAT(' ', p.segundo_apellido), '')
-#     ) AS profesor,
-#     a.nombre_asignatura,
-#     h.seccion,
-#     s.numero_sala,
-#     CONCAT(
-#         SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), '-', 1), 
-#         '-',
-#         SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
-#     ) AS modulo,
-#     COUNT(*) AS registros,
-#     ds.nombre_dia,
-#     r.fecha_reemplazo, 
-#     r.profesor_reemplazo
-# FROM test.reemplazos r
-# JOIN test.horario h ON h.id_horario = r.horario_id_horario 
-# JOIN test.profesor p ON p.id_profesor = h.profesor_id_profesor
-# JOIN test.sala s ON s.id_sala = h.sala_id_sala 
-# JOIN test.modulo mo ON mo.id_modulo = h.modulo_id_modulo
-# JOIN test.asignatura a ON a.id_asignatura = h.asignatura_id_asignatura 
-# JOIN test.dia_semana ds ON ds.id_dia = h.dia_semana_id_dia 
-# where p.id_profesor = 1 AND r.fecha_reemplazo BETWEEN '2024-12-01' AND '2024-12-27'
-# GROUP BY r.semana, r.fecha_reemplazo, r.profesor_reemplazo, s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia 
-# ORDER BY r.fecha_reemplazo;
-# GROUP BY r.semana, r.fecha_reemplazo, r.profesor_reemplazo, s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia 
-# ORDER BY r.fecha_reemplazo;

@@ -21,79 +21,62 @@
             Recuperación</button>
     </div>
 
-<!-- Modal para agregar recuperación -->
-<div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="extraLargeModalLabel">Agregar Recuperación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="extraLargeModalLabel">Agregar Recuperación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="recuperacion-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="profesor" class="form-label">Selecciona un profesor</label>
+                            <select id="profesor" name="profesor" class="form-select" required>
+                                <option value="">Selecciona un profesor</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fecha_clase" class="form-label">Fecha de Clase</label>
+                            <input type="date" name="fecha_clase" id="fecha_clase" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="asignatura" class="form-label">Asignatura</label>
+                            <select id="asignatura" name="asignatura" class="form-select" readonly>
+                                <option value="">Selecciona una asignatura</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_numero_modulos" class="form-label">Número de Módulos</label>
+                            <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
+                            <input type="date" name="fecha_recuperacion" id="fecha_recuperacion" class="form-control"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="hora_recuperacion" class="form-label">Hora de Recuperación</label>
+                            <input type="time" name="hora_recuperacion" id="hora_recuperacion" class="form-control"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="sala" class="form-label">Sala</label>
+                            <select name="sala" id="sala" class="form-control" required>
+                                <option value="">Selecciona una sala</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Recuperación</button>
+                    </div>
+                </form>
             </div>
-            <form id="recuperacion-form">
-                <div class="modal-body">
-                    <!-- Select de Horarios -->
-                    <div class="mb-3">
-                        <label for="horario" class="form-label">Selecciona un Horario</label>
-                        <select id="horario" name="horario" class="form-select" required>
-                            <option value="">Selecciona un horario</option>
-                            <!-- Los horarios se cargarán dinámicamente aquí -->
-                        </select>
-                    </div>
-
-                    <!-- Campos autocompletados -->
-                    <div class="mb-3">
-                        <label for="profesor" class="form-label">Profesor</label>
-                        <input type="text" id="profesor" name="profesor" class="form-control" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="asignatura" class="form-label">Asignatura</label>
-                        <select id="asignatura" name="asignatura" class="form-select" readonly>
-                            <option value="">Selecciona una asignatura</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_numero_modulos" class="form-label">Número de Módulos</label>
-                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos"
-                            required>
-                    </div>
-                    <!-- Mostrar la hora del módulo -->
-                    <div class="mb-3">
-                        <label for="hora_modulo_display" class="form-label">Hora del Módulo</label>
-                        <span id="hora_modulo_display">Hora del módulo:</span>
-                    </div>
-
-                    <!-- Campos restantes -->
-                    <div class="mb-3">
-                        <label for="fecha_clase" class="form-label">Fecha de Clase</label>
-                        <input type="date" name="fecha_clase" id="fecha_clase" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
-                        <input type="date" name="fecha_recuperacion" id="fecha_recuperacion" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="hora_recuperacion" class="form-label">Hora de Recuperación</label>
-                        <input type="time" name="hora_recuperacion" id="hora_recuperacion" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="sala" class="form-label">Sala</label>
-                        <select name="sala" id="sala" class="form-control" required>
-                            <option value="">Selecciona una sala</option>
-                            <!-- Las opciones de sala se llenarán dinámicamente -->
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Recuperación</button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
-
-
-
     {% if messages %}
     <div class="alert alert-success">
         {% for message in messages %}
@@ -129,9 +112,10 @@
                 <td>
                     <div class="d-flex">
                         <button class="btn btn-warning btn-edit me-2" data-bs-toggle="modal" data-bs-target="#editModal"
-                            data-id="{{ rec.id_recuperacion }}"  data-profesor="{{ rec.profesor }}"
+                            data-id="{{ rec.id_recuperacion }}" data-profesor="{{ rec.profesor }}"
                             data-asignatura="{{ rec.asignatura }}" data-numero_modulos="{{ rec.numero_modulos }}"
-                            data-fecha_clase="{{ rec.fecha_clase|date:'Y-m-d' }}" data-fecha_recuperacion="{{ rec.fecha_recuperacion|date:'Y-m-d' }}"
+                            data-fecha_clase="{{ rec.fecha_clase|date:'Y-m-d' }}"
+                            data-fecha_recuperacion="{{ rec.fecha_recuperacion|date:'Y-m-d' }}"
                             data-hora_recuperacion="{{ rec.hora_recuperacion }}" data-sala="{{ rec.sala }}">
                             <i class="material-icons me-2">edit</i>
                         </button>
@@ -158,28 +142,24 @@
                 <input type="hidden" id="edit_id" name="edit_id" value="">
 
                 <div class="modal-body">
-                    <!-- Formulario de edición -->
-
-                    <!-- ID de la recuperación (oculto) -->
                     <input type="hidden" id="edit_id">
 
                     <div class="mb-3">
                         <select id="edit_profesor" name="profesor" class="form-select" required>
                             <option value="">Selecciona un profesor</option>
-                            <!-- Opciones se llenan dinámicamente -->
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <select id="edit_asignatura" name="asignatura" class="form-select" required>
                             <option value="">Selecciona una asignatura</option>
-                            <!-- Opciones se llenan dinámicamente -->
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label for="edit_numero_modulos" class="form-label">Número de Módulos</label>
-                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos" required>
+                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos"
+                            required>
                     </div>
 
                     <div class="mb-3">
@@ -189,19 +169,20 @@
 
                     <div class="mb-3">
                         <label for="edit_fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
-                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion" required>
+                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion"
+                            required>
                     </div>
 
                     <div class="mb-3">
                         <label for="edit_hora_recuperacion" class="form-label">Hora de Recuperación</label>
-                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion" required>
+                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion"
+                            required>
                     </div>
 
                     <div class="mb-3">
                         <label for="edit_sala" class="form-label">Sala</label>
                         <select id="edit_sala" name="sala" class="form-select" required>
                             <option value="">Selecciona una sala</option>
-                            <!-- Opciones se llenan dinámicamente -->
                         </select>
                     </div>
 
@@ -220,178 +201,158 @@
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="{% static 'js/editarRecuperacion.js' %}"></script> 
+<script src="{% static 'js/editarRecuperacion.js' %}"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    obtenerHorariosRecuperacion();
-    obtenerSalas();
+    document.addEventListener('DOMContentLoaded', async function () {
 
-    document.getElementById('horario').addEventListener('change', function () {
-        const selectedHorarioId = this.value;
-        if (selectedHorarioId) {
-            const selectedOption = horariosData.find(horario => horario.id_horario == selectedHorarioId);
-            if (selectedOption) {
-                document.getElementById('profesor').value = selectedOption.profesor ? selectedOption.profesor.nombre : 'No disponible';
-                document.getElementById('hora_modulo_display').textContent = selectedOption.modulos ? `Hora: ${selectedOption.modulos.hora_modulo}` : 'No disponible';
+        obtenerHorariosRecuperacion();
+        obtenerSalas();
+
+        function getCSRFToken() {
+            const csrfToken = document.cookie.split(';').find(cookie => cookie.trim().startsWith('csrftoken='));
+            return csrfToken ? csrfToken.split('=')[1] : '';
+        }
+        const csrfToken = getCSRFToken();
+
+        try {
+            const respuesta = await fetch('/profesores/');
+            if (!respuesta.ok) {
+                throw new Error('Error en la solicitud: ' + respuesta.status);
             }
-        } else {
-            document.getElementById('profesor').value = '';
-            document.getElementById('hora_modulo_display').textContent = 'Hora del módulo:';
+            const data = await respuesta.json();
+            console.log(data);
+            selectProfesor = document.getElementById('profesor')
+            data.forEach(profesor => {
+                const option = document.createElement('option')
+                option.value = profesor.id
+                option.textContent = profesor.nombre_completo
+                selectProfesor.appendChild(option)
+            })
+        } catch (error) {
+            console.error('Error:', error);
         }
-    });
-
-    document.getElementById('fecha_clase').addEventListener('change', function () {
-        const horarioId = document.getElementById('horario').value;
-        const fechaClase = this.value;
-
-        if (horarioId && fechaClase) {
-            fetch(`/obtener_asignaturas_por_fecha/?horario_id=${horarioId}&fecha_clase=${fechaClase}`)
-                .then(response => response.json())
-                .then(data => {
-                    const asignaturaSelect = document.getElementById('asignatura');
-                    asignaturaSelect.innerHTML = '<option value="">Selecciona una asignatura</option>';
-                    if (data.success) {
-                        data.asignaturas.forEach(asignatura => {
-                            const option = document.createElement('option');
-                            option.value = asignatura.id_asignatura;
-                            option.textContent = asignatura.nombre_asignatura;
-                            asignaturaSelect.appendChild(option);
-                        });
-                    } else {
-                        alert(data.message || 'No hay asignaturas disponibles.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error al obtener asignaturas:', error);
+        fechaClase = document.getElementById('fecha_clase')
+        fechaClase.addEventListener('change', async function () {
+            datos = {
+                profesorId: selectProfesor.value,
+                fecha_clase: fechaClase.value
+            }
+            try {
+                const respuesta = await fetch('/obtener_asignaturas_por_fecha/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(datos)
                 });
-        }
+                if (!respuesta.ok) {
+                    throw new Error('Error en la solicitud: ' + respuesta.status);
+                }
+                const data = await respuesta.json();
+                console.log(data);
+                selectAsignatura = document.getElementById('asignatura')
+                data.asignaturas.forEach(asignaturas => {
+                    const option = document.createElement('option')
+                    option.value = asignaturas.id_asignatura
+                    option.textContent = asignaturas.nombre_asignatura,`(${asignaturas.seccion})`,asignaturas.nombre_carrera
+                    selectAsignatura.appendChild(option)
+                    selectAsignatura.addEventListener('change', function(){
+                    selectModulo = document.getElementById('edit_numero_modulos')
+                    selectModulo.value = asignaturas.numero_modulos
+                    })
+                })
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+
+        })
     });
 
-    document.getElementById('recuperacion-form').addEventListener('submit', function (event) {
-        event.preventDefault();
+    let horariosData = [];
+    function obtenerHorariosRecuperacion() {
+        fetch('/horarios/recuperacion/')
+            .then(response => response.json())
+            .then(data => {
+                horariosData = data.horarios || [];
+                const horarioSelect = document.getElementById('horario');
+                horarioSelect.innerHTML = '<option value="">Selecciona un horario</option>';
+                horariosData.forEach(horario => {
+                    const option = document.createElement('option');
+                    option.value = horario.id_horario;
+                    option.textContent = `${horario.profesor.nombre} / ${horario.modulos.hora_modulo}`;
+                    horarioSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al cargar horarios:', error));
+    }
 
-        const formData = new FormData(event.target);
-        const data = {};
+    function obtenerSalas() {
+        fetch('/salas/')
+            .then(response => response.json())
+            .then(data => {
+                const salaSelect = document.getElementById('sala');
+                salaSelect.innerHTML = '<option value="">Selecciona una sala</option>';
+                data.forEach(sala => {
+                    const option = document.createElement('option');
+                    option.value = sala.numero_sala;
+                    option.textContent = sala.numero_sala;
+                    salaSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al obtener salas:', error));
+    }
 
-        formData.forEach((value, key) => {
-            data[key] = value;
-        });
-
-        console.log("Datos a enviar:", data); 
 
 
-        fetch('/registrar_recuperacion/', {
-            method: 'POST',
+    function eliminarRecuperacion(button) {
+        const idRecuperacion = button.getAttribute('data-id');
+
+        if (!confirm('¿Estás seguro de que quieres eliminar esta recuperación?')) {
+            return;
+        }
+
+        fetch(`/eliminar-recuperacion/${idRecuperacion}/`, {
+            method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken'),
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(responseData => {
-            if (responseData.success) {
-                alert('Recuperación registrada correctamente.');
-                window.location.reload();
-            } else {
-                alert('Error al registrar la recuperación.');
+                'X-CSRFToken': csrfToken,
             }
         })
-        .catch(error => {
-            console.error('Error al enviar los datos:', error);
-            alert('Hubo un error al procesar la solicitud.');
-        });
-    });
-});
-
-let horariosData = [];
-function obtenerHorariosRecuperacion() {
-    fetch('/horarios/recuperacion/')
-        .then(response => response.json())
-        .then(data => {
-            horariosData = data.horarios || [];
-            const horarioSelect = document.getElementById('horario');
-            horarioSelect.innerHTML = '<option value="">Selecciona un horario</option>';
-            horariosData.forEach(horario => {
-                const option = document.createElement('option');
-                option.value = horario.id_horario;
-                option.textContent = `${horario.profesor.nombre} / ${horario.modulos.hora_modulo}`;
-                horarioSelect.appendChild(option);
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Recuperación eliminada correctamente');
+                    const row = button.closest('tr');
+                    if (row) {
+                        row.remove();
+                    }
+                } else {
+                    alert('Error al eliminar la recuperación: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error al realizar la solicitud DELETE:', error);
+                alert('Hubo un error al intentar eliminar la recuperación.');
             });
-        })
-        .catch(error => console.error('Error al cargar horarios:', error));
-}
-
-function obtenerSalas() {
-    fetch('/salas/')
-        .then(response => response.json())
-        .then(data => {
-            const salaSelect = document.getElementById('sala');
-            salaSelect.innerHTML = '<option value="">Selecciona una sala</option>';
-            data.forEach(sala => {
-                const option = document.createElement('option');
-                option.value = sala.numero_sala;  
-                option.textContent = sala.numero_sala;  
-                salaSelect.appendChild(option);
-            });
-        })
-        .catch(error => console.error('Error al obtener salas:', error));
-}
-
-function getCSRFToken() {
-    const csrfToken = document.cookie.split(';').find(cookie => cookie.trim().startsWith('csrftoken='));
-    return csrfToken ? csrfToken.split('=')[1] : '';
-}
-
-function eliminarRecuperacion(button) {
-    const idRecuperacion = button.getAttribute('data-id');
-
-    if (!confirm('¿Estás seguro de que quieres eliminar esta recuperación?')) {
-        return;
     }
 
-    const csrfToken = getCSRFToken();
-
-    fetch(`/eliminar-recuperacion/${idRecuperacion}/`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken, 
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Recuperación eliminada correctamente');
-            const row = button.closest('tr'); 
-            if (row) {
-                row.remove(); 
-            }
-        } else {
-            alert('Error al eliminar la recuperación: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error al realizar la solicitud DELETE:', error);
-        alert('Hubo un error al intentar eliminar la recuperación.');
-    });
-}
-
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
     }
-    return cookieValue;
-}
 
 
 
