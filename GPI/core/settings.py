@@ -122,4 +122,5 @@ USE_TZ = True
 STATIC_URL = 'core/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'core/static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+LOGOUT_REDIRECT_URL = '/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

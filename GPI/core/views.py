@@ -1,14 +1,13 @@
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.db import connection, transaction
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
-from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Licencia, Reemplazos,Recuperacion, Carrera
+from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Licencia, Reemplazos,Recuperacion, Carrera, Usuario
 from django.core.exceptions import ObjectDoesNotExist
 import json
 import openpyxl
@@ -18,8 +17,10 @@ import locale
 import os
 from datetime import timedelta, datetime
 from collections import defaultdict
-
 locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+
+def es_admin(user):
+    return user.usuario == 'admin'
 
 def login_view(request):
     if request.method == 'POST':
@@ -33,6 +34,8 @@ def login_view(request):
             messages.error(request, 'Usuario o contraseña incorrectos.')
     return render(request, 'templates/login.html')
 
+@login_required(login_url='/') 
+@user_passes_test(es_admin)
 def docente_view(request):
     profesores = Profesor.objects.all()
     context = {
@@ -89,17 +92,13 @@ def guardar_licencia(request):
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'})
 
+@login_required(login_url='/') 
 def recuperacion_view(request):
     recuperaciones = Recuperacion.objects.all()
 
     return render(request, 'templates/gestion_recuperacion.html', {
         'recuperaciones': recuperaciones
     })        
-
-from django.http import JsonResponse
-
-
-#----------------------------------------------------
 
 def obtener_horarios_unicos(request):
     if request.method == 'GET':
@@ -254,7 +253,7 @@ def actualizar_recuperacion(request, id_recuperacion):
     else:
         return JsonResponse({'success': False, 'message': 'Método no permitido. Solo se permite PUT.'})
 
-
+@login_required(login_url='/login/') 
 def reportes_view(request):
     profesores = Profesor.objects.all()
 
@@ -274,7 +273,7 @@ def reportes_view(request):
     return render(request, 'templates/reportes.html', context)
 
 
-@login_required(login_url='/login/') 
+@login_required(login_url='/') 
 def base_view(request):
     return render(request, 'base.html')
 
@@ -516,7 +515,9 @@ def editar_profesor(request):
         except Exception as e:
             logger.error(f"Error al actualizar el profesor: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)
-   
+
+@login_required(login_url='/') 
+@user_passes_test(es_admin)
 def crear_docente_view(request):
     modulos = Modulo.objects.all()
     dias = DiaSemana.objects.all()
@@ -558,7 +559,6 @@ def crear_docente_view(request):
             messages.success(request, "Profesor agregado exitosamente.")
     return render(request, 'templates/crear_docente.html',context)
 
-
 def registrar_recuperacion(request):
     if request.method == 'POST':
         try:
@@ -588,16 +588,12 @@ def registrar_recuperacion(request):
                 logger.warning("Faltan datos en el formulario.")
                 return JsonResponse({'success': False, 'message': 'Faltan datos en el formulario.'}, status=400)
 
-            sala = sala 
-
+            sala = sala
             profesor = horario.profesor_id_profesor
             nombre_completo_profesor = f"{profesor.nombre} {profesor.segundo_nombre or ''} {profesor.apellido} {profesor.segundo_apellido or ''}".strip()
-
             asignatura = horario.asignatura_id_asignatura
             nombre_asignatura = asignatura.nombre_asignatura
-            
-
-
+        
             recuperacion = Recuperacion(
                 horario=horario,  
                 profesor=nombre_completo_profesor,  
@@ -609,7 +605,6 @@ def registrar_recuperacion(request):
                 sala=sala  
             )
             recuperacion.save()
-
             return JsonResponse({'success': True, 'message': 'Recuperación registrada correctamente.'})
 
         except Exception as e:
@@ -619,9 +614,7 @@ def registrar_recuperacion(request):
     logger.warning("Método no permitido para la solicitud.")
     return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
 
-
-
-
+@login_required(login_url='/') 
 def reemplazos_view(request):
     sql_query = '''
     select r.semana, 
@@ -648,6 +641,7 @@ def reemplazos_view(request):
     join test.modulo mo on mo.id_modulo = h.modulo_id_modulo
     join test.asignatura a on a.id_asignatura = h.asignatura_id_asignatura 
     join test.dia_semana ds on ds.id_dia = h.dia_semana_id_dia 
+    where r.reemplazado = True
     group by r.semana, r.fecha_reemplazo, r.profesor_reemplazo, s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia 
     order by r.fecha_reemplazo 
     '''
@@ -844,7 +838,8 @@ def registrar_reemplazo(request):
     logger.warning('Método no permitido. Solo se acepta POST.')
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-
+@login_required(login_url='/') 
+@user_passes_test(es_admin)
 def modificar_docente_view(request,id):
     modulos = Modulo.objects.all()
     dias = DiaSemana.objects.all()
@@ -978,6 +973,8 @@ def licencias_profesores(request):
 
     return JsonResponse(licencias_info, safe=False)
 
+@login_required(login_url='/') 
+@user_passes_test(es_admin)
 def gestionar_licencias(request, profesor_id):
     profesor = get_object_or_404(Profesor, id_profesor=profesor_id)
 
@@ -1161,15 +1158,12 @@ def horas_periodo(request):
             return JsonResponse({'error': 'La fecha de término no puede ser antes de la fecha de inicio'}, status=400)
 
         try:
-            # Obtener los datos del profesor
             profesor = Profesor.objects.get(id_profesor=docente_id)
             nombre_completo = f"{profesor.nombre} {profesor.segundo_nombre} {profesor.apellido} {profesor.segundo_apellido}".strip()
             logger.debug(f"Profesor encontrado: {nombre_completo}")
         except Profesor.DoesNotExist:
             logger.error(f"Profesor con id {docente_id} no encontrado.")
             return JsonResponse({'error': 'Profesor no encontrado'}, status=404)
-
-        # Ejecutar la consulta con los parámetros proporcionados (fechas y profesor)
         with connection.cursor() as cursor:
             cursor.execute('''
                 SELECT

@@ -88,6 +88,7 @@ CREATE TABLE reemplazos (
     semana INT NOT NULL,
     fecha_reemplazo DATE NOT NULL,
     profesor_reemplazo VARCHAR(255) NOT NULL,
+    reemplazado TINYINT(1) DEFAULT 1,
     horario_id_horario INT NOT NULL,
     UNIQUE(id_reemplazo, horario_id_horario),
     FOREIGN KEY (horario_id_horario) REFERENCES horario(id_horario)

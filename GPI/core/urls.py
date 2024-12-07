@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from django.shortcuts import redirect
+from django.contrib.auth.views import LogoutView
 from django.contrib.auth.decorators import login_required
 from .views import (login_view, reemplazos_view,guardar_licencia ,recuperacion_view,base_view, docente_view, reportes_view, CustomLogoutView,asignatura_view, sala_view,carrera_view, crear_docente_view, crear_profesor_y_horarios,
 profesores_con_licencia_no_asignada,obtener_clases_por_docente,obtener_profesores_disponibles,registrar_reemplazo, modificar_docente_view, modificar_profesor_y_horarios, registrar_recuperacion,
@@ -11,7 +12,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('base/', base_view, name='base'),
     path('', login_view, name='login'),
-    path('logout/', CustomLogoutView, name='logout'),
+    path('logout/', LogoutView.as_view(), name='logout'),
     path('reemplazos/', reemplazos_view, name='reemplazos'),
     path('recuperacion/', recuperacion_view, name='recuperacion'),
     path('docente/', docente_view, name='docente'),

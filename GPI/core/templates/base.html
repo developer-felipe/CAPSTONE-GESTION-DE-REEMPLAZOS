@@ -22,6 +22,7 @@
                     <a class="nav-link" href="{% url 'docente' %}">Profesores</a>
                 </li>
                 {% endif %}
+                {% if user.is_authenticated %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'reemplazos' %}">Gestion de Reemplazo</a>
                 </li>
@@ -31,12 +32,16 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'reportes' %}">Reportes</a>
                 </li>
-                {% if user.is_authenticated %}
                 <li class="nav-item ms-3">
-                    <a class="nav-link" href="{% url 'logout' %}">
+                    <a class="nav-link" href="javascript:void(0);"
+                        onclick="document.getElementById('logout-form').submit();">
                         <i class="material-icons me-2">logout</i>
                     </a>
+                    <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
+                        {% csrf_token %}
+                    </form>
                 </li>
+                {% csrf_token %}
                 {% endif %}
             </ul>
         </div>

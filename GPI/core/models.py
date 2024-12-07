@@ -115,6 +115,7 @@ class Reemplazos(models.Model):
     semana = models.IntegerField()
     fecha_reemplazo = models.DateField()
     profesor_reemplazo = models.CharField(max_length=255)
+    reemplazado = models.BooleanField(default=True)
     horario = models.ForeignKey(Horario, models.DO_NOTHING, db_column='horario_id_horario')
 
     class Meta:
