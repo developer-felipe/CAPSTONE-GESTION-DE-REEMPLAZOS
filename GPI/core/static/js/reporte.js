@@ -1,14 +1,14 @@
 document.addEventListener("DOMContentLoaded", function () {
+
   const formReemplazo = document.getElementById("formReemplazo");
   formReemplazo.addEventListener("click", function () {
-    console.log("click en formReemplazo");
+    document.getElementById('reporte_dara').innerHTML="";
     fetch("/profesores/")
       .then((response) => response.json())
       .then((profesores) => {
         const divSelection = document.querySelector("#reporte_reemplazo");
         let opcionesDocentes =
           '<option value="">Seleccione un docente</option>';
-
         profesores.forEach((profesor) => {
           opcionesDocentes += `<option value="${profesor.id}">${profesor.nombre_completo}</option>`;
         });
@@ -43,7 +43,6 @@ document.addEventListener("DOMContentLoaded", function () {
               </div>
           </div>
         `;
-        document.getElementById("reporte_dara").innerHTML = "";
       })
       .catch((error) =>
         console.error("Error al cargar los profesores:", error)
@@ -52,6 +51,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const formDARA = document.getElementById("formDARA");
   formDARA.addEventListener("click", function () {
+    document.getElementById('reporte_reemplazo').innerHTML="";
+    document.getElementById('reporte-section').innerHTML="";
     console.log("click en formDARA");
     fetch("/licencias_profesores/")
       .then((response) => response.json())
@@ -112,15 +113,16 @@ const csrftoken = getCookie("csrftoken");
 async function enviarDatos() {
   const fechaInicio = document.getElementById("fechaInicio").value;
   const fechaTermino = document.getElementById("fechaFin").value;
-  const profesorId = document.getElementById("docente").value;
+  const profesorSelect = document.getElementById("docente")
+  const profesorId = profesorSelect.value;
+  const profesorReemplazo = profesorSelect.options[profesorSelect.selectedIndex].textContent;
 
   if (fechaInicio && fechaTermino && profesorId) {
     console.log("Fecha Inicio:", fechaInicio);
     console.log("Fecha Término:", fechaTermino);
     console.log("ID Profesor:", profesorId);
-
+    console.log("Profesor:", profesorReemplazo)
     const url = `/horas_periodo/?fechaInicio=${fechaInicio}&fechaTermino=${fechaTermino}&profesorId=${profesorId}`;
-
     try {
       const response = await fetch(url, {
         method: "GET",
@@ -128,20 +130,16 @@ async function enviarDatos() {
           "X-CSRFToken": csrftoken,
         },
       });
-
       if (!response.ok) {
         throw new Error(`Error al enviar datos: ${response.statusText}`);
       }
-
       const result = await response.json();
       console.log("Respuesta del servidor:", result);
-
       const reemplazos = result.reemplazos;
-      const horas_horarios = result.horas_horarios;
-      const horas_reemplazo = result.horas_reemplazo;
-      const total_horas = result.horas_totales;
+      const modulosXhorario = result.modulosXhorario;
+      const modulos_reemplazo = result.modulos_reemplazo;
+      const modulos_totales = result.modulos_totales;
       const tipo_pago = result.tipo_pago;
-
       const reportSection = document.querySelector(".report-section");
       reportSection.innerHTML = "";
 
@@ -190,16 +188,16 @@ async function enviarDatos() {
                           <tr class="font-weight-bold">
                           </tr>
                           <tr>
-                              <td colspan="8" class="font-weight-bold">Horas por Horario:</td>
-                              <td>${horas_horarios}</td>
+                              <td colspan="8" class="font-weight-bold">N° de módulos por Horario:</td>
+                              <td>${modulosXhorario}</td>
                           </tr>
                           <tr>
-                              <td colspan="8" class="font-weight-bold">Horas de Reemplazo:</td>
-                              <td>${horas_reemplazo}</td>
+                              <td colspan="8" class="font-weight-bold">N° de módulos de Reemplazo:</td>
+                              <td>${modulos_reemplazo}</td>
                           </tr>
                           <tr>
-                              <td colspan="8" class="font-weight-bold">Horas totales:</td>
-                              <td>${total_horas}</td>
+                              <td colspan="8" class="font-weight-bold">Módulos totales:</td>
+                              <td>${modulos_totales}</td>
                           </tr>
                           <tr>
                               <td colspan="8" class="font-weight-bold">Tipo de pago:</td>
@@ -215,7 +213,6 @@ async function enviarDatos() {
               <button class="btn btn-dark" onclick="emitirInforme()">Emitir Informe</button>
           </div>
       `;
-
       reportSection.innerHTML = tableHTML;
     } catch (error) {
       console.error("Error al enviar los datos:", error);

@@ -1149,6 +1149,8 @@ def horas_periodo(request):
         logger.error("Faltan parámetros en la solicitud.")
         return JsonResponse({'error': 'Faltan parámetros'}, status=400)
 
+    modulosXhorario = Horario.objects.filter(profesor_id_profesor=docente_id, activo=True).count()
+
     try:
         fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
         fecha_termino = datetime.strptime(fecha_termino, '%Y-%m-%d').date()
@@ -1164,6 +1166,7 @@ def horas_periodo(request):
         except Profesor.DoesNotExist:
             logger.error(f"Profesor con id {docente_id} no encontrado.")
             return JsonResponse({'error': 'Profesor no encontrado'}, status=404)
+
         with connection.cursor() as cursor:
             cursor.execute('''
                 SELECT
@@ -1187,15 +1190,15 @@ def horas_periodo(request):
                 FROM test.reemplazos r
                 JOIN test.horario h ON h.id_horario = r.horario_id_horario
                 JOIN test.profesor p ON p.id_profesor = h.profesor_id_profesor
-                JOIN test.sala s ON s.id_sala = h.id_sala
-                JOIN test.modulo mo ON mo.id_modulo = h.id_modulo
+                JOIN test.sala s ON s.id_sala = h.sala_id_sala 
+                JOIN test.modulo mo ON mo.id_modulo = h.modulo_id_modulo
                 JOIN test.asignatura a ON a.id_asignatura = h.asignatura_id_asignatura
                 JOIN test.dia_semana ds ON ds.id_dia = h.dia_semana_id_dia
                 WHERE r.fecha_reemplazo BETWEEN %s AND %s
-                AND r.profesor_id_profesor = %s
+                AND r.profesor_reemplazo = %s
                 GROUP BY r.semana, r.fecha_reemplazo, r.profesor_reemplazo, s.numero_sala, h.seccion, h.profesor_id_profesor, h.dia_semana_id_dia
                 ORDER BY r.fecha_reemplazo
-            ''', [fecha_inicio, fecha_termino, docente_id])
+            ''', [fecha_inicio, fecha_termino, nombre_completo])
 
             reemplazos = cursor.fetchall()
 
@@ -1216,13 +1219,15 @@ def horas_periodo(request):
                 'id_modulo': row[11],
                 'id_dia': row[12]
             })
-        horas_reemplazo = sum(reemplazo['registros'] for reemplazo in reemplazos_listados)
-        horas_totales = horas_reemplazo
-        tipo_pago = "BONO" if horas_totales >= 40 else "PROGRAMACIÓN"
+
+        modulos_reemplazo = sum(reemplazo['registros'] for reemplazo in reemplazos_listados)
+        modulos_totales = modulos_reemplazo + modulosXhorario
+        tipo_pago = "BONO" if modulos_totales >= 40 else "PROGRAMACIÓN"
 
         return JsonResponse({
-            'horas_reemplazo': horas_reemplazo,
-            'horas_totales': horas_totales,
+            'modulos_reemplazo': modulos_reemplazo,
+            'modulosXhorario': modulosXhorario,
+            'modulos_totales': modulos_totales,
             'tipo_pago': tipo_pago,
             'reemplazos': reemplazos_listados
         })
@@ -1231,21 +1236,8 @@ def horas_periodo(request):
         logger.error(f"Error inesperado: {str(e)}")
         return JsonResponse({'error': f'Error: {str(e)}'}, status=500)
 
-def copy_cell_border(from_cell, to_cell):
-    to_cell.border = Border(
-        left=from_cell.border.left,
-        right=from_cell.border.right,
-        top=from_cell.border.top,
-        bottom=from_cell.border.bottom,
-        diagonal=from_cell.border.diagonal,
-        diagonal_direction=from_cell.border.diagonal_direction,
-        outline=from_cell.border.outline,
-        vertical=from_cell.border.vertical,
-        horizontal=from_cell.border.horizontal
-    )
-
 def reporte_dara(request):
-    licenciaID = request.GET.get('licenciaID')
+    licenciaID = requesdst.GET.get('licenciaID')
     fechaInicio = request.GET.get('fechaInicio')
     fechaTermino = request.GET.get('fechaTermino')
 
