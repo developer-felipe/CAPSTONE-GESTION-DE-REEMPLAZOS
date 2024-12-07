@@ -226,6 +226,14 @@
     }
 
 
+    document.querySelectorAll('.modal.fade').forEach(modal => {
+        modal.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+            }
+        });
+    });
+
     function obtenerDiaModulo(button) {
         const moduloID = button.getAttribute('data-modulo-id');
         const diaID = button.getAttribute('data-dia-id');
@@ -245,7 +253,7 @@
         const carreraSelect = document.getElementById('carrera');
         const carreraID = carreraSelect.value;
         const salaID = salaSelect.value;
-        if (asignaturaID && jornadaSelect && seccionSelect && salaID && salaID!="agregar" && carreraID && carreraID!="agregar") {
+        if (asignaturaID && jornadaSelect && seccionSelect && salaID && salaID != "agregar" && carreraID && carreraID != "agregar") {
             const array_pos = horariosAsignados.length
             horariosAsignados.push({
                 moduloID: moduloID,
@@ -343,8 +351,6 @@
                 });
         });
     });
-
-
 
     function obtenerSalas() {
         $.ajax({
