@@ -259,3 +259,29 @@ async function DARA() {
     console.error("Faltan los parámetros necesarios.");
   }
 }
+
+function emitirInforme() {
+  const tableElement = document.querySelector('table');
+  const options = {
+      margin: [15, 10, 0, 10],
+      filename: 'informe_reemplazo.pdf',
+      html2canvas: {
+          logging: true,
+          useCORS: true,
+          letterRendering: true,
+          scale: 1,
+      },
+      jsPDF: {
+          unit: 'mm',
+          format: 'tabloid',
+          orientation: 'landscape',
+          compress: true,
+          fontSize: 4,
+      }
+  };
+  
+  html2pdf()
+      .from(tableElement)
+      .set(options)
+      .save();
+}
