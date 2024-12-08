@@ -30,6 +30,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="recuperacion-form">
+                    {% csrf_token %}
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="profesor" class="form-label">Selecciona un profesor</label>
@@ -67,6 +68,9 @@
                             <select name="sala" id="sala" class="form-control" required>
                                 <option value="">Selecciona una sala</option>
                             </select>
+                        </div>
+                        <div>
+                            <input type="hidden" id="horario_id_horario"  name="horario_id_horario" value="{{ horario_id_horario  }}">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -257,27 +261,113 @@
                     option.value = asignaturas.id_asignatura
                     option.textContent = asignaturas.nombre_asignatura, `(${asignaturas.seccion})`, asignaturas.nombre_carrera
                     selectAsignatura.appendChild(option)
-                    selectModulo = document.getElementById('edit_numero_modulos')
-                    selectModulo.value = asignaturas.numero_modulos
-                    selectModulo.setAttribute('data-bs-id', `${asignaturas.horarios}`)
-                })
+
+                    const horarioInput = document.getElementById('horario_id_horario'); 
+
+                                    
+                    if (asignaturas.horarios) {
+                        const horarios = asignaturas.horarios.split('-'); 
+                        console.log('Horarios separados:', horarios);
+
+                        if (horarios.length > 0) {
+                            const primerHorario  = horarios[0];
+                            console.log('Primer horario seleccionado automáticamente:', primerHorario);
+
+                            horarioInput.value = primerHorario ;
+                        }
+                    } else {
+                        console.error('No se encontraron horarios para esta asignatura:', asignaturas);
+                    }
+
+                    const selectModulo = document.getElementById('edit_numero_modulos');
+                    selectModulo.value = asignaturas.numero_modulos || '';
+                    selectModulo.setAttribute('data-bs-id', asignaturas.horarios || '');
+                });
             } catch (error) {
                 console.error('Error:', error);
             }
-
         })
     });
 
-    botonEnvio = document.getElementById('envio')
+    function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+var csrfToken = getCookie('csrftoken');
+
+document.addEventListener('DOMContentLoaded', function () {
+    const botonEnvio = document.getElementById('envio');
     botonEnvio.addEventListener('click', function () {
-        selectModulo = document.getElementById('edit_numero_modulos')
-        profesor = document.getElementById('profesor').options[document.getElementById('profesor').selectedIndex].textContent;
-        asignatura = document.getElementById('asignatura').options[document.getElementById('asignatura').selectedIndex].textContent;
-        fecha_clase = document.getElementById('fecha_clase').value;
-        fecha_recuperacion = document.getElementById('fecha_recuperacion').value;
-        sala = document.getElementById('sala').options ? document.getElementById('sala').options[document.getElementById('sala').selectedIndex].textContent : document.getElementById('sala').value;
-        console.log(profesor,fechaClase,fecha_recuperacion,sala,asignatura)
-    })
+        const selectModulo = document.getElementById('edit_numero_modulos').value;
+        const profesor = document.getElementById('profesor').options[document.getElementById('profesor').selectedIndex].value; 
+        const asignatura = document.getElementById('asignatura').options[document.getElementById('asignatura').selectedIndex].value; 
+        const fecha_clase = document.getElementById('fecha_clase').value;
+        const fecha_recuperacion = document.getElementById('fecha_recuperacion').value;
+        const sala = document.getElementById('sala').options ? document.getElementById('sala').options[document.getElementById('sala').selectedIndex].value : document.getElementById('sala').value;
+        const hora_recuperacion = document.getElementById('hora_recuperacion').value;
+        
+        const horarioId = document.getElementById('horario_id_horario').value; 
+
+        if (!horarioId) {
+            console.error('No se encontró un horario válido');
+            alert('El campo "Horario" no puede estar vacío');
+            return; 
+        }
+
+
+        const datos = {
+            'selectModulo': selectModulo,
+            'profesor': profesor,
+            'asignatura': asignatura,
+            'fecha_clase': fecha_clase,
+            'fecha_recuperacion': fecha_recuperacion,
+            'sala': sala,
+            'hora_recuperacion': hora_recuperacion,
+            'horario_id_horario': horarioId  
+        };
+
+        console.log('Datos enviados:', datos);  
+
+        fetch('/registrar_recuperacion/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken 
+            },
+            body: JSON.stringify(datos) 
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(errorText => { throw new Error(errorText); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Recuperación guardada correctamente');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al guardar la recuperación: ' + error.message);
+        });
+    });
+});
+
+
 
     function obtenerSalas() {
         fetch('/salas/')

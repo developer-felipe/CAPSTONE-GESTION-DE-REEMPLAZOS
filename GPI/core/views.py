@@ -195,6 +195,8 @@ def obtener_asignaturas_por_fecha(request):
     logger.warning("Método no permitido para esta solicitud")
     return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
 
+
+
 def obtener_horarios_recuperacion(request):
     horarios = Horario.objects.all()  
     horarios_data = []
@@ -227,45 +229,7 @@ def eliminar_recuperacion(request, id_recuperacion):
 
 
 
-def obtener_horario(request):
-    if request.method == 'GET':
-        try:
-            profesor_id = request.GET.get('profesorId')
-            asignatura_id = request.GET.get('asignaturaId')
-            fecha_clase = request.GET.get('fecha_clase')
 
-            fecha_clase_date = parse_date(fecha_clase)
-            if not fecha_clase_date:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'La fecha de clase no es válida.'
-                }, status=400)
-
-            dia_semana = fecha_clase_date.weekday() + 1
-
-            horarios = Horario.objects.filter(
-                profesor_id_profesor=profesor_id,
-                asignatura_id_asignatura=asignatura_id,
-                dia_semana_id_dia__id_dia=dia_semana
-            ).values('id_horario')
-
-            if horarios.exists():
-                horarios_list = list(horarios)
-                return JsonResponse({
-                    'success': True,
-                    'horarios': horarios_list
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'No se encontraron horarios para la asignatura, profesor y fecha especificados.'
-                }, status=404)
-
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': f'Error inesperado: {str(e)}'
-            }, status=500)
 
 
 def obtener_horarios_por_profesor(request):
@@ -628,40 +592,58 @@ def crear_docente_view(request):
             messages.success(request, "Profesor agregado exitosamente.")
     return render(request, 'templates/crear_docente.html',context)
 
-@csrf_exempt  
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+
+@csrf_exempt
 def registrar_recuperacion(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        profesor_id = data['profesor']  
-        asignatura_id = data['asignatura']  
-        numero_modulos = data['numero_modulos']
-        fecha_clase = data['fecha_clase']
-        fecha_recuperacion = data['fecha_recuperacion']
-        hora_recuperacion = data['hora_recuperacion']
-        sala = data['sala']
-        horario_id = data['horarioid']  
-        
         try:
-            profesor_obj = Profesor.objects.get(id_profesor=profesor_id)  
-            asignatura_obj = Asignatura.objects.get(id_asignatura=asignatura_id)
-            horario_obj = Horario.objects.get(id_horario=horario_id)
-        except (Profesor.DoesNotExist, Asignatura.DoesNotExist, Horario.DoesNotExist) as e:
-            return JsonResponse({'success': False, 'message': f'{str(e)} no encontrado'}, status=400)
+            data = json.loads(request.body)  
+            horario_id = data.get('horario_id_horario')  
+            
+            if not horario_id:
+                return JsonResponse({'success': False, 'message': 'El campo "horario_id_horario" es obligatorio'}, status=400)
 
-        profesor_nombre_completo = f"{profesor_obj.nombre} {profesor_obj.segundo_nombre}{profesor_obj.apellido} {profesor_obj.segundo_apellido}"
-        recuperacion = Recuperacion(
-            profesor=profesor_nombre_completo ,  
-            asignatura=asignatura_obj.nombre_asignatura,  
-            numero_modulos=numero_modulos,
-            fecha_clase=fecha_clase,
-            fecha_recuperacion=fecha_recuperacion,
-            hora_recuperacion=hora_recuperacion,
-            sala=sala,
-            horario=horario_obj  
-        )
-        recuperacion.save()
-        
-        return JsonResponse({'success': True, 'message': 'Recuperación guardada correctamente'})
+            profesor_id = data['profesor']
+            asignatura_id = data['asignatura']
+            numero_modulos = data['selectModulo']  
+            fecha_clase = data['fecha_clase']
+            fecha_recuperacion = data['fecha_recuperacion']
+            hora_recuperacion = data['hora_recuperacion']
+            sala = data['sala']
+
+            profesor_obj = Profesor.objects.get(id_profesor=profesor_id)
+            asignatura_obj = Asignatura.objects.get(id_asignatura=asignatura_id)
+            horario_obj = Horario.objects.get(id_horario=horario_id)  
+
+            profesor_nombre_completo = f"{profesor_obj.nombre} {profesor_obj.segundo_nombre} {profesor_obj.apellido} {profesor_obj.segundo_apellido}"
+            recuperacion = Recuperacion(
+                profesor=profesor_nombre_completo,
+                asignatura=asignatura_obj.nombre_asignatura,
+                numero_modulos=numero_modulos,
+                fecha_clase=fecha_clase,
+                fecha_recuperacion=fecha_recuperacion,
+                hora_recuperacion=hora_recuperacion,
+                sala=sala,
+                horario=horario_obj  
+            )
+            recuperacion.save()
+
+            return JsonResponse({'success': True, 'message': 'Recuperación guardada correctamente'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    else:
+        return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+
+
+
+
 
 
 @login_required(login_url='/') 
