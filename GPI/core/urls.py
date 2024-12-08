@@ -5,7 +5,7 @@ from django.contrib.auth.views import LogoutView
 from django.contrib.auth.decorators import login_required
 from .views import (login_view, reemplazos_view,guardar_licencia ,recuperacion_view,base_view, docente_view, reportes_view, CustomLogoutView,asignatura_view, sala_view,carrera_view, crear_docente_view, crear_profesor_y_horarios,
 profesores_con_licencia_no_asignada,obtener_clases_por_docente,obtener_profesores_disponibles,registrar_reemplazo, modificar_docente_view, modificar_profesor_y_horarios, registrar_recuperacion,
- eliminar_recuperacion,obtener_asignaturas_por_fecha, obtener_horarios_recuperacion ,obtener_horarios_unicos,actualizar_recuperacion , gestionar_licencias,editar_licencia ,eliminar_licencia ,todas_salas,todas_asignaturas,docente_recuperación, docente_asignatura, profesor_por_nombre, modulo_por_id,
+ eliminar_recuperacion,obtener_asignaturas_por_fecha,obtener_horario , obtener_horarios_por_profesor, obtener_horarios_recuperacion ,obtener_horarios_unicos,actualizar_recuperacion , gestionar_licencias,editar_licencia ,eliminar_licencia ,todas_salas,todas_asignaturas,docente_recuperación, docente_asignatura, profesor_por_nombre, modulo_por_id,
  actualizar_reemplazo,obtenerHorario, editar_profesor, horas_periodo, profesores,licencias_profesores,reporte_dara)
 
 urlpatterns = [
@@ -32,6 +32,11 @@ urlpatterns = [
     
     path('modificar_docente/<int:id>/', modificar_docente_view, name='modificar_docente'),
     path('modificar_profesor_y_horarios/', modificar_profesor_y_horarios, name='modificar_profesor_y_horarios'),
+
+    path('obtener_horario/', obtener_horario, name='obtener_horario'),
+    path('obtener-horariosprofe/', obtener_horarios_por_profesor, name='obtener_horarios'),
+
+
 
     path('horarios/unicos/', obtener_horarios_unicos, name='obtener_horarios_unicos'),
     path('horarios/recuperacion/', obtener_horarios_recuperacion, name='obtener_horarios_recuperacion'),

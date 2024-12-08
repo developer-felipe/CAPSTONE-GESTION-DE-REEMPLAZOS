@@ -10,7 +10,12 @@ from django.http import JsonResponse, HttpResponse
 from .models import Modulo, DiaSemana, Asignatura, Sala, Profesor, Horario, Licencia, Reemplazos,Recuperacion, Carrera, Usuario
 from django.core.exceptions import ObjectDoesNotExist
 import json
+import io
+import subprocess
 import openpyxl
+import zipfile
+import rarfile
+import tempfile
 from openpyxl.styles import NamedStyle, Border, Alignment
 import logging
 import locale
@@ -162,11 +167,13 @@ def obtener_asignaturas_por_fecha(request):
                         'jornada': horario.jornada,
                         'carrera_id': horario.carrera_id_carrera.nombre_carrera,
                         'modulos': set(),
-                        'numero_modulos': 0 
+                        'numero_modulos': 0 ,
+                        'horarios': []
                     }
                 
                 agrupados[clave]['modulos'].add(horario.modulo_id_modulo.hora_modulo)
                 agrupados[clave]['numero_modulos'] = len(agrupados[clave]['modulos'])
+                agrupados[clave]['horarios'].append(str(horario.id_horario))
 
             asignaturas_data = [
                 {
@@ -175,18 +182,16 @@ def obtener_asignaturas_por_fecha(request):
                     'seccion': valor['seccion'],
                     'jornada': valor['jornada'],
                     'carrera_id': valor['carrera_id'],
-                    'numero_modulos': valor['numero_modulos']
+                    'numero_modulos': valor['numero_modulos'],
+                    'horarios': '-'.join(valor['horarios'])
                 }
                 for valor in agrupados.values()
             ]
-            
             logger.info(f"Asignaturas encontradas: {len(asignaturas_data)}")
             return JsonResponse({'success': True, 'asignaturas': asignaturas_data})
-
         except Exception as e:
             logger.error(f"Error al procesar la solicitud: {str(e)}", exc_info=True)
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
     logger.warning("Método no permitido para esta solicitud")
     return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
 
@@ -219,39 +224,103 @@ def eliminar_recuperacion(request, id_recuperacion):
         return JsonResponse({'success': False, 'message': 'Recuperación no encontrada'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    
-@csrf_protect  
-def actualizar_recuperacion(request, id_recuperacion):
-    if request.method == 'PUT': 
+
+
+
+def obtener_horario(request):
+    if request.method == 'GET':
         try:
-            data = json.loads(request.body)
-            
-            if not data.get('numero_modulos') or not data.get('fecha_clase') or not data.get('fecha_recuperacion') or not data.get('hora_recuperacion') or not data.get('sala'):
-                return JsonResponse({'success': False, 'message': 'Faltan datos requeridos.'})
-            
-            recuperacion = Recuperacion.objects.get(id_recuperacion=id_recuperacion)
-            
-            recuperacion.numero_modulos = data.get('numero_modulos')
-            recuperacion.fecha_clase = data.get('fecha_clase')
-            recuperacion.fecha_recuperacion = data.get('fecha_recuperacion')
-            recuperacion.hora_recuperacion = data.get('hora_recuperacion')
-            recuperacion.sala = data.get('sala')
-            
-            recuperacion.save()
+            profesor_id = request.GET.get('profesorId')
+            asignatura_id = request.GET.get('asignaturaId')
+            fecha_clase = request.GET.get('fecha_clase')
 
-            return JsonResponse({'success': True, 'message': 'Recuperación actualizada correctamente.'})
+            fecha_clase_date = parse_date(fecha_clase)
+            if not fecha_clase_date:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'La fecha de clase no es válida.'
+                }, status=400)
 
-        except Recuperacion.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Recuperación no encontrada.'})
+            dia_semana = fecha_clase_date.weekday() + 1
 
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Error al procesar los datos JSON.'})
+            horarios = Horario.objects.filter(
+                profesor_id_profesor=profesor_id,
+                asignatura_id_asignatura=asignatura_id,
+                dia_semana_id_dia__id_dia=dia_semana
+            ).values('id_horario')
+
+            if horarios.exists():
+                horarios_list = list(horarios)
+                return JsonResponse({
+                    'success': True,
+                    'horarios': horarios_list
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No se encontraron horarios para la asignatura, profesor y fecha especificados.'
+                }, status=404)
 
         except Exception as e:
-            return JsonResponse({'success': False, 'message': f'Error inesperado: {str(e)}'})
+            return JsonResponse({
+                'success': False,
+                'message': f'Error inesperado: {str(e)}'
+            }, status=500)
+
+
+def obtener_horarios_por_profesor(request):
+    profesor_id = request.GET.get('profesorId')
+    if not profesor_id:
+        return JsonResponse({'error': 'ID del profesor es requerido'}, status=400)
     
+    horarios = Horario.objects.filter(profesor_id=profesor_id).values('id', 'id_horario')
+    return JsonResponse(list(horarios), safe=False)
+
+
+
+    
+@csrf_protect
+def actualizar_recuperacion(request, id_recuperacion):
+    if request.method == 'POST':
+        print("Recibiendo datos del formulario:")
+        print(request.POST)  
+
+        if request.POST.get('_method') == 'PUT':
+            try:
+                recuperacion = get_object_or_404(Recuperacion, id=id_recuperacion)
+
+                profesor = get_object_or_404(Profesor, id=request.POST.get('profesor'))
+                asignatura = get_object_or_404(Asignatura, id=request.POST.get('asignatura'))
+                sala = get_object_or_404(Sala, id=request.POST.get('sala'))
+
+                recuperacion.profesor = profesor
+                recuperacion.asignatura = asignatura
+                recuperacion.numero_modulos = request.POST.get('numero_modulos')
+                recuperacion.fecha_clase = request.POST.get('fecha_clase')
+                recuperacion.fecha_recuperacion = request.POST.get('fecha_recuperacion')
+                recuperacion.hora_recuperacion = request.POST.get('hora_recuperacion')
+                recuperacion.sala = sala
+
+                horario_id = request.POST.get('horario_id')
+                if horario_id:
+                    horario = get_object_or_404(Horario, id=horario_id)
+                    recuperacion.horario = horario
+
+                recuperacion.save()
+
+                return JsonResponse({'success': True, 'message': 'Recuperación actualizada correctamente.'})
+
+            except Exception as e:
+                print("Error al actualizar:", str(e))
+                return JsonResponse({'success': False, 'message': f'Error inesperado: {str(e)}'})
+
+        else:
+            return JsonResponse({'success': False, 'message': 'Método no permitido. Solo se permite PUT.'})
+
     else:
-        return JsonResponse({'success': False, 'message': 'Método no permitido. Solo se permite PUT.'})
+        return JsonResponse({'success': False, 'message': 'Método no permitido. Solo se permite POST.'})
+
+
 
 @login_required(login_url='/login/') 
 def reportes_view(request):
@@ -559,60 +628,41 @@ def crear_docente_view(request):
             messages.success(request, "Profesor agregado exitosamente.")
     return render(request, 'templates/crear_docente.html',context)
 
+@csrf_exempt  
 def registrar_recuperacion(request):
     if request.method == 'POST':
-        try:
-            logger.info("Iniciando registro de recuperación.")
-            data = json.loads(request.body)
-            logger.debug(f"Datos recibidos: {data}")
-
-            horario_id = data.get('horario')  
-
-            if not horario_id:
-                logger.warning("Faltan datos en el formulario.")
-                return JsonResponse({'success': False, 'message': 'Faltan datos en el formulario.'}, status=400)
-
-            try:
-                horario = Horario.objects.get(id_horario=horario_id)  
-            except Horario.DoesNotExist:
-                logger.error("Horario no encontrado.")
-                return JsonResponse({'success': False, 'message': 'Horario no válido.'}, status=400)
-
-            numero_modulos = data.get('numero_modulos')
-            fecha_clase = data.get('fecha_clase')
-            fecha_recuperacion = data.get('fecha_recuperacion')
-            hora_recuperacion = data.get('hora_recuperacion')
-            sala = data.get('sala')  
-
-            if not all([numero_modulos, fecha_clase, fecha_recuperacion, hora_recuperacion, sala]):
-                logger.warning("Faltan datos en el formulario.")
-                return JsonResponse({'success': False, 'message': 'Faltan datos en el formulario.'}, status=400)
-
-            sala = sala
-            profesor = horario.profesor_id_profesor
-            nombre_completo_profesor = f"{profesor.nombre} {profesor.segundo_nombre or ''} {profesor.apellido} {profesor.segundo_apellido or ''}".strip()
-            asignatura = horario.asignatura_id_asignatura
-            nombre_asignatura = asignatura.nombre_asignatura
+        data = json.loads(request.body)
+        profesor_id = data['profesor']  
+        asignatura_id = data['asignatura']  
+        numero_modulos = data['numero_modulos']
+        fecha_clase = data['fecha_clase']
+        fecha_recuperacion = data['fecha_recuperacion']
+        hora_recuperacion = data['hora_recuperacion']
+        sala = data['sala']
+        horario_id = data['horarioid']  
         
-            recuperacion = Recuperacion(
-                horario=horario,  
-                profesor=nombre_completo_profesor,  
-                asignatura=nombre_asignatura,  
-                numero_modulos=numero_modulos,
-                fecha_clase=fecha_clase,
-                fecha_recuperacion=fecha_recuperacion,
-                hora_recuperacion=hora_recuperacion,
-                sala=sala  
-            )
-            recuperacion.save()
-            return JsonResponse({'success': True, 'message': 'Recuperación registrada correctamente.'})
+        try:
+            profesor_obj = Profesor.objects.get(id_profesor=profesor_id)  
+            asignatura_obj = Asignatura.objects.get(id_asignatura=asignatura_id)
+            horario_obj = Horario.objects.get(id_horario=horario_id)
+        except (Profesor.DoesNotExist, Asignatura.DoesNotExist, Horario.DoesNotExist) as e:
+            return JsonResponse({'success': False, 'message': f'{str(e)} no encontrado'}, status=400)
 
-        except Exception as e:
-            logger.error(f"Ocurrió un error al registrar la recuperación: {str(e)}", exc_info=True)
-            return JsonResponse({'success': False, 'message': f'Ocurrió un error: {str(e)}'}, status=500)
-    
-    logger.warning("Método no permitido para la solicitud.")
-    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+        profesor_nombre_completo = f"{profesor_obj.nombre} {profesor_obj.segundo_nombre}{profesor_obj.apellido} {profesor_obj.segundo_apellido}"
+        recuperacion = Recuperacion(
+            profesor=profesor_nombre_completo ,  
+            asignatura=asignatura_obj.nombre_asignatura,  
+            numero_modulos=numero_modulos,
+            fecha_clase=fecha_clase,
+            fecha_recuperacion=fecha_recuperacion,
+            hora_recuperacion=hora_recuperacion,
+            sala=sala,
+            horario=horario_obj  
+        )
+        recuperacion.save()
+        
+        return JsonResponse({'success': True, 'message': 'Recuperación guardada correctamente'})
+
 
 @login_required(login_url='/') 
 def reemplazos_view(request):
@@ -1237,7 +1287,7 @@ def horas_periodo(request):
         return JsonResponse({'error': f'Error: {str(e)}'}, status=500)
 
 def reporte_dara(request):
-    licenciaID = requesdst.GET.get('licenciaID')
+    licenciaID = request.GET.get('licenciaID')
     fechaInicio = request.GET.get('fechaInicio')
     fechaTermino = request.GET.get('fechaTermino')
 
@@ -1255,7 +1305,7 @@ def reporte_dara(request):
             SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(mo.hora_modulo ORDER BY mo.hora_modulo SEPARATOR ', '), ',', -1), '-', -1)
         ) AS modulo,
         ds.nombre_dia,
-    CONCAT(MIN(r.fecha_reemplazo), '/', MAX(r.fecha_reemplazo)) AS fechas_reemplazo,
+        CONCAT(MIN(r.fecha_reemplazo), '/', MAX(r.fecha_reemplazo)) AS fechas_reemplazo,
         r.profesor_reemplazo,
         l.motivo,
         l.observaciones
@@ -1318,12 +1368,13 @@ def reporte_dara(request):
 
         asignaturas_y_carreras[key].append(reemplazo)
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    temp_dir = tempfile.mkdtemp()
     file_paths = []
 
     for (asignatura, carrera), reemplazos in asignaturas_y_carreras.items():
-        file_path = os.path.join(base_dir, 'static', 'documents', 'DARA.xlsx')
-        wb = openpyxl.load_workbook(file_path)
+        file_path = os.path.join(temp_dir, f"{asignatura}_{carrera}.xlsx")
+        base_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'documents', 'DARA.xlsx')
+        wb = openpyxl.load_workbook(base_file_path)
         ws = wb.active
 
         row_actual = 34
@@ -1360,14 +1411,21 @@ def reporte_dara(request):
 
             row_actual += 1
             row_reemplazo += 1
-            if row_actual > 34+8:
-                ws.insert_rows(row_actual+1)
-                ws.insert_rows(row_reemplazo+1)
+            if row_actual > 34 + 8:
+                ws.insert_rows(row_actual + 1)
+                ws.insert_rows(row_reemplazo + 1)
 
-        file_name = f"{asignatura}_{carrera}.xlsx"
-        output_file_path = os.path.join(base_dir, 'static', 'documents', file_name)
+        wb.save(file_path)
+        file_paths.append(file_path)
 
-        wb.save(output_file_path)
-        file_paths.append(output_file_path)
+    zip_file_path = os.path.join(temp_dir, 'reporte_dara.zip')
+    with zipfile.ZipFile(zip_file_path, 'w') as zipf:
+        for file_path in file_paths:
+            zipf.write(file_path, os.path.basename(file_path)) 
 
-    return JsonResponse({"files": file_paths, "reemplazos_listados": reemplazos_listados}, safe=False)
+    with open(zip_file_path, 'rb') as f:
+        response = JsonResponse({"message": "Archivo ZIP generado correctamente."})
+        response['Content-Disposition'] = f'attachment; filename="reporte_dara.zip"'
+        response['Content-Type'] = 'application/zip'
+        response.write(f.read())
+        return response

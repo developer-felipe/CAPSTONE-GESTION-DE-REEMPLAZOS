@@ -206,7 +206,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', async function () {
 
-        obtenerHorariosRecuperacion();
         obtenerSalas();
 
         function getCSRFToken() {
@@ -263,7 +262,6 @@
                     selectModulo.value = asignaturas.numero_modulos
                     })
                 })
-
             } catch (error) {
                 console.error('Error:', error);
             }
@@ -271,23 +269,10 @@
         })
     });
 
-    let horariosData = [];
-    function obtenerHorariosRecuperacion() {
-        fetch('/horarios/recuperacion/')
-            .then(response => response.json())
-            .then(data => {
-                horariosData = data.horarios || [];
-                const horarioSelect = document.getElementById('horario');
-                horarioSelect.innerHTML = '<option value="">Selecciona un horario</option>';
-                horariosData.forEach(horario => {
-                    const option = document.createElement('option');
-                    option.value = horario.id_horario;
-                    option.textContent = `${horario.profesor.nombre} / ${horario.modulos.hora_modulo}`;
-                    horarioSelect.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error al cargar horarios:', error));
-    }
+    botonEnvio = document.getElementById()
+    botonEnvio.addEventListener('click', function(){
+        
+    })
 
     function obtenerSalas() {
         fetch('/salas/')
@@ -353,10 +338,6 @@
         }
         return cookieValue;
     }
-
-
-
-
 
 </script>
 

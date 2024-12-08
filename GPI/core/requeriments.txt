@@ -2,3 +2,4 @@ django
 mysqlclient
 python-decouple
 openpyxl
+rarfile

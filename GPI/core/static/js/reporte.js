@@ -250,8 +250,12 @@ async function DARA() {
         throw new Error(`Error al enviar datos: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      console.log(result);
+      const blob = await response.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'reporte_dara.rar';
+      link.click();
+
     } catch (error) {
       console.error("Error en la solicitud:", error);
     }
@@ -259,6 +263,8 @@ async function DARA() {
     console.error("Faltan los parámetros necesarios.");
   }
 }
+
+
 
 function emitirInforme() {
   const tableElement = document.querySelector('table');
@@ -279,7 +285,7 @@ function emitirInforme() {
           fontSize: 4,
       }
   };
-  
+
   html2pdf()
       .from(tableElement)
       .set(options)
