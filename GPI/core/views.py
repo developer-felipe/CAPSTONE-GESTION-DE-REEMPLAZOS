@@ -248,44 +248,70 @@ def obtener_horarios_por_profesor(request):
     
 @csrf_protect
 def actualizar_recuperacion(request, id_recuperacion):
-    if request.method == 'POST':
-        print("Recibiendo datos del formulario:")
-        print(request.POST)  
+    if request.method == 'PUT':
+        try:
+            recuperacion = get_object_or_404(Recuperacion, id_recuperacion=id_recuperacion)
 
-        if request.POST.get('_method') == 'PUT':
             try:
-                recuperacion = get_object_or_404(Recuperacion, id=id_recuperacion)
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                return JsonResponse({'success': False, 'message': 'Error al procesar los datos JSON.'}, status=400)
 
-                profesor = get_object_or_404(Profesor, id=request.POST.get('profesor'))
-                asignatura = get_object_or_404(Asignatura, id=request.POST.get('asignatura'))
-                sala = get_object_or_404(Sala, id=request.POST.get('sala'))
+            profesor_id = data.get('profesor')
+            asignatura_id = data.get('asignatura')
+            numero_modulos = data.get('numero_modulos')
+            fecha_clase = data.get('fecha_clase')
+            fecha_recuperacion = data.get('fecha_recuperacion')
+            hora_recuperacion = data.get('hora_recuperacion')
+            sala_id = data.get('sala')  
+            horario_id = data.get('horario_id_horario')
 
-                recuperacion.profesor = profesor
-                recuperacion.asignatura = asignatura
-                recuperacion.numero_modulos = request.POST.get('numero_modulos')
-                recuperacion.fecha_clase = request.POST.get('fecha_clase')
-                recuperacion.fecha_recuperacion = request.POST.get('fecha_recuperacion')
-                recuperacion.hora_recuperacion = request.POST.get('hora_recuperacion')
-                recuperacion.sala = sala
+            if not all([profesor_id, asignatura_id, numero_modulos, fecha_clase, fecha_recuperacion, hora_recuperacion, sala_id]):
+                return JsonResponse({'success': False, 'message': 'Todos los campos son requeridos.'}, status=400)
 
-                horario_id = request.POST.get('horario_id')
-                if horario_id:
+            profesor = get_object_or_404(Profesor, id_profesor=profesor_id)
+            asignatura = get_object_or_404(Asignatura, id_asignatura=asignatura_id)
+            sala = get_object_or_404(Sala, numero_sala=sala_id)  
+
+            if horario_id:
+                try:
                     horario = get_object_or_404(Horario, id=horario_id)
-                    recuperacion.horario = horario
+                except Horario.DoesNotExist:
+                    return JsonResponse({'success': False, 'message': 'Horario no encontrado.'}, status=404)
+            else:
+                horario = None
 
-                recuperacion.save()
 
-                return JsonResponse({'success': True, 'message': 'Recuperación actualizada correctamente.'})
+            recuperacion.profesor = profesor.nombre  
+            recuperacion.asignatura = asignatura.nombre_asignatura  
+            recuperacion.numero_modulos = numero_modulos
+            recuperacion.fecha_clase = fecha_clase
+            recuperacion.fecha_recuperacion = fecha_recuperacion
+            recuperacion.hora_recuperacion = hora_recuperacion
+            recuperacion.sala = sala.numero_sala 
+            if horario:
+                recuperacion.horario = horario
 
-            except Exception as e:
-                print("Error al actualizar:", str(e))
-                return JsonResponse({'success': False, 'message': f'Error inesperado: {str(e)}'})
+            recuperacion.save()
 
-        else:
-            return JsonResponse({'success': False, 'message': 'Método no permitido. Solo se permite PUT.'})
+            return JsonResponse({'success': True, 'message': 'Recuperación actualizada correctamente.'})
+
+        except Exception as e:
+            print(f"Error al actualizar: {str(e)}")
+            return JsonResponse({'success': False, 'message': f'Error inesperado: {str(e)}'}, status=500)
 
     else:
-        return JsonResponse({'success': False, 'message': 'Método no permitido. Solo se permite POST.'})
+        return JsonResponse({'success': False, 'message': 'Método no permitido. Solo se permite PUT.'}, status=405)
+
+
+
+
+
+
+
+
+
+
 
 
 

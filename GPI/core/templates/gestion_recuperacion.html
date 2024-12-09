@@ -120,7 +120,7 @@
                             data-asignatura="{{ rec.asignatura }}" data-numero_modulos="{{ rec.numero_modulos }}"
                             data-fecha_clase="{{ rec.fecha_clase|date:'Y-m-d' }}"
                             data-fecha_recuperacion="{{ rec.fecha_recuperacion|date:'Y-m-d' }}"
-                            data-hora_recuperacion="{{ rec.hora_recuperacion }}" data-sala="{{ rec.sala }}">
+                            data-hora_recuperacion="{{ rec.hora_recuperacion }}" data-sala="{{ rec.sala }}" data-horario="{{ rec.horario_id_horario }}">
                             <i class="material-icons me-2">edit</i>
                         </button>
                         <button class="btn btn-danger" data-id="{{ rec.id_recuperacion }}"
@@ -142,12 +142,12 @@
                 <h5 class="modal-title" id="editModalLabel">Editar Recuperación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="edit-recuperacion-form" method="PUT">
+            <form id="edit-recuperacion-form" method="POST">  
+                {% csrf_token %}
                 <input type="hidden" id="edit_id" name="edit_id" value="">
+                <input type="hidden" id="horario_id_horario" name="horario_id_horario" value="">
 
                 <div class="modal-body">
-                    <input type="hidden" id="edit_id">
-
                     <div class="mb-3">
                         <select id="edit_profesor" name="profesor" class="form-select" required>
                             <option value="">Selecciona un profesor</option>
@@ -162,8 +162,7 @@
 
                     <div class="mb-3">
                         <label for="edit_numero_modulos" class="form-label">Número de Módulos</label>
-                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos"
-                            required>
+                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos" required>
                     </div>
 
                     <div class="mb-3">
@@ -173,14 +172,12 @@
 
                     <div class="mb-3">
                         <label for="edit_fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
-                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion"
-                            required>
+                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="edit_hora_recuperacion" class="form-label">Hora de Recuperación</label>
-                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion"
-                            required>
+                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion" required>
                     </div>
 
                     <div class="mb-3">
@@ -200,6 +197,7 @@
         </div>
     </div>
 </div>
+
 
 
 
@@ -356,6 +354,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(data => {
             if (data.success) {
                 alert('Recuperación guardada correctamente');
+                location.reload();
             } else {
                 alert('Error: ' + data.message);
             }

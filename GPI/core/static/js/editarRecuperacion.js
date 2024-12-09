@@ -1,29 +1,44 @@
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 $(document).ready(function () {
     $('#editModal').on('show.bs.modal', function (event) {
         const button = $(event.relatedTarget);  
         const id = button.data('id');
-        const profesorNombreCompleto = button.data('profesor'); 
-        const asignaturaNombre = button.data('asignatura'); 
-        const salaNombre = button.data('sala'); 
+        const profesorNombreCompleto = button.data('profesor');
+        const asignaturaNombre = button.data('asignatura');
         const numeroModulos = button.data('numero_modulos');
         const fechaClase = button.data('fecha_clase');
         const fechaRecuperacion = button.data('fecha_recuperacion');
         const horaRecuperacion = button.data('hora_recuperacion');
-        const horarioId = button.data('horario_id');  // Suponiendo que el ID del horario se pasa también
+        const salaNombre = button.data('sala');
+        const horarioId = button.data('horario');  
 
-        // Rellenamos los campos del formulario con los datos actuales
         $('#edit_id').val(id);
+        $('#horario_id_horario').val(horarioId);  
         $('#edit_numero_modulos').val(numeroModulos);
         $('#edit_fecha_clase').val(fechaClase);
         $('#edit_fecha_recuperacion').val(fechaRecuperacion);
         $('#edit_hora_recuperacion').val(horaRecuperacion);
+        $('#edit_sala').val(salaNombre);
 
-        // Cargar profesores, asignaturas y salas de forma dinámica
         fetch('/docente_recuperación/')
             .then(response => response.json())
             .then(data => {
                 const profesorSelect = $('#edit_profesor');
-                profesorSelect.empty(); 
+                profesorSelect.empty();  
                 data.profesores.forEach(profesor => {
                     const nombreCompleto = `${profesor.nombre} ${profesor.segundo_nombre || ''} ${profesor.apellido} ${profesor.segundo_apellido || ''}`.trim();
                     profesorSelect.append(
@@ -32,7 +47,6 @@ $(document).ready(function () {
                         </option>`
                     );
                 });
-                profesorSelect.val(profesorSelect.find('option:selected').val()).change();
             });
 
         fetch('/todas_asignaturas/')
@@ -47,14 +61,13 @@ $(document).ready(function () {
                         </option>`
                     );
                 });
-                asignaturaSelect.val(asignaturaSelect.find('option:selected').val()).change();
             });
 
-            fetch('/salas/')
+        fetch('/salas/')
             .then(response => response.json())
             .then(data => {
-                const salaSelect = $('#edit_sala');  // Asegúrate de que el id sea correcto
-                salaSelect.empty();  // Limpiamos las opciones anteriores
+                const salaSelect = $('#edit_sala');
+                salaSelect.empty();
                 data.forEach(sala => {
                     salaSelect.append(
                         `<option value="${sala.numero_sala}" ${sala.numero_sala === salaNombre ? 'selected' : ''}>
@@ -62,11 +75,8 @@ $(document).ready(function () {
                         </option>`
                     );
                 });
-                salaSelect.val(salaSelect.find('option:selected').val()).change();  // Asegúrate de que el valor sea correcto
-            })
-            .catch(error => console.error('Error al obtener salas:', error));
+            });
 
-        // Manejo del formulario al enviar
         $('#edit-recuperacion-form').on('submit', function (e) {
             e.preventDefault();
 
@@ -78,14 +88,14 @@ $(document).ready(function () {
                 fecha_recuperacion: $('#edit_fecha_recuperacion').val(),
                 hora_recuperacion: $('#edit_hora_recuperacion').val(),
                 sala: $('#edit_sala').val(),
-                horario_id: horarioId  // Incluimos el ID del horario
+                horario_id: $('#horario_id_horario').val()  
             };
 
             fetch(`/actualizar-recuperacion/${id}/`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')  // Asegúrate de que la CSRF Token esté disponible
+                    'X-CSRFToken': getCookie('csrftoken')  
                 },
                 body: JSON.stringify(formData)
             })
@@ -94,14 +104,12 @@ $(document).ready(function () {
                 if (data.success) {
                     alert('Recuperación actualizada correctamente');
                     $('#editModal').modal('hide');
-                    location.reload(); 
-                    // Actualiza la tabla o la vista para reflejar los cambios
+                    location.reload();  
                 } else {
                     alert('Error al actualizar la recuperación: ' + data.message);
                 }
             })
             .catch(error => console.error('Error:', error));
-            
         });
     });
 });
