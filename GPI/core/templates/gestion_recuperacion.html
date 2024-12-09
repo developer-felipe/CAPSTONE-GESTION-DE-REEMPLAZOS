@@ -20,7 +20,7 @@
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#extraLargeModal">Agregar
             Recuperación</button>
     </div>
-
+    
     <div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -70,7 +70,8 @@
                             </select>
                         </div>
                         <div>
-                            <input type="hidden" id="horario_id_horario"  name="horario_id_horario" value="{{ horario_id_horario  }}">
+                            <input type="hidden" id="horario_id_horario" name="horario_id_horario"
+                                value="{{ horario_id_horario  }}">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -88,10 +89,52 @@
         {% endfor %}
     </div>
     {% endif %}
-    <table class="table">
+    <h2>Reemplazos no definidos</h2>
+    <table>
         <thead>
             <tr>
-                <th class="text-center">ID</th>
+                <th class="text-center">Profesor</th>
+                <th class="text-center">Asignatura</th>
+                <th class="text-center">Número de Módulos</th>
+                <th class="text-center">Fecha de Clase</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rec in recuperaciones %}
+            {% if rec.sala == "0000" and rec.profesor == "Por definir"%}
+            <tr>
+                <td class="text-center">{{ rec.profesor }}</td>
+                <td class="text-center">{{ rec.asignatura }}</td>
+                <td class="text-center">{{ rec.numero_modulos }}</td>
+                <td class="text-center">{{ rec.fecha_clase|date:"d-m-Y" }}</td>
+                <td>
+                    <div class="text-center">
+                        <button class="btn btn-warning btn-edit me-2" data-bs-toggle="modal" data-bs-target="#editModal"
+                            data-id="{{ rec.id_recuperacion }}" data-profesor="{{ rec.profesor }}"
+                            data-asignatura="{{ rec.asignatura }}" data-numero_modulos="{{ rec.numero_modulos }}"
+                            data-fecha_clase="{{ rec.fecha_clase|date:'Y-m-d' }}"
+                            data-fecha_recuperacion=""
+                            data-hora_recuperacion="" data-sala=""
+                            data-horario="{{ rec.horario_id_horario }}">
+                            <i class="material-icons me-2">edit</i>
+                        </button>
+                        <button class="btn btn-danger" data-id="{{ rec.id_recuperacion }}"
+                            onclick="eliminarRecuperacion(this)">
+                            <i class="material-icons me-2">person_remove</i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2 class="pt-5">Historial de Recuperaciones</h2>
+    <table>
+        <thead>
+            <tr>
                 <th class="text-center">Profesor</th>
                 <th class="text-center">Asignatura</th>
                 <th class="text-center">Número de Módulos</th>
@@ -104,8 +147,8 @@
         </thead>
         <tbody>
             {% for rec in recuperaciones %}
+            {% if rec.sala != "0000" and rec.profesor != "Por definir" %}
             <tr>
-                <td class="text-center">{{ rec.id_recuperacion }}</td>
                 <td class="text-center">{{ rec.profesor }}</td>
                 <td class="text-center">{{ rec.asignatura }}</td>
                 <td class="text-center">{{ rec.numero_modulos }}</td>
@@ -120,7 +163,8 @@
                             data-asignatura="{{ rec.asignatura }}" data-numero_modulos="{{ rec.numero_modulos }}"
                             data-fecha_clase="{{ rec.fecha_clase|date:'Y-m-d' }}"
                             data-fecha_recuperacion="{{ rec.fecha_recuperacion|date:'Y-m-d' }}"
-                            data-hora_recuperacion="{{ rec.hora_recuperacion }}" data-sala="{{ rec.sala }}" data-horario="{{ rec.horario_id_horario }}">
+                            data-hora_recuperacion="{{ rec.hora_recuperacion }}" data-sala="{{ rec.sala }}"
+                            data-horario="{{ rec.horario_id_horario }}">
                             <i class="material-icons me-2">edit</i>
                         </button>
                         <button class="btn btn-danger" data-id="{{ rec.id_recuperacion }}"
@@ -130,6 +174,7 @@
                     </div>
                 </td>
             </tr>
+            {% endif %}
             {% endfor %}
         </tbody>
     </table>
@@ -142,27 +187,28 @@
                 <h5 class="modal-title" id="editModalLabel">Editar Recuperación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="edit-recuperacion-form" method="POST">  
+            <form id="edit-recuperacion-form" method="POST">
                 {% csrf_token %}
                 <input type="hidden" id="edit_id" name="edit_id" value="">
                 <input type="hidden" id="horario_id_horario" name="horario_id_horario" value="">
 
                 <div class="modal-body">
                     <div class="mb-3">
-                        <select id="edit_profesor" name="profesor" class="form-select" required>
+                        <select id="edit_profesor" name="profesor" class="form-select" required readonly>
                             <option value="">Selecciona un profesor</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <select id="edit_asignatura" name="asignatura" class="form-select" required>
+                        <select id="edit_asignatura" name="asignatura" class="form-select" required readonly>
                             <option value="">Selecciona una asignatura</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label for="edit_numero_modulos" class="form-label">Número de Módulos</label>
-                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos" required>
+                        <input type="number" class="form-control" id="edit_numero_modulos" name="numero_modulos"
+                            required>
                     </div>
 
                     <div class="mb-3">
@@ -172,12 +218,14 @@
 
                     <div class="mb-3">
                         <label for="edit_fecha_recuperacion" class="form-label">Fecha de Recuperación</label>
-                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion" required>
+                        <input type="date" class="form-control" id="edit_fecha_recuperacion" name="fecha_recuperacion"
+                            required>
                     </div>
 
                     <div class="mb-3">
                         <label for="edit_hora_recuperacion" class="form-label">Hora de Recuperación</label>
-                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion" required>
+                        <input type="time" class="form-control" id="edit_hora_recuperacion" name="hora_recuperacion"
+                            required>
                     </div>
 
                     <div class="mb-3">
@@ -257,21 +305,20 @@
                 data.asignaturas.forEach(asignaturas => {
                     const option = document.createElement('option')
                     option.value = asignaturas.id_asignatura
-                    option.textContent = asignaturas.nombre_asignatura, `(${asignaturas.seccion})`, asignaturas.nombre_carrera
+                    option.textContent = asignaturas.nombre_asignatura+' '+'('+asignaturas.seccion+')'
                     selectAsignatura.appendChild(option)
+                    const horarioInput = document.getElementById('horario_id_horario');
 
-                    const horarioInput = document.getElementById('horario_id_horario'); 
 
-                                    
                     if (asignaturas.horarios) {
-                        const horarios = asignaturas.horarios.split('-'); 
+                        const horarios = asignaturas.horarios.split('-');
                         console.log('Horarios separados:', horarios);
 
                         if (horarios.length > 0) {
-                            const primerHorario  = horarios[0];
+                            const primerHorario = horarios[0];
                             console.log('Primer horario seleccionado automáticamente:', primerHorario);
 
-                            horarioInput.value = primerHorario ;
+                            horarioInput.value = primerHorario;
                         }
                     } else {
                         console.error('No se encontraron horarios para esta asignatura:', asignaturas);
@@ -288,83 +335,79 @@
     });
 
     function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
     }
-    return cookieValue;
-}
 
-var csrfToken = getCookie('csrftoken');
+    var csrfToken = getCookie('csrftoken');
 
-document.addEventListener('DOMContentLoaded', function () {
-    const botonEnvio = document.getElementById('envio');
-    botonEnvio.addEventListener('click', function () {
-        const selectModulo = document.getElementById('edit_numero_modulos').value;
-        const profesor = document.getElementById('profesor').options[document.getElementById('profesor').selectedIndex].value; 
-        const asignatura = document.getElementById('asignatura').options[document.getElementById('asignatura').selectedIndex].value; 
-        const fecha_clase = document.getElementById('fecha_clase').value;
-        const fecha_recuperacion = document.getElementById('fecha_recuperacion').value;
-        const sala = document.getElementById('sala').options ? document.getElementById('sala').options[document.getElementById('sala').selectedIndex].value : document.getElementById('sala').value;
-        const hora_recuperacion = document.getElementById('hora_recuperacion').value;
-        
-        const horarioId = document.getElementById('horario_id_horario').value; 
-
-        if (!horarioId) {
-            console.error('No se encontró un horario válido');
-            alert('El campo "Horario" no puede estar vacío');
-            return; 
-        }
-
-
-        const datos = {
-            'selectModulo': selectModulo,
-            'profesor': profesor,
-            'asignatura': asignatura,
-            'fecha_clase': fecha_clase,
-            'fecha_recuperacion': fecha_recuperacion,
-            'sala': sala,
-            'hora_recuperacion': hora_recuperacion,
-            'horario_id_horario': horarioId  
-        };
-
-        console.log('Datos enviados:', datos);  
-
-        fetch('/registrar_recuperacion/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken 
-            },
-            body: JSON.stringify(datos) 
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(errorText => { throw new Error(errorText); });
+    document.addEventListener('DOMContentLoaded', function () {
+        const botonEnvio = document.getElementById('envio');
+        botonEnvio.addEventListener('click', function () {
+            const selectModulo = document.getElementById('edit_numero_modulos').value;
+            const profesor = document.getElementById('profesor').options[document.getElementById('profesor').selectedIndex].value;
+            const asignatura = document.getElementById('asignatura').options[document.getElementById('asignatura').selectedIndex].value;
+            const fecha_clase = document.getElementById('fecha_clase').value;
+            const fecha_recuperacion = document.getElementById('fecha_recuperacion').value;
+            const sala = document.getElementById('sala').options ? document.getElementById('sala').options[document.getElementById('sala').selectedIndex].value : document.getElementById('sala').value;
+            const hora_recuperacion = document.getElementById('hora_recuperacion').value;
+            const horarioId = document.getElementById('horario_id_horario').value;
+            if (!horarioId) {
+                console.error('No se encontró un horario válido');
+                alert('El campo "Horario" no puede estar vacío');
+                return;
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                alert('Recuperación guardada correctamente');
-                location.reload();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al guardar la recuperación: ' + error.message);
+            const datos = {
+                'selectModulo': selectModulo,
+                'profesor': profesor,
+                'asignatura': asignatura,
+                'fecha_clase': fecha_clase,
+                'fecha_recuperacion': fecha_recuperacion,
+                'sala': sala,
+                'hora_recuperacion': hora_recuperacion,
+                'horario_id_horario': horarioId
+            };
+
+            console.log('Datos enviados:', datos);
+
+            fetch('/registrar_recuperacion/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(datos)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(errorText => { throw new Error(errorText); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('Recuperación guardada correctamente');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al guardar la recuperación: ' + error.message);
+                });
         });
     });
-});
 
 
 

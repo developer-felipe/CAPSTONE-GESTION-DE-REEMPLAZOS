@@ -1348,6 +1348,7 @@ def reporte_dara(request):
     AND l.id_licencia = %s
     AND h.activo = TRUE
     AND l.estado = "asignado"
+    AND r.reemplazado = TRUE
     GROUP BY c.nombre_carrera, h.jornada,h.seccion,s.numero_sala,r.profesor_reemplazo,a.nombre_asignatura,ds.nombre_dia,l.motivo,l.observaciones
     ORDER BY r.fecha_reemplazo, mo.hora_modulo
     '''
