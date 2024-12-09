@@ -255,14 +255,12 @@
                                     .then(data => {
                                         const selectReemplazo = tr.querySelector('td select[name="profesor_remp"]');
                                         selectReemplazo.innerHTML = '';
-
                                         if (data.profesores && data.profesores.length > 0) {
                                             const defaultOption = document.createElement('option');
                                             defaultOption.textContent = 'Seleccione un profesor';
                                             defaultOption.disabled = true;
                                             defaultOption.selected = true;
                                             selectReemplazo.appendChild(defaultOption);
-
                                             data.profesores.forEach(profesor => {
                                                 const option = document.createElement('option');
                                                 option.value = profesor.id_profesor;
@@ -395,16 +393,21 @@
                 let idAsignatura = tdAsignatura.dataset.bsIdAsignatura;
                 const semana = semanaSelect ? semanaSelect.value : null;
                 const fecha_clase = row.querySelector('td:nth-child(7)').textContent.trim();
+                const asignatura = row.querySelector('td:nth-child(2)').textContent.trim();
                 const [day, month, year] = fecha_clase.split('-');
                 const fechaFormateada = `${year}-${month}-${day}`;
+                const reemplazado = profesor_reemplazo_select !== 'n/a';
                 if (semana && profesor_reemplazo && profesor_reemplazo_select) {
                     reemplazosData.push({
                         semana,
                         fecha_reemplazo: fechaFormateada,
                         profesor_reemplazo,
-                        horario_id: idAsignatura
+                        horario_id: idAsignatura,
+                        asignatura,
+                        reemplazado
                     });
                 }
+                console.log(reemplazosData)
             });
             if (reemplazosData.length > 0) {
                 fetch('/registrar_reemplazo/', {
@@ -421,7 +424,6 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            location.reload()
                             alert('Reemplazos registrados con éxito.');
                         } else {
                             alert('Hubo un error al registrar los reemplazos.');
@@ -485,6 +487,7 @@
                                 fetch(`/obtener_profesores_disponibles/?dia_semana=${clase.dia_semana_id}&modulo_id=${clase.modulo_id}`)
                                     .then(response => response.json())
                                     .then(data => {
+
                                         if (data.profesores && data.profesores.length > 0) {
                                             data.profesores.forEach(profesor => {
                                                 const option = document.createElement('option');
@@ -492,10 +495,10 @@
                                                 option.textContent = `${profesor.nombre} ${profesor.segundo_nombre || ''} ${profesor.apellido} ${profesor.segundo_apellido || ''}`.trim();
                                                 selectReemplazo.appendChild(option);
                                             });
-                                        } else {
-                                            const option = document.createElement('option');
-                                            option.textContent = 'Clase a Recuperación';
-                                            selectReemplazo.appendChild(option);
+                                            const recuperacionOption = document.createElement('option');
+                                            recuperacionOption.value = 'n/a';
+                                            recuperacionOption.textContent = 'ASIGNAR CLASE A RECUPERACIÓN';
+                                            selectReemplazo.appendChild(recuperacionOption);
                                         }
                                     })
                                     .catch(error => {

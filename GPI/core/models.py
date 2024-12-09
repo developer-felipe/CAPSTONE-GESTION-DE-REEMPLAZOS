@@ -117,7 +117,6 @@ class Reemplazos(models.Model):
     profesor_reemplazo = models.CharField(max_length=255)
     reemplazado = models.BooleanField(default=True)
     horario = models.ForeignKey(Horario, models.DO_NOTHING, db_column='horario_id_horario')
-
     class Meta:
         managed = False
         db_table = 'reemplazos'
@@ -131,20 +130,16 @@ class UsuarioManager(BaseUserManager):
         usuario.set_password(password)
         usuario.save(using=self._db)
         return usuario
-
     def create_superuser(self, usuario, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-
         return self.create_user(usuario, password, **extra_fields)
-
     def get_by_natural_key(self, username):
         return self.get(**{self.model.USERNAME_FIELD: username})
 
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
     objects = UsuarioManager()
-
     id_usuario = models.AutoField(primary_key=True)
     usuario = models.CharField(max_length=16, unique=True)
     password = models.CharField(max_length=128)

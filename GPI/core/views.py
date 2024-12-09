@@ -54,8 +54,11 @@ def docente_view(request):
                 profesor_a_eliminar = get_object_or_404(Profesor, id_profesor=id_profesor)
                 horarios_asociados = Horario.objects.filter(profesor_id_profesor=profesor_a_eliminar)
                 
+                horarios_asociados = Horario.objects.filter(profesor_id_profesor=profesor_a_eliminar)
                 for horario in horarios_asociados:
+                    Recuperacion.objects.filter(horario=horario).delete()
                     Reemplazos.objects.filter(horario=horario).delete()
+                    horario.delete()
                     
                 Licencia.objects.filter(profesor_id_profesor=profesor_a_eliminar).delete()
                 profesor_a_eliminar.delete()
@@ -640,12 +643,6 @@ def registrar_recuperacion(request):
     else:
         return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
 
-
-
-
-
-
-
 @login_required(login_url='/') 
 def reemplazos_view(request):
     sql_query = '''
@@ -746,11 +743,9 @@ def obtener_clases_por_docente(request):
     docente_id = request.GET.get('docente_id')
     fecha_inicio = request.GET.get('fecha_inicio')  
     fecha_termino = request.GET.get('fecha_termino')
-
     if not docente_id or not fecha_inicio or not fecha_termino:
         logger.error("Faltan parámetros en la solicitud.")
         return JsonResponse({'error': 'Faltan parámetros'}, status=400)
-
     try:
         fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
         fecha_termino = datetime.strptime(fecha_termino, '%Y-%m-%d').date()
@@ -767,9 +762,7 @@ def obtener_clases_por_docente(request):
         horarios = Horario.objects.filter(
             profesor_id_profesor=profesor, activo=True
         ).filter(Q(dia_semana_id_dia__gte=1) & Q(dia_semana_id_dia__lte=6))
-
         logger.debug(f"Horarios obtenidos: {horarios.count()} horarios")
-
         clases = []
         current_date = fecha_inicio
         while current_date <= fecha_termino:
@@ -790,7 +783,6 @@ def obtener_clases_por_docente(request):
                     'profesor_id': horario.profesor_id_profesor.id_profesor
                 })
             current_date += timedelta(days=1)
-
         if not clases:
             logger.info(f"No hay clases para el profesor {profesor.nombre} {profesor.apellido} durante el rango de fechas.")
         
@@ -825,40 +817,67 @@ def registrar_reemplazo(request):
             data = json.loads(request.body)
             reemplazos = data.get('reemplazos', [])
             id_licencia = data.get('id_licencia')
-
+            
             if not reemplazos:
                 logger.warning('No se proporcionaron reemplazos en la solicitud.')
                 return JsonResponse({'error': 'No se proporcionaron reemplazos'}, status=400)
-
+            
             if not id_licencia:
                 logger.warning('No se proporcionó id_licencia en la solicitud.')
                 return JsonResponse({'error': 'No se proporcionó id_licencia'}, status=400)
+            
             licencia = get_object_or_404(Licencia, id_licencia=id_licencia)
             logger.info(f'Licencia {id_licencia} actualizada a estado "asignado".')
             logger.info(f'Número de reemplazos recibidos: {len(reemplazos)}')
+            
             for reemplazo in reemplazos:
                 semana = reemplazo.get('semana')
                 fecha_reemplazo = reemplazo.get('fecha_reemplazo')
                 profesor_reemplazo = reemplazo.get('profesor_reemplazo')
                 horario_id = reemplazo.get('horario_id')
-                logger.info(f'Procesando reemplazo: Semana={semana}, Fecha={fecha_reemplazo}, Profesor={profesor_reemplazo}, Horario ID={horario_id}')
+                asignatura = reemplazo.get('asignatura')
+                reemplazado = reemplazo.get('reemplazado')
+                
+                logger.info(f'Procesando reemplazo: Semana={semana}, Fecha={fecha_reemplazo}, Profesor={profesor_reemplazo}, Horario ID={horario_id}, Reemplazado={reemplazado}')
+            
                 try:
                     horario = Horario.objects.get(id_horario=horario_id)
                     logger.info(f'Horario encontrado: {horario}')
-                    licencia.estado = 'asignado'
-                    licencia.save()
                 except Horario.DoesNotExist:
                     logger.error(f'Horario no encontrado para ID: {horario_id}')
                     return JsonResponse({'error': f'Horario no encontrado para ID {horario_id}'}, status=400)
                 
-                reemplazo_obj = Reemplazos.objects.create(
-                    semana=semana,
-                    fecha_reemplazo=fecha_reemplazo,
-                    profesor_reemplazo=profesor_reemplazo,
-                    horario=horario,
-                )
-                logger.info(f'Reemplazo creado: {reemplazo_obj}')
+                if reemplazado:
+                    reemplazo_obj = Reemplazos.objects.create(
+                        semana=semana,
+                        fecha_reemplazo=fecha_reemplazo,
+                        profesor_reemplazo=profesor_reemplazo,
+                        horario=horario,
+                    )
+                    logger.info(f'Reemplazo creado: {reemplazo_obj}')
+                else:
+                    recuperacion_obj = Recuperacion.objects.create(
+                        profesor="Por definir",
+                        asignatura=asignatura,
+                        numero_modulos=1,
+                        fecha_clase=fecha_reemplazo,
+                        fecha_recuperacion=fecha_reemplazo,
+                        hora_recuperacion="00:00",
+                        sala="0000",
+                        horario=horario,
+                    )
+                    logger.info(f'Recuperación creada: {recuperacion_obj}')
+                    reemplazo_obj = Reemplazos.objects.create(
+                        semana=semana,
+                        fecha_reemplazo=fecha_reemplazo,
+                        profesor_reemplazo=profesor_reemplazo,
+                        horario=horario,
+                        reemplazado=False
+                    )
+                    logger.info(f'Reemplazo creado: {reemplazo_obj}')
 
+            licencia.estado = 'asignado'
+            licencia.save()
             return JsonResponse({'success': True}, status=200)
         except json.JSONDecodeError:
             logger.error('Error al decodificar el JSON recibido.')
@@ -866,7 +885,6 @@ def registrar_reemplazo(request):
         except Exception as e:
             logger.error(f'Error inesperado: {str(e)}')
             return JsonResponse({'error': f'Error inesperado: {str(e)}'}, status=500)
-    
     logger.warning('Método no permitido. Solo se acepta POST.')
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
