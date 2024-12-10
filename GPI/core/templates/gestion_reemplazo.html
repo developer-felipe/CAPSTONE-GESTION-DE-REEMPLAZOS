@@ -5,12 +5,7 @@
 <div class="container">
     <h1>Gestión de Reemplazos</h1>
 
-    <form method="GET" action="{% url 'reemplazos' %}" class="mb-4">
-        <div class="input-group">
-            <input type="text" name="filter" class="form-control" placeholder="Buscar por nombre docente...">
-            <button type="submit" class="btn btn-primary">Buscar</button>
-        </div>
-    </form>
+
 
     <div class="w-50 p-1">
         {% if request.user.is_staff %}
