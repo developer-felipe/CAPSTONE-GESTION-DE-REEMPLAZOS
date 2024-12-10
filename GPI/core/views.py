@@ -281,8 +281,9 @@ def actualizar_recuperacion(request, id_recuperacion):
             else:
                 horario = None
 
+            profesor_nombre_completo = f"{profesor.nombre} {profesor.segundo_nombre or ''} {profesor.apellido} {profesor.segundo_apellido or ''}".strip()
 
-            recuperacion.profesor = profesor.nombre  
+            recuperacion.profesor = profesor_nombre_completo  
             recuperacion.asignatura = asignatura.nombre_asignatura  
             recuperacion.numero_modulos = numero_modulos
             recuperacion.fecha_clase = fecha_clase
