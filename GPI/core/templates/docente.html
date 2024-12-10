@@ -23,16 +23,7 @@
         <h1>Perfil Docentes</h1>
     </div>
 
-    <div class="row justify-content-center mb-4">
-        <div class="col-md-8">
-            <form method="GET" action="{% url 'docente' %}">
-                <div class="input-group">
-                    <input type="text" name="filter" class="form-control" placeholder="Buscar por nombre docente...">
-                    <button type="submit" class="btn btn-primary">Buscar</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <div class="d-flex justify-content-end mb-3">
         <a class="btn btn-warning btn-sm" href="{% url 'crear_docente' %} ">

@@ -9,16 +9,13 @@
     <h1>Gestión de Recuperación</h1>
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
     </div>
-    <form method="GET" action="{% url 'recuperacion' %}" class="mb-4">
-        <div class="input-group">
-            <input type="text" name="filter" class="form-control" placeholder="Buscar por nombre docente...">
-            <button type="submit" class="btn btn-primary">Buscar</button>
-        </div>
-    </form>
+
 
     <div class="mb-3">
+        {% if request.user.is_staff %}
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#extraLargeModal">Agregar
             Recuperación</button>
+        {% endif %}
     </div>
     
     <div class="modal fade" id="extraLargeModal" tabindex="-1" aria-labelledby="extraLargeModalLabel"
@@ -97,7 +94,9 @@
                 <th class="text-center">Asignatura</th>
                 <th class="text-center">Número de Módulos</th>
                 <th class="text-center">Fecha de Clase</th>
+                {% if request.user.is_staff %}
                 <th class="text-center">Acciones</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -110,6 +109,7 @@
                 <td class="text-center">{{ rec.fecha_clase|date:"d-m-Y" }}</td>
                 <td>
                     <div class="text-center">
+                        {% if request.user.is_staff %}
                         <button class="btn btn-warning btn-edit me-2" data-bs-toggle="modal" data-bs-target="#editModal"
                             data-id="{{ rec.id_recuperacion }}" data-profesor="{{ rec.profesor }}"
                             data-asignatura="{{ rec.asignatura }}" data-numero_modulos="{{ rec.numero_modulos }}"
@@ -119,10 +119,13 @@
                             data-horario="{{ rec.horario_id_horario }}">
                             <i class="material-icons me-2">edit</i>
                         </button>
+                        {% endif %}
+                        {% if request.user.is_staff %}
                         <button class="btn btn-danger" data-id="{{ rec.id_recuperacion }}"
                             onclick="eliminarRecuperacion(this)">
                             <i class="material-icons me-2">person_remove</i>
                         </button>
+                        {% endif %}
                     </div>
                 </td>
             </tr>
@@ -142,7 +145,9 @@
                 <th class="text-center">Fecha de Recuperación</th>
                 <th class="text-center">Hora de Recuperación</th>
                 <th class="text-center">Sala</th>
+                {% if request.user.is_staff %}
                 <th class="text-center">Acciones</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -158,6 +163,7 @@
                 <td class="text-center">{{ rec.sala }}</td>
                 <td>
                     <div class="d-flex">
+                        {% if request.user.is_staff %}
                         <button class="btn btn-warning btn-edit me-2" data-bs-toggle="modal" data-bs-target="#editModal"
                             data-id="{{ rec.id_recuperacion }}" data-profesor="{{ rec.profesor }}"
                             data-asignatura="{{ rec.asignatura }}" data-numero_modulos="{{ rec.numero_modulos }}"
@@ -167,10 +173,13 @@
                             data-horario="{{ rec.horario_id_horario }}">
                             <i class="material-icons me-2">edit</i>
                         </button>
+                        {% endif %}
+                        {% if request.user.is_staff %}
                         <button class="btn btn-danger" data-id="{{ rec.id_recuperacion }}"
                             onclick="eliminarRecuperacion(this)">
                             <i class="material-icons me-2">person_remove</i>
                         </button>
+                        {% endif %}
                     </div>
                 </td>
             </tr>
