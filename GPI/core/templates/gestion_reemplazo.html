@@ -482,7 +482,9 @@
                                 <td>${clase.dia}</td>
                                 <td>${clase.fecha_clase}</td>
                                 <td><select id="profesor_reemplazo_${clase.id_horario}" name="profesor_reemplazo" class="form-select" required>
-                                <option value="">Selecciona un profesor reemplazante</option></select></td>`;
+                                <option value="">Selecciona un profesor reemplazante</option>
+                                <option value="n/a">ASIGNAR CLASE A RECUPERACIÓN</option></select></td>`;
+                                
                                 const selectReemplazo = row.querySelector(`#profesor_reemplazo_${clase.id_horario}`);
                                 fetch(`/obtener_profesores_disponibles/?dia_semana=${clase.dia_semana_id}&modulo_id=${clase.modulo_id}`)
                                     .then(response => response.json())
