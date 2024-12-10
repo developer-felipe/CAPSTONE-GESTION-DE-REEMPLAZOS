@@ -80,7 +80,9 @@
                 <th class="text-center">Día</th>
                 <th class="text-center">Fecha de Clase</th>
                 <th class="text-center">Profesor Reemplazante</th>
+                {% if request.user.is_staff %}
                 <th class="text-center">Acciones</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -101,6 +103,7 @@
                 </td>
                 <td>
                     <div class="d-flex">
+                        {% if request.user.is_staff %}
                         <button class="btn btn-warning btn-edit me-2" id="btn-edit-{{ reemplazo.id_reemplazo }}"
                             data-bs-toggle="modal" data-bs-target="#editModal" data-semana="{{ reemplazo.semana }}"
                             data-profesor="{{ reemplazo.profesor_nombre }}"
@@ -111,6 +114,7 @@
                             data-profesor_remp="{{ reemplazo.profesor_reemplazo }}">
                             <i class="material-icons me-2">edit</i>
                         </button>
+                        {% endif %}
                     </div>
                 </td>
             </tr>
@@ -354,6 +358,7 @@
                         .then(data => {
                             if (data.success) {
                                 console.log('Reemplazo actualizado');
+                                location.reload();
                             } else {
                                 console.error('Error al actualizar el reemplazo');
                             }
