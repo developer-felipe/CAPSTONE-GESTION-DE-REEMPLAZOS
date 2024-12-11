@@ -1,0 +1,39 @@
+Definición del Alcance ⭕
+Carta Gantt ⭕
+Acta de Constitución ⭕
+Casos de Uso  ⭕
+Especificación de Requerimientos del Software (SrS)⭕
+Requerimientos - resumen (Excel) ⭕
+Acta de Cierre  ⭕
+Plan de Pruebas de Software ⭕
+
+diagrama de hitos
+horas de trabajo
+
+
+starUML crackeado:
+https://gist.github.com/K1ethoang/83267585235bbb6a55e5479ae969d7a3
+
+al modelo lógico le faltan los método
+qué método arquitectonico se usó para conecto
+
+
+
+- vista de escneario:
+    caso de uso
+    gestion de tareas
+    gestion de usuario
+
+- logica
+    diagrama de clases(al modelo lógico le faltan los método)
+    mvc
+
+- vista desarrollo
+diagrama de componentes
+diagrama de paquete
+
+- vista de procesos
+diagrama de interaccion de todo el sistema
+
+- vista fisica
+diagrama de despliegue
