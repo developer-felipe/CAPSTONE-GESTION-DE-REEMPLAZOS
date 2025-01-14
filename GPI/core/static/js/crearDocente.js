@@ -117,6 +117,7 @@ $(document).ready(function () {
             alert('El primer nombre y el primer apellido son obligatorios.');
             return;
         }
+
         const datosFormulario = {
             profesor: {
                 id: ultimoId,
@@ -127,6 +128,7 @@ $(document).ready(function () {
             },
             horarios_asignados: horariosAsignados
         };
+
         fetch('/crear_profesor_y_horarios/', {
             method: 'POST',
             headers: {
@@ -135,19 +137,24 @@ $(document).ready(function () {
             },
             body: JSON.stringify(datosFormulario)
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.redirect) {
-                    window.location.href = data.redirect;
-                } else {
-                    alert('Profesor y horarios creados exitosamente!');
-                }
-                console.log(data);
-            })
-            .catch(error => {
-                console.error('Error:', error);
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else if (response.redirected) {
+                window.location.href = response.url;
+            } else {
                 alert('Hubo un error al crear el profesor y los horarios.');
-            });
+            }
+        })
+        .then(data => {
+            if (data && data.redirect) {
+                window.location.href = data.redirect;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Hubo un error al crear el profesor y los horarios.');
+        });
     });
 });
 

@@ -156,17 +156,20 @@ $(document).ready(function () {
             },
             body: JSON.stringify(datosFormulario)
         })
-            .then(response => response.json())
-            .then(data => {
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.redirect) {
+                window.location.href = data.redirect;
+            } else {
                 alert('Profesor y horarios actualizados exitosamente!');
-                console.log(data);
                 window.location.href = '{% url "docente" %}';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Hubo un error al editar el profesor y los horarios.');
-            });
-    });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Hubo un error al editar el profesor y los horarios.');
+        });
+});
 });
 
 async function obtenerSalas() {

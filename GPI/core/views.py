@@ -415,12 +415,10 @@ def crear_profesor_y_horarios(request):
             profesor_data = data.get('profesor')
 
             if not profesor_data.get('nombre') or not profesor_data.get('apellido'):
-                logger.warning("Faltan datos del profesor: nombre o apellido no proporcionados.")
                 return JsonResponse({"error": "Faltan datos del profesor"}, status=400)
 
             ultimo_profesor = Profesor.objects.last()
             nuevo_id_profesor = ultimo_profesor.id_profesor + 1 if ultimo_profesor else 1
-            logger.info(f"Creando nuevo profesor con ID: {nuevo_id_profesor}")
 
             with transaction.atomic():
                 profesor = Profesor.objects.create(
@@ -430,7 +428,6 @@ def crear_profesor_y_horarios(request):
                     segundo_nombre=profesor_data.get('segundo_nombre', ''),
                     segundo_apellido=profesor_data.get('segundo_apellido', '')
                 )
-                logger.info(f"Profesor {profesor.nombre} {profesor.apellido} creado exitosamente.")
 
                 for horario_data in data['horarios_asignados']:
                     try:
@@ -465,9 +462,7 @@ def crear_profesor_y_horarios(request):
                         jornada=horario_data['jornada'],
                         carrera_id_carrera=carrera
                     )
-                    logger.info(f"Horario creado para el profesor {profesor.nombre} {profesor.apellido}, seccion {horario_data['seccion']}.")
-
-                return JsonResponse({"message": "Profesor y horarios creados exitosamente!","redirect":"/docente/"}, status=201)
+                return JsonResponse({"redirect": "/docente/"}, status=200)
 
         except Exception as e:
             logger.error(f"Error al crear profesor y horarios: {str(e)}")
@@ -492,9 +487,6 @@ def editar_profesor(request):
             profesor.apellido = profesor_data['apellido']
             profesor.segundo_nombre = profesor_data.get('segundo_nombre', '')
             profesor.segundo_apellido = profesor_data.get('segundo_apellido', '')
-            profesor.save()
-
-            logger.info(f"Profesor {profesor.nombre} {profesor.apellido} actualizado exitosamente.")
 
             horarios_actuales = Horario.objects.filter(profesor_id_profesor=profesor)
 
@@ -567,13 +559,7 @@ def editar_profesor(request):
                         seccion=horario_data['seccion'],
                         jornada=horario_data['jornada']
                     )
-                    logger.info(f"Horario creado para el profesor {profesor.nombre} {profesor.apellido}: "
-                                f"Asignatura ID {asignatura.id_asignatura}, Sala ID {sala.id_sala}, "
-                                f"Módulo ID {modulo.id_modulo}, Día ID {dia.id_dia}, "
-                                f"Sección {horario_data['seccion']}, Jornada {horario_data['jornada']}, "
-                                f"Carrera ID {carrera.id_carrera}.")
-            
-            return JsonResponse({"message": "Profesor y horarios actualizados exitosamente!"}, status=200)
+            return JsonResponse({"redirect": "/docente/"}, status=200)
 
         except Exception as e:
             logger.error(f"Error al actualizar el profesor: {str(e)}")
