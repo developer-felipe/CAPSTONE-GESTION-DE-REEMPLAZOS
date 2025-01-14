@@ -1,4 +1,6 @@
 {% extends 'templates/base.html' %}
+
+{% load static %}
 {% block title %}Gestión de Reemplazo{% endblock %}
 {% block content %}
 {% if messages %}
@@ -7,7 +9,6 @@
         <div class="alert alert-info" role="alert"
             style="background-color: #007bff; color: white; border-radius: 10px; margin-bottom: 10px;">
             <div class="alert-header" style="background-color: #0056b3; color: white; border-radius: 10px 10px 0 0;">
-                <!-- Aquí podrías agregar un título si lo necesitas -->
             </div>
             <div class="alert-body">
                 {{ message }}
@@ -22,8 +23,6 @@
     <div class="text-center mb-4">
         <h1>Perfil Docentes</h1>
     </div>
-
-
 
     <div class="d-flex justify-content-end mb-3">
         <a class="btn btn-warning btn-sm" href="{% url 'crear_docente' %} ">
@@ -92,7 +91,6 @@
     {% endfor %}
 </div>
 
-<!-- Contenedor para el mensaje de confirmación -->
 <div id="confirmationMessage" class="alert alert-warning alert-dismissible fade show" role="alert" 
     style="position: fixed; top: 10%; left: 50%; transform: translateX(-50%); z-index: 1050; display: none;">
     <strong>¿Estás seguro de que deseas eliminar este docente?</strong>
@@ -103,8 +101,6 @@
     </form>
     <button type="button" class="btn btn-secondary btn-sm" id="cancelDelete">Cancelar</button>
 </div>
-
-
 
 <div class="modal fade" id="licenciaModal" tabindex="-1" aria-labelledby="licenciaModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -151,72 +147,7 @@
 <script src="{% static 'js/alertas.js' %}"></script>
 <script src="{% static 'js/licenciafun.js' %}"></script>
 <script src="{% static 'js/modalfun.js' %}"></script>
-
+<script src="{% static 'js/docente.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/style.css' %}">
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    let eliminarForm = document.getElementById('formConfirmarEliminacion');
-    let cancelDeleteBtn = document.getElementById('cancelDelete');
-    let confirmationMessage = document.getElementById('confirmationMessage');
-    
-    let idProfesorParaEliminar = null; 
 
-    document.querySelectorAll('#btnEliminar').forEach(function(botonEliminar) {
-        botonEliminar.addEventListener('click', function (e) {
-            e.preventDefault(); 
-
-            idProfesorParaEliminar = botonEliminar.getAttribute('data-id');
-            
-            document.getElementById('idProfesorConfirmarEliminacion').value = idProfesorParaEliminar;
-
-            confirmationMessage.style.display = 'block';
-        });
-    });
-
-    cancelDeleteBtn.addEventListener('click', function () {
-        confirmationMessage.style.display = 'none'; 
-    });
-
-    eliminarForm.addEventListener('submit', function (e) {
-        if (!idProfesorParaEliminar) {
-            e.preventDefault(); 
-            alert("Debe seleccionar un docente para eliminar.");
-        }
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-    let alerts = document.querySelectorAll('#alert-container .alert');
-
-    alerts.forEach(function(alert) {
-        setTimeout(function() {
-            alert.style.display = 'none';
-        }, 3000); 
-    });
-});
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken');
-
-    botonEditar = document.querySelectorAll('#modProfe')
-    botonEditar.forEach(function (boton) {
-        boton.addEventListener('click', function () {
-            id = boton.dataset.mod_prof
-            console.log(id)
-        })
-    })
-</script>
 {% endblock %}

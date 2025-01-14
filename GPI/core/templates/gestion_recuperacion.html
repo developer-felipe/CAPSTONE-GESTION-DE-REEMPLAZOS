@@ -255,10 +255,6 @@
     </div>
 </div>
 
-
-
-
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{% static 'js/editarRecuperacion.js' %}"></script>
 
@@ -418,8 +414,6 @@
         });
     });
 
-
-
     function obtenerSalas() {
         fetch('/salas/')
             .then(response => response.json())
@@ -435,8 +429,6 @@
             })
             .catch(error => console.error('Error al obtener salas:', error));
     }
-
-
 
     function eliminarRecuperacion(button) {
         const idRecuperacion = button.getAttribute('data-id');

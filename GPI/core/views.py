@@ -467,7 +467,7 @@ def crear_profesor_y_horarios(request):
                     )
                     logger.info(f"Horario creado para el profesor {profesor.nombre} {profesor.apellido}, seccion {horario_data['seccion']}.")
 
-                return JsonResponse({"message": "Profesor y horarios creados exitosamente!"}, status=201)
+                return JsonResponse({"message": "Profesor y horarios creados exitosamente!","redirect":"/docente/"}, status=201)
 
         except Exception as e:
             logger.error(f"Error al crear profesor y horarios: {str(e)}")
